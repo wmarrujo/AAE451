@@ -12,25 +12,25 @@ g = 9.80665 # m/s² # gravitational acceleration at sea level
 
 # ATMOSPHERE VALUES
 
-baseHeights = [0, 11000, 25000, 47000, 53000, 79000, 90000, 105000] # (geopotential) heights for the beginning of each layer, in m
-baseTemperatures = [288.16, 216.66, 216.66, 282.66, 282.66, 165.66, 165.66, 225.66] # temperature for the beginning of each layer, in K
-tempGradients = [-0.0065, 0, 0.003, 0, -0.0045, 0, 0.004, NaN] # temperature gradients for each layer, in K/m (last one represents no information above that height)
-basePressures = [101325.0, 22634.008746132295, 2489.1856086672196, 120.49268001877302, 58.347831704016428, 1.0101781258352585, 0.10452732009352216, nan] # in Pa # precalculated
-baseDensities = [1.225, 0.3639451299338376, 0.040025034448687088, 0.0014850787413445172, 0.00071914015402165508, 2.124386216253755e-05, 2.1981905205581133e-06, nan] # in kg/m^3 # precalculated
+_baseHeights = [0, 11000, 25000, 47000, 53000, 79000, 90000, 105000] # (geopotential) heights for the beginning of each layer, in m
+_baseTemperatures = [288.16, 216.66, 216.66, 282.66, 282.66, 165.66, 165.66, 225.66] # temperature for the beginning of each layer, in K
+_tempGradients = [-0.0065, 0, 0.003, 0, -0.0045, 0, 0.004, NaN] # temperature gradients for each layer, in K/m (last one represents no information above that height)
+_basePressures = [101325.0, 22634.008746132295, 2489.1856086672196, 120.49268001877302, 58.347831704016428, 1.0101781258352585, 0.10452732009352216, nan] # in Pa # precalculated
+_baseDensities = [1.225, 0.3639451299338376, 0.040025034448687088, 0.0014850787413445172, 0.00071914015402165508, 2.124386216253755e-05, 2.1981905205581133e-06, nan] # in kg/m^3 # precalculated
 
 ################################################################################
 # EXPORTS
 ################################################################################
 
 def _layerIndexForheight(h): # get a reference to the place in the lists where the base information is
-    return baseHeights.index(next(height for height in reversed(baseHeights) if height <= h))
+    return _baseHeights.index(next(height for height in reversed(_baseHeights) if height <= h))
 
 def _geopotentialAltitudeForHeight(hg):
     return (r * hg) / (r + hg)
 
 def _temperatureAtHeight(h):
     i = _layerIndexForheight(h)
-    return baseTemperatures[i] + tempGradients[i] * (h - baseHeights[i])
+    return _baseTemperatures[i] + _tempGradients[i] * (h - _baseHeights[i])
 
 def _isothermalLayerPressureAtHeight(h, basePressure, baseHeight, layerTemperature):
     return basePressure * exp(-(g * (h - baseHeight) / (R * layerTemperature)))
@@ -46,7 +46,7 @@ def _gradientLayerDensityAtHeight(h, baseDensity, temperatureAtHeight, baseTempe
 
 def _baseInformation(h):
     i = _layerIndexForheight(h)
-    return baseHeights[i], baseTemperatures[i], tempGradients[i], basePressures[i], baseDensities[i]
+    return _baseHeights[i], _baseTemperatures[i], _tempGradients[i], _basePressures[i], _baseDensities[i]
 
 def _informationAtHeight(hg):
     """Takes a Geometric Altitude and Returns the Geometric Altitude, Geopotential
@@ -85,3 +85,9 @@ def densityAtAltitude(altitude):
 
 def machAtAltitude(altitude):
     return sqrt(γ * R * temperatureAtAltitude(altitude))
+
+def dynamicViscosity(temperature):
+    return β * T^(3/2) / (T + S)
+    # T = temp in (°R)
+    # S = sutherland temperature (°R)
+    # β = 2.26969e8 sl/ft/s/°R

@@ -1,12 +1,11 @@
 def convert(value, fromUnit, toUnit):
     """number -> string -> string
-    ! does not check if dimensions are the same
+    NOTE: does not check if dimensions are the same
     """
     fromMultiplier = _parseUnit(fromUnit)
     toMultiplier = _parseUnit(toUnit)
     return value * fromMultiplier / toMultiplier
 
-# test string: "kg*m^2/s^2*mol*K"
 def _parseUnit(unitString):
     """string -> multiplier
     returns how many of the base SI units are equivalent to this unit
@@ -32,11 +31,12 @@ def _convertUnit(unit):
     else:
         raise Exception("unknown unit: {0}".format(unit))
 
-_baseUnits = ["1", "m", "kg", "s", "K", "A", "mol", "cd", "rad"]
+_baseUnits = ["1", "m", "kg", "s", "K", "A", "mol", "cd", "rad", "USD"]
 
-# NOTE: multipliers are to base SI unit of same dimension
+# NOTE: multipliers are 1 of these is how many of base SI unit of same dimension
 _scaledUnits = { # {scaledUnit: multiplier}
     "mm": 1e-3,
+    "cm": 1e-2,
     "km": 1e3,
     "mi": 1609.34,
     "g": 1e-3,
@@ -45,7 +45,14 @@ _scaledUnits = { # {scaledUnit: multiplier}
     "deg": 0.017453292519943295,
     "lb": 4.4482216282509,
     "in": 0.0254,
-    "ft": 0.3048}
+    "ft": 0.3048,
+    "hp": 745.7,
+    "kts": 0.514444,
+    "R": 5/9,
+    "GBP": 1.3, # Jan 2019
+    "EUR": 1.14, # Jan 2019
+    "L": 1e-3,
+    "gal": 0.00378541}
 
 # NOTE: baseUnitConstruction must be made of only units in _baseUnits or _scaledUnits
 _derivedUnits = { # {derivedUnit: baseUnitConstruction}
@@ -53,4 +60,6 @@ _derivedUnits = { # {derivedUnit: baseUnitConstruction}
     "J": "kg*m^2/s^2",
     "W": "kg*m^2/s^3",
     "Pa": "kg/s^2*m",
-    "psi": "lb/in^2"}
+    "psi": "lb/in^2",
+    "mph": "mi/hr",
+    "fps": "ft/s"}

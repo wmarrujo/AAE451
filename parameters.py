@@ -1,3 +1,5 @@
+from convert import convert
+
 class Mission:
     range = 0 # m
     loiter = 0 # s
@@ -8,12 +10,12 @@ class Mission:
     loiterAltitude = 0 # m
     
     def __str__(self):
-        str =  "range:              {0}\n".format(self.range)
-        str += "loiter:             {0}".format(self.loiter)
+        str =  "range:              {0}nmi\n".format(convert(self.range, "m", "nmi"))
+        str += "loiter:             {0}hr".format(convert(self.loiter, "s", "hr"))
         str += "passengers:         {0}".format(self.passengers)
-        str += "payload weight:     {0}".format(self.passengers * self.passengerWeight + self.baggageWeight)
-        str += "cruise altitude:    {0}".format(self.cruiseAltitude)
-        str += "loiter altitude:    {0}".format(self.loiterAltitude)
+        str += "payload weight:     {0}lb".format(convert(self.passengers * self.passengerWeight + self.baggageWeight, "N", "lb"))
+        str += "cruise altitude:    {0}ft".format(convert(self.cruiseAltitude, "m", "ft"))
+        str += "loiter altitude:    {0}ft".format(convert(self.loiterAltitude, "m", "ft"))
         return str
     def __repr__(self):
         return self.__str__()

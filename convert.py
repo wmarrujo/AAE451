@@ -39,6 +39,7 @@ _scaledUnits = { # {scaledUnit: multiplier}
     "cm": 1e-2,
     "km": 1e3,
     "mi": 1609.34,
+    "nmi": 1852,
     "g": 1e-3,
     "min": 60,
     "hr": 60*60,

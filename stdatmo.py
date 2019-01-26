@@ -86,8 +86,9 @@ def densityAtAltitude(altitude):
 def machAtAltitude(altitude):
     return sqrt(γ * R * temperatureAtAltitude(altitude))
 
-def dynamicViscosity(temperature):
-    return β * T^(3/2) / (T + S)
-    # T = temp in (°R)
-    # S = sutherland temperature (°R)
-    # β = 2.26969e8 sl/ft/s/°R
+def dynamicViscosityAtAltitude(altitude):
+    temperature = temperatureAtAltitude(altitude)
+    referenceDynamicViscosity = 1.729e-5 # kg/m*s
+    referenceTemperature = 273.15 # K
+    sutherlandTemperature = 110.4 # K
+    return referenceDynamicViscosity * (temperature / referenceTemperature)**(3/2) * (referenceTemperature + sutherlandTemperature) / (temperature + sutherlandTemperature)

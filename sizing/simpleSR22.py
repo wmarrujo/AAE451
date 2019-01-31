@@ -83,7 +83,7 @@ while 1 < abs(W0 - W0guess) and iteration < 1000:
 W0 = W0guess
 
 if iteration >= 1000:
-    print("iteration cap reached")
+    print("WARNING: iteration cap reached")
 
 ################################################################################
 # OUTPUT

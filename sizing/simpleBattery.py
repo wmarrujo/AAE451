@@ -12,12 +12,11 @@ from matplotlib.pyplot import * # plotting
 # CONSTANTS
 gasWeight = convert(6, "lb/gal", "N/m^3") # weight per gallon of gas
 
+# AIRPLANE PARAMETERS
+Esb = convert(265, "kWh/kg", "J/kg") # battery specific energy
+
 # MISSION PARAMETERS
-WeightFraction01 = 0.99 # taxi & takeoff
-WeightFraction12 = 0.985 # climb
-WeightFraction34 = 0.995 # descent & approach
-WeightFraction45 = 0.99 # climb to loiter
-WeightFraction78 = 0.995 # landing & taxi
+MissionWeightFraction = 1 # weight fraction for entire mission
 Wpay = convert(800, "lb", "N") # payload weight
 #R = convert(300, "nmi", "m") # range
 Eloiter = convert(3/4, "hr", "s") # loiter time
@@ -28,6 +27,7 @@ R = convert(300, "nmi", "m") # range
 # ASSUMED PARAMETERS
 ηpcruise = 0.9 # cruise propeller efficiency
 ηploiter = 0.9 # loiter propeller efficiency
+ηe = 0.95 # electrical system efficiency
 Cbhpcruise = convert(0.4, "lb/hr*hp", "kg/J") # Brake specific fuel consumption during cruise
 Cbhploiter = convert(0.5, "lb/hr*hp", "kg/J") # Brake specific fuel consumption during loiter
 KLD = 11
@@ -42,10 +42,6 @@ def EmptyWeightFraction(W0): # Empty Weight Fraction
 
 LDmax = KLD * sqrt(Awetted)
 Ecruise = R / Vcruise # cruise time
-WeightFraction23 = exp(-(Ecruise * Vcruise * Cbhpcruise) / (ηpcruise * LDmax)) # cruise-climb
-WeightFraction67 = exp(-(Eloiter * Vloiter * Cbhploiter) / (ηploiter * LDmax)) # loiter
-MissionWeightFraction = WeightFraction01 * WeightFraction12 * WeightFraction23 * WeightFraction34 * WeightFraction45 * WeightFraction67 * WeightFraction78
-FuelWeightFraction = 1.01 * (1 - MissionWeightFraction)
 
 W0 = 10000000
 W0guess = convert(2300, "lb", "N")
@@ -54,8 +50,18 @@ while 1 < abs(W0 - W0guess) and iteration < 1000:
     #print("W0guess = {0:.0f}".format(convert(W0guess, "N", "lb")))
     W0 = W0guess
     
+    Dcruise = W0guess / LDmax # drag in cruise
+    Dloiter = W0guess / LDmax # drag in loiter
+    Prcruise = Dcruise*Vcruise / ηpcruise # power required
+    Prloiter = Dloiter*Vloiter / ηploiter # power required
+    
+    cbcruise = Prcruise*Ecruise / ηe # battery capacity for cruise
+    cbloiter = Prloiter*Eloiter / ηe # battery capacity for loiter
+    mb = (cbcruise + cbloiter) / Esb # mass of battery
+    Wf = mb * 9.80665 # mission fuel weight
+    
     We = EmptyWeightFraction(W0) * W0guess
-    Wf = W0guess * FuelWeightFraction # mission fuel weight
+    
     W0guess = We + Wf + Wpay # gross weight
     
     iteration += 1
@@ -69,5 +75,5 @@ if iteration >= 1000:
 ################################################################################
 
 print("We = {0:4.0f} lb".format(convert(We, "N", "lb")))
-print("Wf = {0:4.0f} lb ({1:.0f} gal)".format(convert(Wf, "N", "lb"), convert(Wf / gasWeight, "m^3", "gal")))
+print("Wf = {0:4.0f} lb ({1:.0f} kWh)".format(convert(Wf, "N", "lb"), convert(cbcruise + cbloiter, "J", "kWh")))
 print("W0 = {0:4.0f} lb".format(convert(W0, "N", "lb")))

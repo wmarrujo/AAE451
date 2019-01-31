@@ -48,12 +48,14 @@ CD0 = 0.02 # Parasite Drag Coefficient
 e = 0.8 # oswald efficiency factor
 KLD = 11
 Awetted = 1.6
+
 def EmptyWeightFraction(W0): # Empty Weight Fraction
     #return 1.51e-5 * convert(W0, "N", "lb") + 0.637 # trendline from composite airplanes from airplane database
     #return 1.51*convert(W0, "N", "lb")**(-1) # raymer
-    return 0.911*convert(W0, "N", "lb")**(-0.053) # nicolai
+    #return 0.911*convert(W0, "N", "lb")**(-0.053) # nicolai
     #return 0.688*convert(W0, "N", "lb")**(-9.23e-3) # 2nd trendline
     #return 1.69*convert(W0, "N", "lb")**(-0.124) # 3rd trendline
+    return 0.759*convert(W0, "N", "lb")**(-0.0164) # 4th trendline
 
 ################################################################################
 # SIZING
@@ -61,7 +63,6 @@ def EmptyWeightFraction(W0): # Empty Weight Fraction
 
 # LDmax = 1/2 * 1/sqrt(CD0 / (pi * AR * e)) # maximum L/D
 LDmax = KLD * sqrt(Awetted)
-print(LDmax)
 Ecruise = R / Vcruise # cruise time
 WeightFraction23 = exp(-(Ecruise * Vcruise * Cbhpcruise) / (ηpcruise * LDmax)) # cruise-climb
 WeightFraction67 = exp(-(Eloiter * Vloiter * Cbhploiter) / (ηploiter * LDmax)) # loiter
@@ -70,7 +71,7 @@ FuelWeightFraction = 1.01 * (1 - MissionWeightFraction)
 
 W0guess = convert(2300, "lb", "N")
 iteration = 0
-while 1 < abs(W0 - W0guess) and iteration < 100:
+while 1 < abs(W0 - W0guess) and iteration < 1000:
     #print("W0guess = {0:.0f}".format(convert(W0guess, "N", "lb")))
     W0 = W0guess
     
@@ -80,6 +81,9 @@ while 1 < abs(W0 - W0guess) and iteration < 100:
     
     iteration += 1
 W0 = W0guess
+
+if iteration >= 1000:
+    print("iteration cap reached")
 
 ################################################################################
 # OUTPUT

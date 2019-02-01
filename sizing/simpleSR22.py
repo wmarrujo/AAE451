@@ -64,6 +64,7 @@ def EmptyWeightFraction(W0): # Empty Weight Fraction
 # LDmax = 1/2 * 1/sqrt(CD0 / (pi * AR * e)) # maximum L/D
 LDmax = KLD * sqrt(Awetted)
 Ecruise = R / Vcruise # cruise time
+print("E = ", convert(Ecruise, "s", "hr"))
 WeightFraction23 = exp(-(Ecruise * Vcruise * Cbhpcruise) / (ηpcruise * LDmax)) # cruise-climb
 WeightFraction67 = exp(-(Eloiter * Vloiter * Cbhploiter) / (ηploiter * LDmax)) # loiter
 MissionWeightFraction = WeightFraction01 * WeightFraction12 * WeightFraction23 * WeightFraction34 * WeightFraction45 * WeightFraction67 * WeightFraction78

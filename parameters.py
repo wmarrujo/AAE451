@@ -69,6 +69,7 @@ class Airfoil:
 class Powerplant:
     rotationRate = 0 # rad/s
     efficiency = 1 #
+    lapseRate = 0 # TODO: what's the unit? W/m?
 
 class Propeller:
     efficiency = 1 #

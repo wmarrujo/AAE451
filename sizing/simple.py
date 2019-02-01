@@ -21,7 +21,7 @@ WeightFraction78 = 0.995 # landing & taxi
 Wpay = convert(800, "lb", "N") # payload weight
 #R = convert(300, "nmi", "m") # range
 Eloiter = convert(3/4, "hr", "s") # loiter time
-Vcruise = convert(183, "kts", "m/s") # cruise speed
+Vcruise = convert(180, "kts", "m/s") # cruise speed
 Vloiter = convert(120, "kts", "m/s") # speed during loiter
 R = convert(300, "nmi", "m") # range
 
@@ -42,6 +42,7 @@ def EmptyWeightFraction(W0): # Empty Weight Fraction
 
 LDmax = KLD * sqrt(Awetted)
 Ecruise = R / Vcruise # cruise time
+print("E = ", convert(Ecruise, "s", "hr"))
 WeightFraction23 = exp(-(Ecruise * Vcruise * Cbhpcruise) / (ηpcruise * LDmax)) # cruise-climb
 WeightFraction67 = exp(-(Eloiter * Vloiter * Cbhploiter) / (ηploiter * LDmax)) # loiter
 MissionWeightFraction = WeightFraction01 * WeightFraction12 * WeightFraction23 * WeightFraction34 * WeightFraction45 * WeightFraction67 * WeightFraction78

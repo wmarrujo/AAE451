@@ -45,6 +45,7 @@ _scaledUnits = { # {scaledUnit: multiplier}
     "hr": 60*60, # s
     "kW": 1e3, # kg*m^2/s^2
     "kWh": 3.6e6, # kg*m/s^2
+    "Wh": 3.6e3, # kg*m/s^2
     "deg": 0.017453292519943295, # rad
     "lb": 4.4482216282509, # kg*m/s^2
     "in": 0.0254, # m

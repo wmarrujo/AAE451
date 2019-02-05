@@ -92,3 +92,29 @@ def dynamicViscosityAtAltitude(altitude):
     referenceTemperature = 273.15 # K
     sutherlandTemperature = 110.4 # K
     return referenceDynamicViscosity * (temperature / referenceTemperature)**(3/2) * (referenceTemperature + sutherlandTemperature) / (temperature + sutherlandTemperature)
+
+################################################################################
+# ATMOSPHERE OBJECT
+################################################################################
+
+class Air:
+    altitude = 0 # m
+    
+    def __init__(self, altitude):
+        self.altitude = altitude
+    
+    @property
+    def temperature(self):
+        return temperatureAtAltitude(altitude)
+    
+    @property
+    def pressure(self):
+        return pressureAtAltitude(altitude)
+    
+    @property
+    def density(self):
+        return densityAtAltitude(altitude)
+    
+    @property
+    def mach(self):
+        return sqrt(γ * R * self.temperature)

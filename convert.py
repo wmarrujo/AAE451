@@ -41,13 +41,15 @@ _scaledUnits = { # {scaledUnit: multiplier}
     "mi": 1609.34, # m
     "nmi": 1852, # m
     "g": 1e-3, # kg
+    "slug": 14.5939, # kg
     "min": 60, # s
     "hr": 60*60, # s
     "kW": 1e3, # kg*m^2/s^2
-    "kWh": 3.6e6, # kg*m/s^2
+    "kWh": 3.6e6, # kg*m^2/s^2
+    "btu": 1055.06, # kg*m^2/s^2
     "Wh": 3.6e3, # kg*m/s^2
-    "deg": 0.017453292519943295, # rad
     "lb": 4.4482216282509, # kg*m/s^2
+    "deg": 0.017453292519943295, # rad
     "in": 0.0254, # m
     "ft": 0.3048, # m
     "hp": 745.7, # kg*m^2/s^3

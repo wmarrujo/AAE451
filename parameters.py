@@ -44,6 +44,7 @@ class Wing:
     rootChord = 0 # m
     tipChord = 0 # m
     span = 0 # m
+    oswaldEfficiency = 1 # 
     airfoil = None # Airfoil object
     
     @property
@@ -57,10 +58,6 @@ class Wing:
     @property
     def aspectRatio(self):
         return self.span / self.meanAerodynamicChord
-    
-    @property
-    def oswaldEfficiency(self):
-        return 1.78 * (1 - 0.045 * self.aspectRatio**0.68) - 0.64
 
 class Airfoil:
     CLMax = 0 #

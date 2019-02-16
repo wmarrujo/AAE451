@@ -2,9 +2,28 @@ def convert(value, fromUnit, toUnit):
     """number -> string -> string
     NOTE: does not check if dimensions are the same
     """
+    
+    # Deal with F & C offsets
+    if fromUnit == "degF":
+        value += 459.67
+        fromUnit = "R"
+    elif fromUnit == "degC":
+        value += 273.15
+        fromUnit = "K"
+    
+    if toUnit == "degF":
+        offset = -459.67
+        toUnit = "R"
+    elif toUnit == "degC":
+        offset = -273.15
+        toUnit = "K"
+    else:
+        offset = 0
+    
     fromMultiplier = _parseUnit(fromUnit)
     toMultiplier = _parseUnit(toUnit)
-    return value * fromMultiplier / toMultiplier
+    
+    return value * fromMultiplier / toMultiplier + offset
 
 def _parseUnit(unitString):
     """string -> multiplier
@@ -78,4 +97,5 @@ _derivedUnits = { # {derivedUnit: baseUnitConstruction}
     "Pa": "kg/s^2*m",
     "psi": "lb/in^2",
     "mph": "mi/hr",
-    "fps": "ft/s"}
+    "fps": "ft/s",
+    "degR": "R"}

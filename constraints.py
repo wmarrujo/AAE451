@@ -9,11 +9,11 @@ from stdatmo import *
 
 g = 9.80665 # m/s²
 β = 0.9 #  # weightFraction # FIXME: guessed
-α = 0.653 #  # lapse rate # FIXME: guessed, gagg-farrar
-V = convert(180, "kts", "m/s") # speed # FIXME: guessed
+α = 0.8 #  # lapse rate # FIXME: guessed, raymer
+V = convert(180, "kts", "m/s") # speed # FIXME: cruise speed
 ηp = 0.9 # propeller efficiency # FIXME: guessed
 q = 0.5*densityAtAltitude(0)*V**2 # dynamic pressure # FIXME: guessed
-CD0 = 0.02 #  # zero-lift drag # FIXME: guessed
+CD0 = 0.0218 #  # zero-lift drag # FIXME: raymer?
 AR = 10 #  # aspect ratio # FIXME: guessed
 e = 0.8 #  # oswald efficiency factor # FIXME: guessed
 n = 1 #  # load factor # FIXME: guessed
@@ -24,7 +24,7 @@ CLLA = 1.85 #  # landing lift coefficient # FIXME: guessed
 TOP = 200 # FIXME: guessed from raymer table 5.4 for 2000 ft takeoff distance
 σ = 1 #  # density ratio of runway (sea level - sea level)
 sland = convert(2000, "ft", "m") # landing distance 
-glr = 5 #  # landing glide ratio
+glr = 5 #  # landing glide ratio # FIXME: guessed
 ho = convert(50, "ft", "m") # height of obstacle
 brf = convert(80, "ft^3/lb", "m^3/N") # braking factor on dry runway # FIXME: guessed raymer/slides
 

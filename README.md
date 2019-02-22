@@ -1,13 +1,19 @@
 # AAE 451 Senior Design Project Code
 Code for the AAE 451 Senior Design Project
 
-## Conventions
+## Sizing Organization
 
-- comment. please.
-- use long descriptive names for functions and variables
-- for functions and variables that are not to be used outside their module, prefix with an underscore
-- add description (the three double quotes) for any function that is not obvious
-- state assumptions in comments for all equation functions
+### Parameters
+
+The source of the data for the equations in `equations.py`. These objects are written in the sizing code to correspond to specific missions or airplanes respectively.
+
+### Equations
+
+The `equations.py` file contains the equations used by the sizing code to calculate the airplane parameters.
+
+### Sizing
+
+In the sizing files, we define the airplane and mission, then run the equations 
 
 ## Unit Conversions
 

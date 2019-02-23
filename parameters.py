@@ -23,3 +23,10 @@ class Segment:
 
 class Airplane:
     etap = None
+    thrust = None
+    power = None
+    velocity = None
+    Cbhp = None
+    propellerRotationSpeed = None
+    propellerDiameter = None
+    takeoffWeight = None

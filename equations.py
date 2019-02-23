@@ -2,26 +2,71 @@ from convert import *
 from parameters import *
 from definitions import *
 
+def TakeoffWeight(Airplane, Missions):
+    Wpay = PayloadWeight(Mission)
+    We = EmptyWeight(Airplane, Mission)
+    Wf = FuelWeight(Airplane, Mission)
+    
+    return Wpay + We + Wf
+
 def PayloadWeight(Mission):
     Wpax = heavyPassengerWeight if Mission.passengers <= 3 else lightPassengerWeight
     Wbag = heavyPassengerBagWeight if Mission.passengers <= 3 else lightPassengerBagWeight
     
     return (Wpax + Wbag) * Mission.passengers + pilotWeight * Mission.pilots
 
-def Endurance(Mission, Airplane):
+def EmptyWeight(Airplane, Mission):
+    W0 = Airplane.takeoffWeight
+    
+    return 0.759*convert(W0, "N", "lb")**(-0.0164)
+
+def FuelWeight(Airplane, Mission):
+    Wi1Wis = [MissionSegmentWeightFraction(Airplane, Mission, segment) for segment in Mission.segments]
+    W0 = Airplane.takeoffWeight
+    Wbat = BatteryWeight(Airplane)
+    
+    return W0 * (1 - sum(1/Wi1Wis)) + Wbat
+
+def MissionSegmentWeightFraction(Airplane, Mission, missionSegment):
+    Wi1Wis = [Mission.segment[segment].get("weightFraction") for segment in Mission.segments]
+    Wi1Wis[Mission.segments.index("cruise")] = CruiseWeightFraction(Airplane, Mission)
+    Wi1Wis[Mission.segments.index("loiter")] = LoiterWeightFraction(Airplane, Mission)
+    
+    return Wi1Wis
+
+def BatteryWeight(Airplane):
+    C = BatteryCapacity(Airplane)
+    Esb = 265 # Wh/kg
+    
+    return C / Esb
+    
+def BatteryCapacity(Airplane):
+    Pm = Airplane.power
+    t = None # TODO get this info from mission segments
+    etaE = MotorEfficiency(Airplane) * CircuitEfficiency()
+    
+    return Pm * t / etaE
+    
+def MotorEfficiency(Airplane):
+    pass
+    
+def CircuitEfficiency():
+    return 0.98
+
+def Endurance(Airplane, Mission):
     R = Range(Mission, Airplane)
     V = Velocity(Mission, Airplane)
     
     return R/V
 
-def Range(Mission, Airplane, missionSegment):
+def Range(Airplane, Mission, missionSegment):
     etap = Airplane.etap
     Cbhp = Airplane.Cbhp
     wiwi1 = WeightFraction(Mission, Airplane, missionSegment)
 
     R = (etap / cbhp) * (L/D) * log(wiwi1)
 
-def WeightFraction(Mission, Airplane, missionSegment):
+def WeightFraction(Airplane, Mission, missionSegment):
     pass
 
 def PropellerEfficiency(Airplane):
@@ -54,17 +99,26 @@ def CoefficientOfPower(Airplane):
     
     return CP
 
-def FuelWeight(Airplane, Mission):
-    WiWi1s = [Mission.segment[segment]["weightFraction"] for segment in Mission.segments]
-    # TODO: finish
-    # TODO: replace cruise & loiter segments with actual values
-    # TODO: make safe so it doesn't crash when the weightFraction is undefined for cruise & loiter
+def CruiseWeightFraction(Airplane, Mission):
+    E = 
+    V = 
+    Cbhp = 
+    etap = 
+    LD = 
+    
+    return exp(-(E * V * Cbhp) / (etap * LD))
+
+def LoiterWeightFraction(Airplane, Mission):
+    pass
+
+def TakeoffWeight(Airplane, Mission):
+    pass
 
 def LandingDistance(Airplane, Mission):
-    sL = Airplane.groundRoll
+    sL = GroundRollDistance(Airplane, Mission, missionSegment)
     sa = LandingObstacleClearanceDistance(Airplane, Mission)
     
-    return (sL + sa)
+    return sL + sa
 
 def LandingObstacleClearanceDistance(Airplane, Mission):
     return convert(600, "ft", "m")
@@ -73,9 +127,16 @@ def GroundRollDistance(Airplane, Mission, missionSegment):
     bfr = DryRunwayBrakingFactor()
     sigma = AtmosphericDensityRatio(Mission, missionSegment)
     WS = WingLoading(Airplane)
+    sigma = AtmosphericDensityRatio(Mission, missionSegment)
+    CLmax = CoefficientOfLift(Airplane)
+    
+    sL = brf * WS * (sigma * CLmax)^-1
+    
+    return sL
 
-def WingLoading(Airplane):
-    pass
+def WingLoading(Airplane, Mission, missionSegment):
+    S = Airplane.wingPlanform
+    W = 
 
 def DryRunwayBrakingFactor():
     return convert(80, "ft^3/lb", "m^3/N")
@@ -85,6 +146,11 @@ def AtmosphericDensityRatio(Mission, missionSegment):
     rho = densityAtAltitude(altitude)
     rhoSL = densityAtAltitude(0)
     
+    # TODO: finish
     
-
-
+def TakeoffDistance(Airplane, Mission):
+    sLO = LiftoffDistance(Airplane, Mission, missionSegment)
+    sOver = TakeoffObstacleClearanceDistance(Airplane, Mission)
+    
+    return sLO + sOver
+    

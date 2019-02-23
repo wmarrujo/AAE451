@@ -21,7 +21,7 @@ Here are defined the equations that take the mission and aircraft parameters and
 
 ### Sizing
 
-This is where the calculations are called and the airplane configurations are tested for their performance values.
+This is where the calculations are called and the airplane configurations are tested for their performance values. Any iteration is done here.
 
 ## Unit Conversions
 
@@ -57,6 +57,7 @@ examples:
 - Equation names are fully written out names: `FuelWeight` vs. `Wf`
 - Inside equation, all variables to be used in calculation are defined first via their respective functions (and commented if ambiguous)
 - Inside equation, all Variable names to be used in calculation are with shortened names 'Wf' vs. `FuelWeight`
+- Keep iteration from guesses in the sizing file, not in the equations, definitions, or parameters section
 
 ### Programming Practice
 

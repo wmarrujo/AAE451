@@ -31,7 +31,7 @@ referenceMission.segment["startup"]["altitude"] = 0
 referenceMission.segment["takeoff"]["altitude"] = 0
 
 ################################################################################
-# AIRPLANE COMPONENTS
+# COMPONENTS
 ################################################################################
 
 # TODO: insert propeller 

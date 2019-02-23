@@ -8,10 +8,10 @@ from stdatmo import *
 ################################################################################
 
 g = 9.80665 # m/s²
-β = 0.9 #  # weightFraction # FIXME: guessed
-α = 0.8 #  # lapse rate # FIXME: guessed, raymer
+beta = 0.9 #  # weightFraction # FIXME: guessed
+alpha = 0.8 #  # lapse rate # FIXME: guessed, raymer
 V = convert(180, "kts", "m/s") # speed # FIXME: cruise speed
-ηp = 0.9 # propeller efficiency # FIXME: guessed
+etap = 0.9 # propeller efficiency # FIXME: guessed
 q = 0.5*densityAtAltitude(0)*V**2 # dynamic pressure # FIXME: guessed
 CD0 = 0.0218 #  # zero-lift drag # FIXME: raymer?
 AR = 10 #  # aspect ratio # FIXME: guessed
@@ -22,7 +22,7 @@ dVdt = 0 # m/s² # top of climb acceleration # TODO: figure out what this actual
 CLTO = 1.5 #  # takeoff lift coefficient # FIXME: guessed
 CLLA = 1.85 #  # landing lift coefficient # FIXME: guessed
 TOP = 200 # FIXME: guessed from raymer table 5.4 for 2000 ft takeoff distance
-σ = 1 #  # density ratio of runway (sea level - sea level)
+sigma = 1 #  # density ratio of runway (sea level - sea level)
 sland = convert(2000, "ft", "m") # landing distance 
 glr = 5 #  # landing glide ratio # FIXME: guessed
 ho = convert(50, "ft", "m") # height of obstacle
@@ -35,12 +35,12 @@ brf = convert(80, "ft^3/lb", "m^3/N") # braking factor on dry runway # FIXME: gu
 # TAKEOFF
 
 def takeoff(wingLoading):
-    return β**2 * wingLoading / (α * TOP * σ * CLTO)
+    return beta**2 * wingLoading / (alpha * TOP * sigma * CLTO)
 
 # CLIMB
 
 def climb(wingLoading):
-    return β/α * V/ηp * (q/β * (CD0/wingLoading + 1/(pi*AR*e) * (n*β/q)**2 * wingLoading) + 1/V * dhdt + 1/g * dVdt)
+    return beta/alpha * V/etap * (q/beta * (CD0/wingLoading + 1/(pi*AR*e) * (n*beta/q)**2 * wingLoading) + 1/V * dhdt + 1/g * dVdt)
 
 # CRUISE
 
@@ -50,7 +50,7 @@ def cruise(wingLoading):
 # LANDING
 
 sa = glr * ho
-landing = σ * CLLA / (β * brf) * (sland - sa)
+landing = sigma * CLLA / (beta * brf) * (sland - sa)
 
 ################################################################################
 # PLOTS

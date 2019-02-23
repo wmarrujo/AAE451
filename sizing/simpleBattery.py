@@ -25,9 +25,9 @@ Vloiter = convert(120, "kts", "m/s") # speed during loiter
 R = convert(300, "nmi", "m") # range
 
 # ASSUMED PARAMETERS
-ηpcruise = 0.9 # cruise propeller efficiency
-ηploiter = 0.9 # loiter propeller efficiency
-ηe = 0.95 # electrical system efficiency
+etapcruise = 0.9 # cruise propeller efficiency
+etaploiter = 0.9 # loiter propeller efficiency
+etae = 0.95 # electrical system efficiency
 Cbhpcruise = convert(0.4, "lb/hr*hp", "kg/J") # Brake specific fuel consumption during cruise
 Cbhploiter = convert(0.5, "lb/hr*hp", "kg/J") # Brake specific fuel consumption during loiter
 KLD = 11
@@ -52,11 +52,11 @@ while 1 < abs(W0 - W0guess) and iteration < 1000:
     
     Dcruise = W0guess / LDmax # drag in cruise
     Dloiter = W0guess / LDmax # drag in loiter
-    Prcruise = Dcruise*Vcruise / ηpcruise # power required
-    Prloiter = Dloiter*Vloiter / ηploiter # power required
+    Prcruise = Dcruise*Vcruise / etapcruise # power required
+    Prloiter = Dloiter*Vloiter / etaploiter # power required
     
-    cbcruise = Prcruise*Ecruise / ηe # battery capacity for cruise
-    cbloiter = Prloiter*Eloiter / ηe # battery capacity for loiter
+    cbcruise = Prcruise*Ecruise / etae # battery capacity for cruise
+    cbloiter = Prloiter*Eloiter / etae # battery capacity for loiter
     mb = (cbcruise + cbloiter) / Esb # mass of battery
     Wf = mb * 9.80665 # mission fuel weight
     

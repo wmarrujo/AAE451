@@ -26,8 +26,8 @@ Vloiter = convert(120, "kts", "m/s") # speed during loiter
 R = convert(300, "nmi", "m") # range
 
 # ASSUMED PARAMETERS
-ηpcruise = 0.9 # cruise propeller efficiency
-ηploiter = 0.9 # loiter propeller efficiency
+etapcruise = 0.9 # cruise propeller efficiency
+etaploiter = 0.9 # loiter propeller efficiency
 Cbhpcruise = convert(0.4, "lb/hr*hp", "kg/J") # Brake specific fuel consumption during cruise
 Cbhploiter = convert(0.5, "lb/hr*hp", "kg/J") # Brake specific fuel consumption during loiter
 KLD = 11
@@ -43,8 +43,8 @@ def EmptyWeightFraction(W0): # Empty Weight Fraction
 LDmax = KLD * sqrt(Awetted)
 Ecruise = R / Vcruise # cruise time
 print("E = ", convert(Ecruise, "s", "hr"))
-WeightFraction23 = exp(-(Ecruise * Vcruise * Cbhpcruise) / (ηpcruise * LDmax)) # cruise-climb
-WeightFraction67 = exp(-(Eloiter * Vloiter * Cbhploiter) / (ηploiter * LDmax)) # loiter
+WeightFraction23 = exp(-(Ecruise * Vcruise * Cbhpcruise) / (etapcruise * LDmax)) # cruise-climb
+WeightFraction67 = exp(-(Eloiter * Vloiter * Cbhploiter) / (etaploiter * LDmax)) # loiter
 MissionWeightFraction = WeightFraction01 * WeightFraction12 * WeightFraction23 * WeightFraction34 * WeightFraction45 * WeightFraction67 * WeightFraction78
 FuelWeightFraction = 1.01 * (1 - MissionWeightFraction)
 

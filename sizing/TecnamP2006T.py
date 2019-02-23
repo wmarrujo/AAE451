@@ -24,16 +24,20 @@ tecnam.takeoffDistance = convert(1293, "ft", "m")
 tecnam.landingDistance = convert(1145, "ft", "m")
 tecnam.range = convert(1239, "km", "nmi")
 tecnam.takeoffWeight = None # TODO: fill with weight for mission
+tecnam.powerplant = hybrid
+tecnam.powerplant.propeller = genericPropeller
 
 ################################################################################
 # CALCULATIONS
 ################################################################################
 
 # TODO: gross weight
-takeoffWeight = TakeoffWeight(tecnam, designMission) # TODO: will need iteration
+#takeoffWeight = TakeoffWeight(tecnam, designMission) # TODO: will need iteration
 # TODO: landing distance
+#landingDistance = LandingDistance(tecnam, designMission)
 # TODO: takeoff distance
 # TODO: range
 # TODO: cost
 
 print("takeoff weight = {0:.0f} lb\n".format(convert(takeoffWeight, "N", "lb")))
+print("landing distance = {0:.0f} lb\n".format(convert(takeoffWeight, "m", "ft")))

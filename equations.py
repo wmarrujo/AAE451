@@ -23,16 +23,41 @@ def EmptyWeight(Airplane, Mission):
 def FuelWeight(Airplane, Mission):
     Wi1Wis = [MissionSegmentWeightFraction(Airplane, Mission, segment) for segment in Mission.segments]
     W0 = Airplane.takeoffWeight
-    Wbat = BatteryWeight(Airplane)
     
-    return W0 * (1.01) * (1 - sum(1/Wi1Wis)) + Wbat
+    return W0 * (1 - sum(1/Wi1Wis))
+
+def MissionSegmentInitialWeight(Airplane, Mission, missionSegment):
+    W0 = Airplane.takeoffWeight
+    Wi1Wis = [1]
+    for segment in Mission.segments:
+        Wf = MissionSegmentFuelWeightUsed(Airplane, Mission, segment)
+        Wi1 = Wi1Wi[-1] - Wf
+        Wi1Wis += [Wi1/Wi]
+    Wi1Wis = Wi1Wis[0:Mission.segments.index(missionSegment)] # filter to before missionSegment
+    
+    return W0*product(Wi1Wis)
+
+def MissionSegmentFinalWeight(Airplane, Mission, missionSegment):
+    Wi = MissionSegmentInitialWeight(Airplane, Mission, missionSegment)
+    Wf = MissionSegmentFuelWeightUsed(Airplane, Mission, segment)
+    
+    return Wi - Wf
 
 def MissionSegmentWeightFraction(Airplane, Mission, missionSegment):
-    Wi1Wis = [Mission.segment[segment].get("weightFraction") for segment in Mission.segments]
-    Wi1Wis[Mission.segments.index("cruise")] = CruiseWeightFraction(Airplane, Mission)
-    Wi1Wis[Mission.segments.index("loiter")] = LoiterWeightFraction(Airplane, Mission)
+    Wi = MissionSegmentInitialWeight(missionSegment)
+    Wi1 = MissionSegmentFinalWeight(missionSegment)
     
-    return Wi1Wis
+    return Wi1/Wi
+
+def MissionSegmentFuelWeightUsed(Airplane, Mission, missionSegment):
+    energyUsed = MissionSegmentEnergyUsed(Airplane, Mission, missionSegment)
+    
+    return Airplane.powerplant.fuelWeightForEnergyUsed(missionSegment, energyUsed)
+    
+    pass # asks powerplant how much fuel weight was used for a certain mission segment (N)
+
+def MissionSegmentEnergyUsed(Airplane, Mission, missionSegment):
+    pass
 
 def BatteryWeight(Airplane):
     C = BatteryCapacity(Airplane)
@@ -43,15 +68,17 @@ def BatteryWeight(Airplane):
 def BatteryCapacity(Airplane):
     Pm = Airplane.power
     t = None # TODO get this info from mission segments
-    etaE = MotorEfficiency(Airplane) * CircuitEfficiency()
+    etaE = ElectricMotorEfficiency(Airplane) * CircuitEfficiency()
     
     return Pm * t / etaE
     
-def MotorEfficiency(Airplane):
-    pass
+def ElectricMotorEfficiency(Airplane):
+    return 0.9
     
 def CircuitEfficiency():
     return 0.98
+
+# UNORGANIZED
 
 def Endurance(Airplane, Mission):
     R = Range(Mission, Airplane)
@@ -99,23 +126,23 @@ def CoefficientOfPower(Airplane):
     
     return CP
 
-def CruiseWeightFraction(Airplane, Mission):
-    E =
-    V =
-    Cbhp = Airplane.Cbhp
-    etap = Airplane.etap
-    LD = Airplane.LDcruise
-    
-    return exp(-(E * V * Cbhp) / (etap * LD))
-
-def LoiterWeightFraction(Airplane, Mission):
-    E =
-    V =
-    Cbhp = Airplane.Cbhp
-    etap = Airplane.etap
-    LD = Airplane.LDloiter
-    
-    return exp(-(E * V * Cbhp) / (etap * LD))
+# def CruiseWeightFraction(Airplane, Mission):
+#     E =
+#     V =
+#     Cbhp = Airplane.Cbhp
+#     etap = Airplane.etap
+#     LD = Airplane.LDcruise
+# 
+#     return exp(-(E * V * Cbhp) / (etap * LD))
+# 
+# def LoiterWeightFraction(Airplane, Mission):
+#     E =
+#     V =
+#     Cbhp = Airplane.Cbhp
+#     etap = Airplane.etap
+#     LD = Airplane.LDloiter
+# 
+#     return exp(-(E * V * Cbhp) / (etap * LD))
 
 def TakeoffWeight(Airplane, Mission):
     pass
@@ -142,7 +169,9 @@ def GroundRollDistance(Airplane, Mission, missionSegment):
 
 def WingLoading(Airplane, Mission, missionSegment):
     S = Airplane.wingPlanform
-    W =
+    W = MissionSegmentWeight(Airplane, Mission, missionSegment)
+    
+    return W / S
 
 def DryRunwayBrakingFactor():
     return convert(80, "ft^3/lb", "m^3/N")

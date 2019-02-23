@@ -35,4 +35,14 @@ class Airplane:
     #wingTwist = None
     #fuselageFineness = None
     #LDcruise = None
-    
+    powerplant = None #motors & stuff
+
+class Powerplant:
+    eta = None
+    engines = None
+    def fuelUsedForEnergyUsed(missionSegment, energyUsed):
+        pass
+    propeller = None
+
+class Propeller:
+    eta

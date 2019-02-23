@@ -25,7 +25,7 @@ def FuelWeight(Airplane, Mission):
     W0 = Airplane.takeoffWeight
     Wbat = BatteryWeight(Airplane)
     
-    return W0 * (1 - sum(1/Wi1Wis)) + Wbat
+    return W0 * (1.01) * (1 - sum(1/Wi1Wis)) + Wbat
 
 def MissionSegmentWeightFraction(Airplane, Mission, missionSegment):
     Wi1Wis = [Mission.segment[segment].get("weightFraction") for segment in Mission.segments]
@@ -83,9 +83,9 @@ def CoefficientOfThrust(Airplane, Mission):
     # rho = densityAtAltitude
     # n = Airplane.propellerRotationSpeed
     # D = Airplane.propellerDiameter
-    # 
+    #
     # CT = thrust / (rho * n^2 * D^4)
-    # 
+    #
     # return CT
     return 0.8
 
@@ -100,16 +100,22 @@ def CoefficientOfPower(Airplane):
     return CP
 
 def CruiseWeightFraction(Airplane, Mission):
-    E = 
-    V = 
-    Cbhp = 
-    etap = 
-    LD = 
+    E =
+    V =
+    Cbhp = Airplane.Cbhp
+    etap = Airplane.etap
+    LD = Airplane.LDcruise
     
     return exp(-(E * V * Cbhp) / (etap * LD))
 
 def LoiterWeightFraction(Airplane, Mission):
-    pass
+    E =
+    V =
+    Cbhp = Airplane.Cbhp
+    etap = Airplane.etap
+    LD = Airplane.LDloiter
+    
+    return exp(-(E * V * Cbhp) / (etap * LD))
 
 def TakeoffWeight(Airplane, Mission):
     pass
@@ -136,7 +142,7 @@ def GroundRollDistance(Airplane, Mission, missionSegment):
 
 def WingLoading(Airplane, Mission, missionSegment):
     S = Airplane.wingPlanform
-    W = 
+    W =
 
 def DryRunwayBrakingFactor():
     return convert(80, "ft^3/lb", "m^3/N")

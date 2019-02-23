@@ -16,10 +16,7 @@ class Mission:
         "shutdown": {}
         }
     segments = ["takeoff", "climb", "cruise", "descent", "abortClimb", "loiter", "abortDescent", "landing", "shutdown"]
-class Segment:
-    velocity = None
-    range = None
-    time = None
+
 
 class Airplane:
     etap = None
@@ -30,3 +27,12 @@ class Airplane:
     propellerRotationSpeed = None
     propellerDiameter = None
     takeoffWeight = None
+    #chord = None
+    #span = None
+    #aspectRatio = None
+    #tryhicktoChord = None
+    #taperRatio = None
+    #wingTwist = None
+    #fuselageFineness = None
+    #LDcruise = None
+    

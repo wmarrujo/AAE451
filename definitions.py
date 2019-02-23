@@ -26,6 +26,10 @@ designMission.pilots = 1
 
 designMission.segment["startup"]["altitude"] = 0
 designMission.segment["startup"]["weightFraction"] = 0.95
+designMission.segment["startup"]["time"] = 10*60 # 10 minutes into seconds
+
+designmission.segment["takeoff"]["altitude"] = 0
+
 
 designMission.segment["cruise"]["altitude"] = cruiseAltitude
 
@@ -37,8 +41,12 @@ referenceMission.pilots = 1
 
 referenceMission.segment["startup"]["altitude"] = 0
 referenceMission.segment["startup"]["thrustSetting"] = 0
+referenceMission.segment["startup"]["time"] = 10*60 # 10 minutes into seconds
 
 referenceMission.segment["takeoff"]["altitude"] = 0
+referenceMission.segment["takeoff"]["obstacle"] = convert(50, "ft" , "m")
+referenceMission.segment["takeoff"]["fieldLength"] = convert(2500,"ft","m")
+referenceMission.segment["takeoff"]["climbAngle"] = convert(3, "deg", "rad")
 
 referenceMission.segment["cruise"]["altitude"] = cruiseAltitude
 
@@ -56,4 +64,4 @@ referenceMission.segment["shutdown"]["altitude"] = 0
 # COMPONENTS
 ################################################################################
 
-# TODO: insert propeller 
+# TODO: insert propeller

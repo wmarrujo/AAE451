@@ -13,10 +13,15 @@ class Mission:
         "loiter": {},
         "abortDescent": {},
         "landing": {},
-        "shutdown": {}
-        }
+        "shutdown": {}}
     segments = ["takeoff", "climb", "cruise", "descent", "abortClimb", "loiter", "abortDescent", "landing", "shutdown"]
 
+class FlightCondition: # for simulation
+    altitude = None
+    speed = None
+    powerSetting = None
+    weight = None # complete airplane weight
+    angleOfAttack = None
 
 class Airplane:
     etap = None
@@ -27,22 +32,24 @@ class Airplane:
     propellerRotationSpeed = None
     propellerDiameter = None
     takeoffWeight = None
-    #chord = None
-    #span = None
-    #aspectRatio = None
-    #tryhicktoChord = None
-    #taperRatio = None
-    #wingTwist = None
-    #fuselageFineness = None
-    #LDcruise = None
-    powerplant = None #motors & stuff
+    powerplant = None # motors & stuff
 
 class Powerplant:
-    eta = None
-    engines = None
-    def fuelUsedForEnergyUsed(missionSegment, energyUsed):
-        pass
-    propeller = None
+    propeller = None # propeller object
+    engines = None # number of engines
+    engine = None # engine object
 
 class Propeller:
-    eta
+    eta = None # number or function that calculates number based on flight conditions
+
+class Engine:
+    fuelSource = None # Fuel Object
+
+class Fuel:
+    pass
+
+class Battery(Fuel):
+    pass
+
+class Gas(Fuel):
+    pass

@@ -70,38 +70,3 @@ referenceMission.segment["shutdown"]["altitude"] = 0
 # COMPONENTS
 ################################################################################
 
-hybridParallel = Powerplant()
-hybridParallel.fuelUsedForEnergyUsed = _hybridparallelFuelUsed
-
-def _hybridParallelFuelUsed(missionSegment, energyUsed):
-    pass
-
-hybridSeries = Powerplant()
-hybridSeries.etaf = internalCombustionMotorEfficiency * electricalSystemEfficiency**2 * shaftEfficiency * hybridSeries.propeller.eta
-hybridSeries.etab = electricalSystemEfficiency * shaftEfficiency * hybridSeries.propeller.eta
-hybridSeries.fuelUsedForEnergyUsed = _hybridseriesFuelUsed
-
-def _hybridseriesFuelUsed(missionSegment, energyUsed):
-    
-    batteryEnergyUsed = energyUsed / hybridSeries.etab
-    
-    return 
-    
-electric = Powerplant()
-electric.eta = electricalSystemEfficiency * shaftEfficiency * electric.propeller.eta
-electric.fuelUsedForEnergyUsed = _electricFuelUsed
-
-def _electricFuelUsed(missionSegment, energyUsed):
-    batteryEnergyUsed = energyUsed / electric.eta
-    return (energyRequiredOfBattery / batteryEnergyDensity) * g
-        
-conventional = Powerplant()
-conventional.eta = internalCombustionMotorEfficiency * shaftEfficiency * conventional.propeller.eta
-conventional.fuelUsedForEnergyUsed = _conventionalFuelUsed
-
-def _conventionalFuelUsed(missionSegment, energyUsed):
-    fuelEnergyUsed = energyUsed / conventional.eta
-    return (fuelEnergyUsed / avgasEnergyDensity) * g # in kg
-
-genericPropeller = Propeller()
-genericPropeller.eta = 0.8

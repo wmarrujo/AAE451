@@ -40,6 +40,7 @@ class Airplane:
 class Powerplant:
     eta = None
     engines = None
+    maxPower = None
     def fuelUsedForEnergyUsed(missionSegment, energyUsed):
         pass
     propeller = None

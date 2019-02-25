@@ -53,10 +53,14 @@ def MissionSegmentFuelWeightUsed(Airplane, Mission, missionSegment):
     energyUsed = MissionSegmentEnergyUsed(Airplane, Mission, missionSegment)
     
     return Airplane.powerplant.fuelWeightForEnergyUsed(missionSegment, energyUsed)
-    
-    pass # asks powerplant how much fuel weight was used for a certain mission segment (N)
+    # asks powerplant how much fuel weight was used for a certain mission segment (N)
 
 def MissionSegmentEnergyUsed(Airplane, Mission, missionSegment):
+    maxPower = Airplane.powerplant.maxPower
+    segmentTime = Mission.segment[missionSegment]["timeElapsed"]
+    segmentPowerPercent = Mission.segment[missionSegment]["powerPercent"]
+    
+    return (segmentPowerPercent * maxPower) * segmentTime
     pass
 
 def BatteryWeight(Airplane):
@@ -132,16 +136,16 @@ def CoefficientOfPower(Airplane):
 #     Cbhp = Airplane.Cbhp
 #     etap = Airplane.etap
 #     LD = Airplane.LDcruise
-# 
+#
 #     return exp(-(E * V * Cbhp) / (etap * LD))
-# 
+#
 # def LoiterWeightFraction(Airplane, Mission):
 #     E =
 #     V =
 #     Cbhp = Airplane.Cbhp
 #     etap = Airplane.etap
 #     LD = Airplane.LDloiter
-# 
+#
 #     return exp(-(E * V * Cbhp) / (etap * LD))
 
 def TakeoffWeight(Airplane, Mission):

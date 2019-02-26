@@ -12,19 +12,24 @@ def TakeoffWeight(Airplane, Mission):
     Wpay = PayloadWeight(Mission)
     We = EmptyWeight(Airplane, Mission)
     Wf = FuelWeight(Airplane, Mission)
+    print("Payload Weight = ", convert(Wpay,"N","lb"))
+    print("Empty Weight = ", convert(We,"N","lb"))
+    print("Fuel Weight = ", convert(Wf,"N","lb"))
     
     return Wpay + We + Wf
 
 def PayloadWeight(Mission):
     Wpax = heavyPassengerWeight if Mission.passengers <= 3 else lightPassengerWeight
     Wbag = heavyPassengerBagWeight if Mission.passengers <= 3 else lightPassengerBagWeight
+    pax = Mission.passengers
+    pilots = Mission.pilots
     
-    return (Wpax + Wbag) * Mission.passengers + pilotWeight * Mission.pilots
+    return (Wpax + Wbag) * pax + pilotWeight * pilots
 
 def EmptyWeight(Airplane, Mission):
     W0 = Airplane.takeoffWeight
     
-    return W0*0.7 # from some historical data # FIXME: get better estimate
+    return W0 * 1.57 * (W0)**-0.1 # from some historical data for twin engine
     # return 0.759*convert(W0, "N", "lb")**(-0.0164) # correlation for single engine
 
 def FuelWeight(Airplane, Mission):
@@ -51,7 +56,8 @@ def MissionSegmentInitialWeight(Airplane, Mission, missionSegment):
 def MissionSegmentFinalWeight(Airplane, Mission, missionSegment):
     Wi = MissionSegmentInitialWeight(Airplane, Mission, missionSegment)
     Wf = MissionSegmentFuelWeightUsed(Airplane, Mission, missionSegment)
-    
+    print(missionSegment)
+    print( convert(Wf, "N" , "lb" ) )
     return Wi - Wf
 
 def MissionSegmentWeightFraction(Airplane, Mission, missionSegment):
@@ -62,10 +68,19 @@ def MissionSegmentWeightFraction(Airplane, Mission, missionSegment):
 
 def MissionSegmentFuelWeightUsed(Airplane, Mission, missionSegment): # asks powerplant how much fuel weight was used for a certain mission segment (N)
     energyUsed = MissionSegmentEnergyUsed(Airplane, Mission, missionSegment)
+    altitude = Mission.segment[missionSegment]["altitude"]
+    rho = densityAtAltitude(altitude)
+    rhoSL = densityAtAltitude(0)
+    lapseRate = (rho/rhoSL)**engineLapseRateCoefficient
+    print(missionSegment)
+    print(energyUsed)
+    energyNeeded = energyUsed / (0.4 * lapseRate) # FIXME: need to incorporate the engine ineffeciency
     p = Airplane.powerplant.percentEnergyFromBattery
-    #print("segment: {0:12}, Energy = {1}".format(missionSegment, convert(energyUsed, "J", "MJ"))) # TODO: will need to return to this after drag implementation
     
-    return energyUsed*(p/batteryEnergyDensity + (1-p)/avgasEnergyDensity) * g
+    #print("segment: {0:12}, Energy = {1}".format(missionSegment, convert(energyUsed, "J", "MJ"))) # TODO: will need to return to this after drag implementation
+    #print(missionSegment)
+    #print("Fuel Consumption Rate = {0:0f} L/hr".format(convert( (energyNeeded*(p/batteryEnergyDensity + (1-p)/avgasEnergyDensity))/avgasDensity/Mission.segment[missionSegment]["timeElapsed"], "L/s", "L/hr")))
+    return energyNeeded*(p/batteryEnergyDensity + (1-p)/avgasEnergyDensity) * g
 
 def MissionSegmentEnergyUsed(Airplane, Mission, missionSegment):
     segmentTime = Mission.segment[missionSegment]["timeElapsed"]
@@ -76,10 +91,11 @@ def MissionSegmentEnergyUsed(Airplane, Mission, missionSegment):
 def MissionSegmentPower(Airplane, Mission, missionSegment):
     PSLW0 = Airplane.maxPowerToWeight
     W0 = Airplane.takeoffWeight
-    segmentPowerPercent = Mission.segment[missionSegment]["powerPercent"]
-    
-    return PSLW0*W0*segmentPowerPercent
+    powerPercent = Mission.segment[missionSegment]["powerPercent"]
 
+    
+    #print("Power = {0:0f} hp".format(convert((PSLW0*W0*powerPercent)*lapseRate, "W", "hp")))
+    return (PSLW0*W0*powerPercent)
 
 def ParasiteDrag(Airplane, Mission, missionSegment):
     altitude = Mission.segment[missionSegment]["altitude"] # FIXME: bad stopgap measure for now, do proper simulation later
@@ -111,12 +127,12 @@ def WingPlanformArea(Airplane):
 #     Pm = Airplane.power
 #     t = None # TODO get this info from mission segments
 #     etaE = ElectricMotorEfficiency(Airplane) * CircuitEfficiency()
-# 
+#
 #     return Pm * t / etaE
-# 
+#
 # def ElectricMotorEfficiency(Airplane):
 #     return 0.9
-# 
+#
 # def CircuitEfficiency():
 #     return 0.98
 
@@ -125,28 +141,28 @@ def WingPlanformArea(Airplane):
 # def Endurance(Airplane, Mission):
 #     R = Range(Mission, Airplane)
 #     V = Velocity(Mission, Airplane)
-# 
+#
 #     return R/V
-# 
+#
 # def Range(Airplane, Mission, missionSegment):
 #     etap = Airplane.etap
 #     Cbhp = Airplane.Cbhp
 #     wiwi1 = WeightFraction(Mission, Airplane, missionSegment)
-# 
+#
 #     R = (etap / cbhp) * (L/D) * log(wiwi1)
-# 
+#
 # def WeightFraction(Airplane, Mission, missionSegment):
 #     pass
-# 
+#
 # def PropellerEfficiency(Airplane):
 #     thrust = Airplane.thrust
 #     power = Airplane.power
 #     velocity = Airplane.velocity
-# 
+#
 #     etap = (thrust / power) * Velocity
-# 
+#
 #     return etap
-# 
+#
 # def CoefficientOfThrust(Airplane, Mission):
 #     # thrust = Airplane.thrust
 #     # rho = densityAtAltitude
@@ -157,15 +173,15 @@ def WingPlanformArea(Airplane):
 #     #
 #     # return CT
 #     return 0.8
-# 
+#
 # def CoefficientOfPower(Airplane):
 #     power = Airplane.power
 #     rho = densityAtAltitude
 #     n = Airplane.propellerRotationSpeed
 #     D = Airplane.propellerDiameter
-# 
+#
 #     CP = power / (rho * n^3 * D^5)
-# 
+#
 #     return CP
 
 # def CruiseWeightFraction(Airplane, Mission):
@@ -185,49 +201,49 @@ def WingPlanformArea(Airplane):
 #     LD = Airplane.LDloiter
 #
 #     return exp(-(E * V * Cbhp) / (etap * LD))
-# 
+#
 # def TakeoffWeight(Airplane, Mission):
 #     pass
-# 
+#
 # def LandingDistance(Airplane, Mission):
 #     sL = GroundRollDistance(Airplane, Mission, missionSegment)
 #     sa = LandingObstacleClearanceDistance(Airplane, Mission)
-# 
+#
 #     return sL + sa
-# 
+#
 # def LandingObstacleClearanceDistance(Airplane, Mission):
 #     return convert(600, "ft", "m")
-# 
+#
 # def GroundRollDistance(Airplane, Mission, missionSegment):
 #     bfr = DryRunwayBrakingFactor()
 #     sigma = AtmosphericDensityRatio(Mission, missionSegment)
 #     WS = WingLoading(Airplane)
 #     sigma = AtmosphericDensityRatio(Mission, missionSegment)
 #     CLmax = CoefficientOfLift(Airplane)
-# 
+#
 #     sL = brf * WS * (sigma * CLmax)^-1
-# 
+#
 #     return sL
-# 
+#
 # def WingLoading(Airplane, Mission, missionSegment):
 #     S = Airplane.wingPlanform
 #     W = MissionSegmentWeight(Airplane, Mission, missionSegment)
-# 
+#
 #     return W / S
-# 
+#
 # def DryRunwayBrakingFactor():
 #     return convert(80, "ft^3/lb", "m^3/N")
-# 
+#
 # def AtmosphericDensityRatio(Mission, missionSegment):
 #     altitude = Mission.segment[missionSegment]["altitude"] # TODO: make this safe
 #     rho = densityAtAltitude(altitude)
 #     rhoSL = densityAtAltitude(0)
-# 
+#
 #     # TODO: finish
-# 
+#
 # def TakeoffDistance(Airplane, Mission):
 #     sLO = LiftoffDistance(Airplane, Mission, missionSegment)
 #     sOver = TakeoffObstacleClearanceDistance(Airplane, Mission)
-# 
+#
 #     return sLO + sOver
     

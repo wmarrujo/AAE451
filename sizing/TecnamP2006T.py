@@ -37,10 +37,6 @@ tecnam.components = [
     Surface(1.05, 1.58*1, 0.1, 1.58)] # Third set is the vertical stabilizer
 tecnam.miscellaneousParasiteDragFactor = 0.1 # TODO: correction factor?
 
-designMission.passengers = 3
-heavyPassengerBagWeight = 0
-heavyPassengerBagWeight = 0
-
 ################################################################################
 # CALCULATIONS
 ################################################################################
@@ -50,7 +46,7 @@ oldWeight = 0
 iteration = 0
 while abs(oldWeight - tecnam.takeoffWeight) > 1:
     oldWeight = tecnam.takeoffWeight
-    tecnam.takeoffWeight = TakeoffWeight(tecnam, designMission)
+    tecnam.takeoffWeight = TakeoffWeight(tecnam, tecnamMission)
     
     print("Takeoff Weight = ", convert(tecnam.takeoffWeight, "N", "lb"))
     if iteration > 1000:

@@ -74,7 +74,7 @@ def MissionSegmentFuelWeightUsed(Airplane, Mission, missionSegment): # asks powe
     lapseRate = (rho/rhoSL)**engineLapseRateCoefficient
     print(missionSegment)
     print(energyUsed)
-    energyNeeded = energyUsed / (0.4 * lapseRate) # FIXME: need to incorporate the engine ineffeciency
+    energyNeeded = energyUsed / (0.25 * lapseRate) # FIXME: need to incorporate the engine ineffeciency
     p = Airplane.powerplant.percentEnergyFromBattery
     
     #print("segment: {0:12}, Energy = {1}".format(missionSegment, convert(energyUsed, "J", "MJ"))) # TODO: will need to return to this after drag implementation
@@ -93,7 +93,6 @@ def MissionSegmentPower(Airplane, Mission, missionSegment):
     W0 = Airplane.takeoffWeight
     powerPercent = Mission.segment[missionSegment]["powerPercent"]
 
-    
     #print("Power = {0:0f} hp".format(convert((PSLW0*W0*powerPercent)*lapseRate, "W", "hp")))
     return (PSLW0*W0*powerPercent)
 

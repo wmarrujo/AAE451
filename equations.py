@@ -56,8 +56,8 @@ def MissionSegmentInitialWeight(Airplane, Mission, missionSegment):
 def MissionSegmentFinalWeight(Airplane, Mission, missionSegment):
     Wi = MissionSegmentInitialWeight(Airplane, Mission, missionSegment)
     Wf = MissionSegmentFuelWeightUsed(Airplane, Mission, missionSegment)
-    print(missionSegment)
-    print( convert(Wf, "N" , "lb" ) )
+    #print(missionSegment)
+    #print( convert(Wf, "N" , "lb" ) )
     return Wi - Wf
 
 def MissionSegmentWeightFraction(Airplane, Mission, missionSegment):
@@ -72,8 +72,8 @@ def MissionSegmentFuelWeightUsed(Airplane, Mission, missionSegment): # asks powe
     rho = densityAtAltitude(altitude)
     rhoSL = densityAtAltitude(0)
     lapseRate = (rho/rhoSL)**engineLapseRateCoefficient
-    print(missionSegment)
-    print(energyUsed)
+    #print(missionSegment)
+    #print(lapseRate)
     energyNeeded = energyUsed / (0.25 * lapseRate) # FIXME: need to incorporate the engine ineffeciency
     p = Airplane.powerplant.percentEnergyFromBattery
     

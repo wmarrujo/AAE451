@@ -12,7 +12,7 @@ heavyPassengerBagWeight = convert(30, "lb", "N") # weight of bag of a heavy pass
 lightPassengerBagWeight = convert(25, "lb", "N") # weight of bag of a light passenger
 pilotWeight = convert(180, "lb", "N") # weight of a pilot
 takeoffObstacle = convert(50, "ft", "m") # height of obstacle at end of runway
-cruiseAltitude = 4300 #convert(8000, "ft", "m")
+cruiseAltitude = convert(8000, "ft", "m")
 loiterAltitude = convert(3000, "ft", "m")
 avgasEnergyDensity = convert(44.65, "MJ/kg", "J/kg")
 batteryEnergyDensity = convert(265, "Wh/kg", "J/kg")
@@ -49,15 +49,15 @@ tecnamMission.segment["takeoff"]["speed"] = convert(100, "kts", "m/s") # FIXME: 
 
 tecnamMission.segment["climb"]["powerPercent"] = 1
 tecnamMission.segment["climb"]["timeElapsed"] = convert(8, "min", "s") # FIXME: total guess, just needed to fill in field
-tecnamMission.segment["climb"]["altitude"] = cruiseAltitude/2 # FIXME: this is a shit average
-tecnamMission.segment["climb"]["speed"] = convert(140, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP
+tecnamMission.segment["climb"]["altitude"] = 4300/2
+tecnamMission.segment["climb"]["speed"] = convert(140, "kts", "m/s")
 
-tecnamMission.segment["cruise"]["altitude"] = cruiseAltitude
+tecnamMission.segment["cruise"]["altitude"] = 4300
 tecnamMission.segment["cruise"]["powerPercent"] = 0.75 # tentative guess for now, will need a better estimate based on power available and required, which is a function of flight speed
-tecnamMission.segment["cruise"]["speed"] = convert(140, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP
-tecnamMission.segment["cruise"]["timeElapsed"] = convert(700, "nmi", "m")/tecnamMission.segment["cruise"]["speed"] # FIXME: solved from 13
+tecnamMission.segment["cruise"]["speed"] = convert(convert(278, "km/hr", "kts"), "kts", "m/s")
+tecnamMission.segment["cruise"]["timeElapsed"] = convert(1239, "km", "nmi")/convert(278, "km/hr", "kts")
 
-tecnamMission.segment["descent"]["altitude"] = cruiseAltitude/2 # FIXME: this is a shit average
+tecnamMission.segment["descent"]["altitude"] = 4300/2 # FIXME: this is a shit average
 tecnamMission.segment["descent"]["powerPercent"] = 0
 tecnamMission.segment["descent"]["timeElapsed"] = convert(10, "min", "s") # FIXME: "educated" guess based on the guessed climb time
 tecnamMission.segment["descent"]["speed"] = convert(140, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP

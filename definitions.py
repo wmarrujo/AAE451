@@ -13,6 +13,7 @@ lightPassengerBagWeight = convert(25, "lb", "N") # weight of bag of a light pass
 pilotWeight = convert(180, "lb", "N") # weight of a pilot
 takeoffObstacle = convert(50, "ft", "m") # height of obstacle at end of runway
 cruiseAltitude = convert(8000, "ft", "m")
+loiterAltitude = convert(3000, "ft", "m")
 avgasEnergyDensity = convert(44.65, "MJ/kg", "J/kg")
 batteryEnergyDensity = convert(265, "Wh/kg", "J/kg")
 shaftEfficiency = 0.99
@@ -47,81 +48,57 @@ referenceMission.pilots = 1
 referenceMission.segment["startup"]["altitude"] = 0
 referenceMission.segment["startup"]["thrustSetting"] = 0
 referenceMission.segment["startup"]["powerPercent"] = 0.1
-referenceMission.segment["startup"]["timeElapsed"] = 7*60
+referenceMission.segment["startup"]["timeElapsed"] = convert(7, "min", "s")
+referenceMission.segment["startup"]["speed"] = convert(5, "kts", "m/s") # we know this to be true
 
 referenceMission.segment["takeoff"]["altitude"] = 0
 referenceMission.segment["takeoff"]["obstacle"] = convert(50, "ft" , "m")
 referenceMission.segment["takeoff"]["fieldLength"] = convert(2500,"ft","m")
 referenceMission.segment["takeoff"]["climbAngle"] = convert(3, "deg", "rad")
 referenceMission.segment["takeoff"]["powerPercent"] = 1
-referenceMission.segment["takeoff"]["timeElapsed"] = 3*60
+referenceMission.segment["takeoff"]["timeElapsed"] = convert(3, "min", "s")
+referenceMission.segment["takeoff"]["speed"] = convert(90, "kts", "m/s") # FIXME: halfway between climb/cruise speed
 
 referenceMission.segment["climb"]["powerPercent"] = 1
-referenceMission.segment["climb"]["timeElapsed"] = 8*60 # total guess, just needed to fill in field
+referenceMission.segment["climb"]["timeElapsed"] = convert(8, "min", "s") # FIXME: total guess, just needed to fill in field
+referenceMission.segment["climb"]["altitude"] = cruiseAltitude/2 # FIXME: this is a shit average
+referenceMission.segment["climb"]["speed"] = convert(180, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP
 
 referenceMission.segment["cruise"]["altitude"] = cruiseAltitude
 referenceMission.segment["cruise"]["powerPercent"] = 0.8 # tentative guess for now, will need a better estimate based on power available and required, which is a function of flight speed
-referenceMission.segment["cruise"]["timeElapsed"] = (45-8-10)*60 # solved from the other time guesses
+referenceMission.segment["cruise"]["speed"] = convert(180, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP
+referenceMission.segment["cruise"]["timeElapsed"] = convert(135, "nmi", "m")/referenceMission.segment["cruise"]["speed"] - convert(8+10, "min", "s") # FIXME: solved from 13
 
-referenceMission.segment["descent"]
+referenceMission.segment["descent"]["altitude"] = cruiseAltitude/2 # FIXME: this is a shit average
 referenceMission.segment["descent"]["powerPercent"] = 0
-referenceMission.segment["descent"]["timeElapsed"] = 10*60 # "educated" guess based on the guessed climb time
+referenceMission.segment["descent"]["timeElapsed"] = convert(10, "min", "s") # FIXME: "educated" guess based on the guessed climb time
+referenceMission.segment["descent"]["speed"] = convert(180, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP
 
-referenceMission.segment["abortClimb"]["timeElapsed"] = 4*60 # still guessing
+referenceMission.segment["abortClimb"]["timeElapsed"] = convert(4, "min", "s") # FIXME: guess
 referenceMission.segment["abortClimb"]["powerPercent"] = 1
+referenceMission.segment["abortClimb"]["altitude"] = loiterAltitude/2
+referenceMission.segment["abortClimb"]["speed"] = convert(100, "kts", "m/s") # FIXME: GUESSING CONTINUES
 
+referenceMission.segment["loiter"]["timeElapsed"] = convert(45, "min", "s") # stipulated in the RFP
+referenceMission.segment["loiter"]["powerPercent"] = 0.5 # FIXME: guess
+referenceMission.segment["loiter"]["altitude"] = loiterAltitude
+referenceMission.segment["loiter"]["speed"] = convert(130, "kts", "m/s") # FIXME: END ME this is a guess
 
-referenceMission.segment["loiter"]["timeElapsed"] = 45*60 # stipulated in the RFP
-referenceMission.segment["loiter"]["powerPercent"] = 0.5 # tentative guess for now, see above
-
-referenceMission.segment["abortDescent"]["timeElapsed"] = 6*60 # finally done guessing
+referenceMission.segment["abortDescent"]["timeElapsed"] = convert(6, "min", "s") # FIXME: guess
 referenceMission.segment["abortDescent"]["powerPercent"] = 0
+referenceMission.segment["abortDescent"]["altitude"] = loiterAltitude/2
+referenceMission.segment["abortDescent"]["speed"] = convert(100, "kts", "m/s") # FIXME: i'm gonna become addicted to guessing
 
 referenceMission.segment["landing"]["altitude"] = 0
 referenceMission.segment["landing"]["powerPercent"] = 1
-referenceMission.segment["landing"]["timeElapsed"] = 3*60
+referenceMission.segment["landing"]["timeElapsed"] = convert(3, "min", "s")
+referenceMission.segment["landing"]["speed"] = convert(50, "kts", "m/s") # FIXME: Halfway between the guess value for abort descent
 
 referenceMission.segment["shutdown"]["altitude"] = 0
 referenceMission.segment["shutdown"]["powerPercent"] = 0.1
-referenceMission.segment["shutdown"]["timeElapsed"] = 7*60
+referenceMission.segment["shutdown"]["timeElapsed"] = convert(7, "min", "s")
+referenceMission.segment["shutdown"]["speed"] = convert(5, "kts", "m/s") # we know this to be true
 
 ################################################################################
 # COMPONENTS
 ################################################################################
-
-hybridParallel = Powerplant()
-hybridParallel.fuelUsedForEnergyUsed = _hybridparallelFuelUsed
-
-def _hybridParallelFuelUsed(missionSegment, energyUsed):
-    pass
-
-hybridSeries = Powerplant()
-hybridSeries.etaf = internalCombustionMotorEfficiency * electricalSystemEfficiency**2 * shaftEfficiency * hybridSeries.propeller.eta
-hybridSeries.etab = electricalSystemEfficiency * shaftEfficiency * hybridSeries.propeller.eta
-hybridSeries.fuelUsedForEnergyUsed = _hybridseriesFuelUsed
-
-def _hybridseriesFuelUsed(missionSegment, energyUsed):
-    
-    batteryEnergyUsed = energyUsed / hybridSeries.etab
-    
-    return
-    
-electric = Powerplant()
-electric.eta = electricalSystemEfficiency * shaftEfficiency * electric.propeller.eta
-electric.fuelUsedForEnergyUsed = _electricFuelUsed
-
-def _electricFuelUsed(missionSegment, energyUsed):
-    batteryEnergyUsed = energyUsed / electric.eta
-    return (batteryEnergyUsed / batteryEnergyDensity) * g
-        
-conventional = Powerplant()
-conventional.eta = internalCombustionMotorEfficiency * shaftEfficiency * conventional.propeller.eta
-conventional.fuelUsedForEnergyUsed = _conventionalFuelUsed
-
-def _conventionalFuelUsed(missionSegment, energyUsed):
-    fuelEnergyUsed = energyUsed / conventional.eta
-    return (fuelEnergyUsed / avgasEnergyDensity) * g
-
-
-genericPropeller = Propeller()
-genericPropeller.eta = 0.8

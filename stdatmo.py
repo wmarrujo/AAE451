@@ -93,6 +93,9 @@ def dynamicViscosityAtAltitude(altitude):
     sutherlandTemperature = 110.4 # K
     return referenceDynamicViscosity * (temperature / referenceTemperature)**(3/2) * (referenceTemperature + sutherlandTemperature) / (temperature + sutherlandTemperature)
 
+def kinematicViscosityAtAltitude(altitude):
+    return dynamicViscosityAtAltitude(altitude) / densityAtAltitude(altitude)
+
 ################################################################################
 # ATMOSPHERE OBJECT
 ################################################################################

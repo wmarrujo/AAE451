@@ -12,9 +12,9 @@ def TakeoffWeight(Airplane, Mission):
     Wpay = PayloadWeight(Mission)
     We = EmptyWeight(Airplane, Mission)
     Wf = FuelWeight(Airplane, Mission)
-    print("Payload Weight = ", convert(Wpay,"N","lb"))
-    print("Empty Weight = ", convert(We,"N","lb"))
-    print("Fuel Weight = ", convert(Wf,"N","lb"))
+    #print("Payload Weight = ", convert(Wpay,"N","lb"))
+    #print("Empty Weight = ", convert(We,"N","lb"))
+    #print("Fuel Weight = ", convert(Wf,"N","lb"))
     
     return Wpay + We + Wf
 

@@ -48,12 +48,12 @@ while abs(oldWeight - tecnam.takeoffWeight) > 1:
     oldWeight = tecnam.takeoffWeight
     tecnam.takeoffWeight = TakeoffWeight(tecnam, tecnamMission)
     
-    print("Takeoff Weight = ", convert(tecnam.takeoffWeight, "N", "lb"))
+    #print("Takeoff Weight = ", convert(tecnam.takeoffWeight, "N", "lb"))
     if iteration > 1000:
         print(convert(tecnam.takeoffWeight, "N", "lb"))
         raise ValueError("Maximum Iterations Reached, stopping iterations")
     iteration += 1
-print(iteration)
+#print(iteration)
 # TODO: landing distance
 #landingDistance = LandingDistance(tecnam, designMission)
 # TODO: takeoff distance

@@ -94,7 +94,7 @@ designMission = Mission()
 designMission.passengers = 5
 designMission.pilots = 1
 
-designSpeed = 180 # kts
+designSpeed = convert(180, "kts", "m/s")
 
 designMission.segment["startup"]["thrustSetting"] = 0
 designMission.segment["startup"]["powerPercent"] = 0.1
@@ -112,22 +112,22 @@ designMission.segment["takeoff"]["speed"] = convert(100, "kts", "m/s") # FIXME: 
 designMission.segment["climb"]["powerPercent"] = 1
 designMission.segment["climb"]["timeElapsed"] = convert(8, "min", "s") # FIXME: total guess, just needed to fill in field
 designMission.segment["climb"]["altitude"] = cruiseAltitude/2 # FIXME: this is a shit average
-designMission.segment["climb"]["speed"] = convert(designSpeed, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP
+designMission.segment["climb"]["speed"] = designSpeed # FIXME: this is the minimum speed stipulated in the RFP
 
 designMission.segment["cruise"]["altitude"] = cruiseAltitude
 designMission.segment["cruise"]["powerPercent"] = 0.8 # tentative guess for now, will need a better estimate based on power available and required, which is a function of flight speed
-designMission.segment["cruise"]["speed"] = convert(designSpeed, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP
+designMission.segment["cruise"]["speed"] = designSpeed # FIXME: this is the minimum speed stipulated in the RFP
 designMission.segment["cruise"]["timeElapsed"] = convert(250, "nmi", "m")/designMission.segment["cruise"]["speed"] # FIXME: solved from 13
 
 designMission.segment["descent"]["altitude"] = cruiseAltitude/2 # FIXME: this is a shit average
 designMission.segment["descent"]["powerPercent"] = 0
 designMission.segment["descent"]["timeElapsed"] = convert(10, "min", "s") # FIXME: "educated" guess based on the guessed climb time
-designMission.segment["descent"]["speed"] = convert(designSpeed, "kts", "m/s") # FIXME: this is the minimum speed stipulated in the RFP
+designMission.segment["descent"]["speed"] = designSpeed # FIXME: this is the minimum speed stipulated in the RFP
 
 designMission.segment["abortClimb"]["timeElapsed"] = convert(4, "min", "s") # FIXME: guess
 designMission.segment["abortClimb"]["powerPercent"] = 1
 designMission.segment["abortClimb"]["altitude"] = loiterAltitude/2
-designMission.segment["abortClimb"]["speed"] = convert(designSpeed/2, "kts", "m/s") # FIXME: GUESSING CONTINUES
+designMission.segment["abortClimb"]["speed"] = designSpeed/2 # FIXME: GUESSING CONTINUES
 
 designMission.segment["loiter"]["timeElapsed"] = convert(45, "min", "s") # stipulated in the RFP
 designMission.segment["loiter"]["powerPercent"] = 0.5 # FIXME: guess
@@ -137,12 +137,12 @@ designMission.segment["loiter"]["speed"] = convert(100, "kts", "m/s") # FIXME: E
 designMission.segment["abortDescent"]["timeElapsed"] = convert(6, "min", "s") # FIXME: guess
 designMission.segment["abortDescent"]["powerPercent"] = 0
 designMission.segment["abortDescent"]["altitude"] = loiterAltitude/2
-designMission.segment["abortDescent"]["speed"] = convert(designSpeed/2, "kts", "m/s") # FIXME: i'm gonna become addicted to guessing
+designMission.segment["abortDescent"]["speed"] = designSpeed/2 # FIXME: i'm gonna become addicted to guessing
 
 designMission.segment["landing"]["altitude"] = 0
 designMission.segment["landing"]["powerPercent"] = 1
 designMission.segment["landing"]["timeElapsed"] = convert(3, "min", "s")
-designMission.segment["landing"]["speed"] = convert(designSpeed/2, "kts", "m/s") # FIXME: Halfway between the guess value for abort descent
+designMission.segment["landing"]["speed"] = designSpeed/2 # FIXME: Halfway between the guess value for abort descent
 
 designMission.segment["shutdown"]["altitude"] = 0
 designMission.segment["shutdown"]["powerPercent"] = 0.1

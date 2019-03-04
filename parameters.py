@@ -1,3 +1,4 @@
+from utilities import *
 from convert import convert
 from scipy import *
 
@@ -6,42 +7,45 @@ from scipy import *
 class Mission:
     passengers = None
     pilots = None
-    segment = {
-        "startup": {},
-        "takeoff": {},
-        "climb": {},
-        "cruise": {},
-        "descent": {},
-        "abortClimb": {},
-        "loiter": {},
-        "abortDescent": {},
-        "landing": {},
-        "shutdown": {}
-        }
-    segments = ["takeoff", "climb", "cruise", "descent", "abortClimb", "loiter", "abortDescent", "landing", "shutdown"]
+    segments = None
+    
+    def simulate(Airplane): # TODO: is this the best place to define this?
+        pass
 
+class Segments:
+    segments = None
+    
+    def __init__(self, segments):
+        self.segments = segments
+    
+    def __getitem__(self, key):
+        if type(key) is int:
+            return self.segments[key]
+        elif type(key) is str:
+            return first(self.segments, lambda x: x.name == key)
+
+class Segment:
+    name = None
+    
+    def __init__(self, name):
+        self.name = name
+    
+    def initialize(Airplane, t, t0): # reset the airplane parameters to simulate going forward, t is total mission time elapsed, t0 is the beginning time of the mission segment
+        pass
+    
+    def checkComplete(Airplane, t, t0): # returns true when mission segment has been completed, t is total mission time elapsed, t0 is the beginning time of the mission segment
+        pass
 
 class Airplane:
-    etap = None
-    thrust = None
-    power = None
-    velocity = None
-    Cbhp = None
-    propellerRotationSpeed = None
-    propellerDiameter = None
-    takeoffWeight = None
-    #chord = None
-    #span = None
-    #aspectRatio = None
-    #tryhicktoChord = None
-    #taperRatio = None
-    #wingTwist = None
-    #fuselageFineness = None
-    #LDcruise = None
-    maxPowerToWeight = None
-    wingLoading = None
-    powerplant = None
-    components = []
+    altitiude = None # number : (0 <= altitude)
+    position = None # number : (0 <= range) # how far the airplane has gone so far
+    speed = None # number
+    throttle = None # number : (0 <= throttle <= 1)
+    emptyMass = None # number : (0 <= emptyMass)
+    installedPower = None # number : (0 <= installedPower)
+    wing = None # wing component object
+    powerplant = None # powerplant object
+    extraComponents = [] # all other components not mentioned in rest of definition
     miscellaneousParasiteDragFactor = None
 
 ################################################################################
@@ -50,6 +54,9 @@ class Airplane:
 
 class Powerplant:
     percentEnergyFromBattery = None
+    fuelMass = None # number : (0 <= fuelMass)
+    def useEnergy():
+        pass
 
 class Component:
     formFactor = None
@@ -128,6 +135,9 @@ class Surface(Component):
     def wettedArea(self):
         # ASSUMPTION: modeling as a cylinder
         return self.planformArea * 2 * 1.02
+
+class Wing(Surface):
+    pass
 
 # nacelles
 # wings

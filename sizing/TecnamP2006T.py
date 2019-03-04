@@ -5,8 +5,8 @@ from stdatmo import * # standard atmospheric conditions
 from scipy import * # math
 from matplotlib.pyplot import * # plotting
 
-from definitions import *
 from parameters import *
+from constants import *
 from equations import *
 
 ################################################################################
@@ -42,6 +42,7 @@ tecnam.miscellaneousParasiteDragFactor = 0.1 # TODO: correction factor?
 ################################################################################
 
 # TODO: gross weight
+# TODO: check out: scipy.optimize.minimize
 oldWeight = 0
 iteration = 0
 while abs(oldWeight - tecnam.takeoffWeight) > 1:

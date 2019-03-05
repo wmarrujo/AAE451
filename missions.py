@@ -32,13 +32,14 @@ def _designMissionInitializeStartup(Airplane, t, t0):
 def _designMissionCompletedStartup(Airplane, t, t0):
     return convert(10, "min", "s") <= t - t0
 def _designMissionUpdateStartup(Airplane, t, tstep):
-    pass # use fuel passively
+    pass
 designMission.segments["startup"].initialize = _designMissionInitializeStartup
 designMission.segments["startup"].completed = _designMissionCompletedStartup
 designMission.segments["startup"].update = _designMissionUpdateStartup
 
 def _designMissionInitializeTakeoff(Airplane, t, t0):
     Airplane.throttle = 1
+    Airplane.position = 0
 def _designMissionCompletedTakeoff(Airplane, t, t0):
     return obstacleHeight <= Airplane.altitude
 def _designMissionUpdateTakeoff(Airplane, t, tstep):

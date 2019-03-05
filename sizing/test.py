@@ -23,6 +23,7 @@ airplane.
 # EVALUATION
 ################################################################################
 
+# TODO: probably add this to an instance method as Mission.simulate(tstep)
 t0 = 0
 t = t0
 tstep = 1 # s

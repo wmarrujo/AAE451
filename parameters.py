@@ -42,11 +42,33 @@ class Airplane:
     speed = None # number
     throttle = None # number : (0 <= throttle <= 1)
     emptyMass = None # number : (0 <= emptyMass)
-    installedPower = None # number : (0 <= installedPower)
+    
     wing = None # wing component object
+    propeller = None # propeller object
     powerplant = None # powerplant object
     extraComponents = [] # all other components not mentioned in rest of definition
     miscellaneousParasiteDragFactor = None
+
+# climb dependencies:
+# S
+# ρSL
+# L/D
+# V
+# c
+# AR
+# e
+# altitude
+# W
+
+# operating cost:
+# crew cost (per hour)
+# airframe maintenance fee (maintenance hours per flight hours)
+#   engine maintenance fee
+# depreciation
+# insurance
+# interest
+# landing fees
+# fuel costs
 
 ################################################################################
 # COMPONENTS
@@ -55,8 +77,6 @@ class Airplane:
 class Powerplant:
     percentEnergyFromBattery = None
     fuelMass = None # number : (0 <= fuelMass)
-    def useEnergy():
-        pass
 
 class Component:
     formFactor = None

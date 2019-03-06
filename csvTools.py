@@ -38,3 +38,37 @@ def dictToCSV(filename, dict):
     mt = list(dict.values())
     m = [vs] + list(map(list, zip(*mt)))
     matrixToCSV(filename, m)
+
+################################################################################
+# USING
+################################################################################
+
+def functionFromPairs(pairs): # [(a, b)] -> a -> b
+    """takes in a list of 2 item tuples [(a, b)] and returns a function which will interpolate the values of b given a as an input (where the a's are orderable), it will take the endpoint values as the value if a out of range"""
+    pairs = sorted(pairs, key=lambda pair: pair[0]) # sort by a
+    if pairs == []: # if invalid list
+        raise ValueError("nothing to interpolate from an empty list")
+    
+    def interpolate(pairs, a):
+        try:
+            below = max([pair for pair in pairs if pair[0] < a], key=lambda pair: pair[0]) # get the point below a
+        except Exception as e:
+            below = None
+        try:
+            above = min([pair for pair in pairs if a <= pair[0]], key=lambda pair: pair[0]) # get the point above a
+        except Exception as e:
+            above = None
+        if below == None and above != None: # under bounds
+            return above[1]
+        elif below != None and above == None: # over bounds
+            return below[1]
+        #elif below == None and above == None: # no bounds # cannot happen, checked for before making function
+        else:
+            return (above[1] - below[1]) / (above[0] - below[0]) * (a - below[0]) + below[1]
+    
+    return lambda a: interpolate(pairs, a)
+
+def pairsFromColumns(csvdict, colA, colB):
+    A = [float(a) for a in csvdict[colA]]
+    B = [float(b) for b in csvdict[colB]]
+    return list(zip(A, B))

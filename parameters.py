@@ -1,78 +1,138 @@
 from convert import convert
+from scipy import *
+
+################################################################################
 
 class Mission:
-    range = 0 # m
-    loiter = 0 # s
-    passengers = 1 #
-    passengerWeight = 0 # N
-    baggageWeight = 0 # N
-    cruiseAltitude = 0 # m
-    loiterAltitude = 0 # m
-    
-    def __str__(self):
-        str =  "range:              {0}nmi\n".format(convert(self.range, "m", "nmi"))
-        str += "loiter:             {0}hr".format(convert(self.loiter, "s", "hr"))
-        str += "passengers:         {0}".format(self.passengers)
-        str += "payload weight:     {0}lb".format(convert(self.passengers * self.passengerWeight + self.baggageWeight, "N", "lb"))
-        str += "cruise altitude:    {0}ft".format(convert(self.cruiseAltitude, "m", "ft"))
-        str += "loiter altitude:    {0}ft".format(convert(self.loiterAltitude, "m", "ft"))
-        return str
-    def __repr__(self):
-        return self.__str__()
+    passengers = None
+    pilots = None
+    segment = {
+        "startup": {},
+        "takeoff": {},
+        "climb": {},
+        "cruise": {},
+        "descent": {},
+        "abortClimb": {},
+        "loiter": {},
+        "abortDescent": {},
+        "landing": {},
+        "shutdown": {}
+        }
+    segments = ["takeoff", "climb", "cruise", "descent", "abortClimb", "loiter", "abortDescent", "landing", "shutdown"]
+
 
 class Airplane:
-    power = 0 # W
-    emptyWeight = 0 # kg
-    grossWeight = 0 # kg
-    cruiseSpeed = 0 # m/s
-    maxLoadFactor = 1 #
-    wingspan = 0 # m
-    tipChord = 0 # m
-    rootChord = 0 # m
-    CD0 = 0 #  # Parasite Drag Coefficient
-    fuselageDiameter = 0 # m
-    wing = None # Airfoil object
-    powerplant = None # Powerplant object
-    engines = 1 #  # number of engines
-    propeller = None # Propeller Object
-    fuel = None # Fuel Object
+    etap = None
+    thrust = None
+    power = None
+    velocity = None
+    Cbhp = None
+    propellerRotationSpeed = None
+    propellerDiameter = None
+    takeoffWeight = None
+    #chord = None
+    #span = None
+    #aspectRatio = None
+    #tryhicktoChord = None
+    #taperRatio = None
+    #wingTwist = None
+    #fuselageFineness = None
+    #LDcruise = None
+    maxPowerToWeight = None
+    wingLoading = None
+    powerplant = None
+    components = []
+    miscellaneousParasiteDragFactor = None
 
-# SubSections
-
-class Wing:
-    sweep = 0 # rad
-    rootChord = 0 # m
-    tipChord = 0 # m
-    span = 0 # m
-    oswaldEfficiency = 1 # 
-    airfoil = None # Airfoil object
-    
-    @property
-    def taperRatio(self):
-        return self.tipChord / self.rootChord
-    
-    @property
-    def meanAerodynamicChord(self):
-        return (2/3) * self.rootChord * (1 + self.taperRatio + self.taperRatio**2) / (1 + self.taperRatio)
-    
-    @property
-    def aspectRatio(self):
-        return self.span / self.meanAerodynamicChord
-
-class Airfoil:
-    CLMax = 0 #
-    thickness = 0 #
+################################################################################
+# COMPONENTS
+################################################################################
 
 class Powerplant:
-    rotationRate = 0 # rad/s
-    efficiency = 1 #
-    lapseRate = 0 # TODO: what's the unit? W/m?
+    percentEnergyFromBattery = None
 
-class Propeller:
-    efficiency = 1 #
+class Component:
+    formFactor = None
+    interferenceFactor = None
+    wettedArea = None
+    referenceLength = None
+    
+    def reynoldsNumber(self, density, velocity, dynamicViscosity):
+        return density * velocity * self.referenceLength / dynamicViscosity
+    
+    def skinFrictionCoefficient(self, density, velocity, dynamicViscosity):
+        return 0.455 / (log10(self.reynoldsNumber(density, velocity, dynamicViscosity))**2.58)
 
-class Fuel:
-    pass
+class Fuselage(Component):
+    diameter = None
+    length = None
+    
+    def __init__(self, interferenceFactor, diameter, length):
+        self.interferenceFactor = interferenceFactor
+        self.referenceLength = diameter
+        self.diameter = diameter
+        self.length = length
+    
+    @property
+    def finenessRatio(self):
+        return self.length / self.diameter
+    
+    @property
+    def formFactor(self):
+        return 1 + 60 / self.finenessRatio**3 + self.finenessRatio / 400
+        
+    @property
+    def wettedArea(self):
+        # ASSUMPTION: modeling as "hotdog"
+        return pi * self.diameter * self.length * (1 - 2/self.finenessRatio)**(2/3) * (1 + 1/self.finenessRatio**2)
 
-# Subsection Instances
+class Nacelle(Component):
+    diameter = None
+    length = None
+    
+    def __init__(self, interferenceFactor, diameter, length):
+        self.interferenceFactor = interferenceFactor
+        self.referenceLength = diameter
+        self.diameter = diameter
+        self.length = length
+    
+    @property
+    def finenessRatio(self):
+        return self.length / self.diameter
+    
+    @property
+    def formFactor(self):
+        return 1 + 0.35 / self.finenessRatio
+    
+    @property
+    def wettedArea(self):
+        # ASSUMPTION: modeling as a cylinder
+        return pi * self.diameter * self.length
 
+class Surface(Component):
+    planformArea = None
+    thicknessToChord = None
+    
+    def __init__(self, interferenceFactor, planformArea, thicknessToChord, span):
+        self.interferenceFactor = interferenceFactor
+        self.referenceLength = span
+        self.thicknessToChord = thicknessToChord
+        self.planformArea = planformArea
+    
+    @property
+    def formFactor(self):
+        Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
+        return 1 + Zfactor * self.thicknessToChord + 100 * self.thicknessToChord**4
+    
+    @property
+    def wettedArea(self):
+        # ASSUMPTION: modeling as a cylinder
+        return self.planformArea * 2 * 1.02
+
+# nacelles
+# wings
+# struts
+# pylons
+# fuselage
+# landing gear
+# tail

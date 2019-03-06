@@ -3,6 +3,7 @@ sys.path.insert(0, sys.path[0] + "/../")
 from convert import convert # unit conversions
 from stdatmo import * # standard atmospheric conditions
 from scipy import * # math
+from scipy.optimize import minimize
 from matplotlib.pyplot import * # plotting
 
 from definitions import *
@@ -41,25 +42,35 @@ tecnam.miscellaneousParasiteDragFactor = 0.1 # TODO: correction factor?
 # CALCULATIONS
 ################################################################################
 
-# TODO: gross weight
-oldWeight = 0
-iteration = 0
-while abs(oldWeight - tecnam.takeoffWeight) > 1:
-    oldWeight = tecnam.takeoffWeight
-    tecnam.takeoffWeight = TakeoffWeight(tecnam, tecnamMission)
-    
-    #print("Takeoff Weight = ", convert(tecnam.takeoffWeight, "N", "lb"))
-    if iteration > 1000:
-        print(convert(tecnam.takeoffWeight, "N", "lb"))
-        raise ValueError("Maximum Iterations Reached, stopping iterations")
-    iteration += 1
-#print(iteration)
-# TODO: landing distance
-#landingDistance = LandingDistance(tecnam, designMission)
-# TODO: takeoff distance
-# TODO: range
-# TODO: cost
-# TODO: drag buildup
+def calculateTakeoffWeight(guess):
+    tecnam.takeoffWeight = guess
+    return TakeoffWeight(tecnam, tecnamMission)
+
+def err(x):
+    guess = x[0]
+    return abs(guess - calculateTakeoffWeight(guess))
+
+minimize(err, [convert(3000, "lb", "N")])
+
+# # TODO: gross weight
+# oldWeight = 0
+# iteration = 0
+# while abs(oldWeight - tecnam.takeoffWeight) > 1:
+#     oldWeight = tecnam.takeoffWeight
+#     tecnam.takeoffWeight = TakeoffWeight(tecnam, tecnamMission)
+# 
+#     #print("Takeoff Weight = ", convert(tecnam.takeoffWeight, "N", "lb"))
+#     if iteration > 1000:
+#         print(convert(tecnam.takeoffWeight, "N", "lb"))
+#         raise ValueError("Maximum Iterations Reached, stopping iterations")
+#     iteration += 1
+# #print(iteration)
+# # TODO: landing distance
+# #landingDistance = LandingDistance(tecnam, designMission)
+# # TODO: takeoff distance
+# # TODO: range
+# # TODO: cost
+# # TODO: drag buildup
 parasiteDrags = zip(Mission.segments, [ParasiteDrag(tecnam, designMission, segment) for segment in Mission.segments])
 
 print("takeoff weight = {0:.0f} lb".format(convert(tecnam.takeoffWeight, "N", "lb")))

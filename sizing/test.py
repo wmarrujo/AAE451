@@ -14,10 +14,6 @@ from equations import *
 ################################################################################
 
 airplane = Airplane()
-airplane.altitiude = 0
-airplane.throttle = 0.2
-airplane.mass = 0
-airplane.
 
 ################################################################################
 # EVALUATION

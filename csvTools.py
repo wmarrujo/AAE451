@@ -59,9 +59,9 @@ def functionFromPairs(pairs): # [(a, b)] -> a -> b
         except Exception as e:
             above = None
         if below == None and above != None: # under bounds
-            return above[1]
+            return None
         elif below != None and above == None: # over bounds
-            return below[1]
+            return None
         #elif below == None and above == None: # no bounds # cannot happen, checked for before making function
         else:
             return (above[1] - below[1]) / (above[0] - below[0]) * (a - below[0]) + below[1]

@@ -46,9 +46,8 @@ def _designMissionCompletedTakeoff(Airplane, t, t0):
     return takeoffSpeed <= Airplane.speed
 def _designMissionUpdateTakeoff(Airplane, t, tstep):
     pass
-    # see Raymer section 4.9.2
-    # find power from throttle
-    # find thrust from power & speed
+    # see Raymer-v6 section 17.8.1 
+    # find thrust
     # find acceleration from thrust, drag and ground friction
     # update speed with acceleration
     # update position with speed
@@ -61,8 +60,10 @@ def _designMissionInitializeClimb(Airplane, t, t0):
 def _designMissionCompletedClimb(Airplane, t, t0):
     return cruiseAltitude <= Airplane.altitude
 def _designMissionUpdateClimb(Airplane, t, tstep):
-    pass
-    # 
+    Airplane.altitude = Airplane.altitude + climbAltitudeCredit(Airplane, tstep)
+    Airplane.position = Airplane.position + climbPositionCredit(Airplane, tstep)
+    Airplane.speed = climbVelocity(Airplane)
+    
 designMission.segments["climb"].initialize = _designMissionInitializeClimb
 designMission.segments["climb"].completed = _designMissionCompletedClimb
 designMission.segments["climb"].update = _designMissionUpdateClimb

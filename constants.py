@@ -35,5 +35,5 @@ electricalSystemEfficiency = 0.98 #
 internalCombustionMotorEfficiency = 0.4 # 
 electricalMotorEfficiency = 0.98 # 
 engineLapseRateCoefficient = 0.7 # 
-runwayFrictionCoefficientNoBrakes = 0.03 # 0.015-0.04 -> from Raymer Table 4.3
-runwayFrictionCoefficientWithBrakes = 0.5 # 0.3-0.6 -> from Raymer Table 4.3
+runwayFrictionCoefficientNoBrakes = 0.03 # 0.015-0.04 -> from Raymer Table 17.1
+runwayFrictionCoefficientWithBrakes = 0.5 # 0.3-0.6 -> from Raymer Table 17.1

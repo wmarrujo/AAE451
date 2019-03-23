@@ -7,16 +7,22 @@ from scipy import *
 class Mission:
     segments = None
     
-    def simulate(Airplane): # TODO: is this the best place to define this?
+    def simulate(self, tstep, Airplane, recordingFunction):
         t0 = 0 # s
         t = t0
-        tstep = 1 # s
+        iteration = 0
+        recordingFunction(t, "Start", Airplane)
+        
         for segment in self.segments:
-            segment.initialize(airplane, t, t0)
-            while not segment.completed(airplane, t, t0):
-                segment.update(airplane, t, tstep)
+            segment.initialize(Airplane, t, t0)
+            
+            while not segment.completed(Airplane, t, t0):
+                segment.update(Airplane, t, tstep)
+                recordingFunction(t, segment.name, Airplane)
+                
                 t0 = t
                 t = t + tstep
+                iteration += 1
 
 class Segments:
     segments = None
@@ -60,6 +66,7 @@ class Airplane:
     oswaldEfficiencyFactor = None # number : (0.7 < x < 0.85) # TODO: get better estimate
     compressibilityDrag = 0 # number : (0 = x) # we fly too slow
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
+    emptyWeight = None # number [N] : (0 <= x) # TODO: replace with component weight, will delete this parameter later
 
 ################################################################################
 # COMPONENTS
@@ -75,11 +82,12 @@ class Engine: # the engines/motors that drive the propeller
     propeller = None # propeller object
 
 class Powerplant: # the powerplant system configuration
-    gas = None # fuel object
-    battery = None # fuel object
+    gas = None # gas object
+    battery = None # battery object
     generator = None # generator object
     percentElectric = None # number : (0 <= x <= 1) # how much of the output energy comes from electricity
     generatorOn = None # bool # is the generator on, giving energy to the battery?
+    
     
     @property
     def fuelMass(self):
@@ -88,12 +96,18 @@ class Powerplant: # the powerplant system configuration
         
         return mg + mb
 
-class Fuel:
+class Gas:
     mass = None # number [kg] : (0 <= x)
     energyDensity = None # number [J/kg] : (0 <= x)
 
+class Battery:
+    mass = None # number [kg] : (0 <= x)
+    energyDensity = None # number [W*h/kg] : (0 <= x)
+    energy = None # number [J] : (0 <= x)
+    
 class Generator:
     efficiency = None # number : (0 <= x <= 1)
+    power = None # number : (0 <= x) # most efficient power setting, the only one we'll run it at
 
 class Component:
     mass = None # number : (0 <= x)
@@ -114,16 +128,24 @@ class Fuselage(Component):
     
     @property
     def finenessRatio(self):
-        return self.length / self.diameter
+        l = self.length
+        D = self.diameter
+        
+        return l / D
     
     @property
     def formFactor(self):
-        return 1 + 60 / self.finenessRatio**3 + self.finenessRatio / 400
+        fr = self.finenessRatio
+        
+        return 1 + 60 / fr**3 + fr / 400
         
     @property
     def wettedArea(self):
-        # ASSUMPTION: modeling as "hotdog"
-        return pi * self.diameter * self.length * (1 - 2/self.finenessRatio)**(2/3) * (1 + 1/self.finenessRatio**2)
+        D = self.diameter
+        l = self.length
+        fr = self.finenessRatio
+        
+        return pi * D * l * (1 - 2/fr)**(2/3) * (1 + 1/fr**2) # ASSUMPTION: modeling as "hotdog"
 
 class Nacelle(Component):
     diameter = None
@@ -137,11 +159,16 @@ class Nacelle(Component):
     
     @property
     def finenessRatio(self):
-        return self.length / self.diameter
+        l = self.length
+        D = self.diameter
+        
+        return l / D
     
     @property
     def formFactor(self):
-        return 1 + 0.35 / self.finenessRatio
+        fr = self.finenessRatio
+        
+        return 1 + 0.35 / fr
     
     @property
     def wettedArea(self):

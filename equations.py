@@ -27,12 +27,12 @@ def PayloadWeight(Airplane):
     return (Wpax + Wbag) * pax + pilotWeight * pilots
 
 def FuelWeight(Airplane):
-    mf = airplane.powerplant.fuelMass
+    mf = Airplane.powerplant.fuelMass
     
     return mf/g
 
 def EmptyWeight(Airplane):
-    pass # TODO: component weight buildup
+    Airplane.emptyWeight # TODO: temporary, replace with component weight buildup later
 
 def AirplaneReynoldsNumber(Airplane):
     rho = densityAtAltitude(Airplane.altitude)
@@ -58,11 +58,29 @@ def accelerationOnGround(Airplane):
     return g/W * (T - D - mu*(W-L))
 
 def AirplaneThrust(Airplane):
-    P = enginePower(Airplane)
-    etap = Airplane.propeller.efficiency
     V = Airplane.speed
+    Ts = []
+    for engine in Airplane.engines:
+        P = enginePower(Airplane, engine)
+        etap = engine.propeller.efficiency
+        
+        Ts += [P*etap / V]
     
-    return (P*etap) / V
+    return sum(Ts)
+
+def enginePower(Airplane, engine):
+    th = Airplane.throttle
+    maxP = engine.maxPower
+    
+    return th * maxP
+
+def allEnginesPower(Airplane):
+    th = Airplane.throttle
+    engines = Airplane.engines
+    maxPs = [engine.maxPower for engine in engines]
+    P = sum([th*maxP for maxP in maxPs])
+    
+    return P
 
 def AirplaneDrag(Airplane):
     q = AirplaneDynamicPressure(Airplane)
@@ -137,14 +155,6 @@ def AirplaneLift(Airplane):
     
     return q * S * CL
 
-def enginePower(Airplane, tstep):
-    th = Airplane.throttle
-    engines = Airplane.engines
-    maxPs = [engine.maxPower for engine in engines]
-    P = sum([th*maxP for maxP in maxPs])
-    
-    return P
-
 def climbRangeCredit(Airplane, tstep):
     rangeRate = climbRangeRate(Airplane)
     
@@ -199,7 +209,7 @@ def coefficientOfThrust(Airplane):
     return cp * etap / V
     
 def coefficientOfPower(Airplane):
-    Peng = enginePower(Airplane)
+    Peng = allEnginesPower(Airplane)
     rhoAlt = densityAtAltitude(Airplane.altitude)
     n = Airplane.engine.PmaxRotationRate
     d = Airplane.propeller.diameter
@@ -242,3 +252,21 @@ def climbVelocity(Airplane):
 # UPDATING FUNCTIONS
 ################################################################################
 
+def updateFuel(Airplane, tstep):
+    P = allEnginesPower(Airplane)
+    E = P*tstep
+    gas = Airplane.powerplant.gas
+    battery = Airplane.powerplant.battery
+    mg = gas.mass if gas is not None else 0
+    mb = battery.mass if battery is not None else 0
+    generator = Airplane.powerplant.generator
+    percentElectric = Airplane.powerplant.percentElectric
+    generatorOn = Airplane.powerplant.generatorOn
+    
+    Eb = E*percentElectric # energy requested of battery
+    Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
+    
+    if battery is not None:
+       battery.energy -= Eb
+    if gas is not None:
+        gas.mass -= Eg/gas.energyDensity

@@ -66,6 +66,7 @@ class Airplane:
     oswaldEfficiencyFactor = None # number : (0.7 < x < 0.85) # TODO: get better estimate
     compressibilityDrag = 0 # number : (0 = x) # we fly too slow
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
+    InitialGrossWeight = None # number : initial guess for gross weight, changes with iterations
     emptyWeight = None # number [N] : (0 <= x) # TODO: replace with component weight, will delete this parameter later
 
 ################################################################################
@@ -146,6 +147,18 @@ class Fuselage(Component):
         fr = self.finenessRatio
         
         return pi * D * l * (1 - 2/fr)**(2/3) * (1 + 1/fr**2) # ASSUMPTION: modeling as "hotdog"
+        
+    @property
+    def weight(self):
+        Sf = self.wettedArea
+        Nz = 1 #FIXME do we use a different load factor? 3 or something?
+        Wdg = 1 #FIXME where do we pull the guess W0 from?
+        Lt = 0.45*length #Based roughly on Tecnam Lt to L ratio
+        LD = length / diameter #CHANGE FOR ELIPTICAL (or other) FUSELAGE
+        q = .5 * densityAtAltitude(convert(8000, "ft", "m")) * convert(180, "knots", "m/s") ** 2 #Dynamic prressure at cruise
+        Wpress = 0 #no pressurization weight penalty for our a/class
+        WfImperial = 0.052 * convert(Sf, "m^2", "ft^2")**1.086 * (Nz*convert(Wdg, "N", "lb")**0.177 * convert(Lt, "m^2", "ft^2")**-0.051 * LD**-0.072 * convert(q, "N/m^2","lb/ft^2")**0.241 + Wpress #RAYMER eqn 15.48
+        return convert(WfImperial, "lb", "N")
 
 class Nacelle(Component):
     diameter = None
@@ -216,4 +229,30 @@ class Surface(Component):
         return AR/b
 
 class Wing(Surface):
-    pass
+    span = None # number [m] : (0 <= x)
+    aspectRatio = None # number : (0 <= x)
+    chord = None # number [m] : (0 <= x)
+    Sw = WingPlanformArea(airplane)
+    Wdg = airplane.InitialGrossWeight
+    Wfw = 0.5 * airplane.powerplant.gas.mass
+    AR = span / chord
+    q = .5 * densityAtAltitude(convert(8000, "ft", "m")) * convert(180, "knots", "m/s") ** 2 #Dynamic prressure at cruise
+    tc = 0.12 # FIXME just used 12% t/c based on NACA ##12 series
+    Nz = 1 #FIXME do we use a different load factor? 3 or something?
+    @property
+    def weight(self):
+        Ww = 0.036*convert(Sw, "m^2", "ft^2")**0.758 * convert(Wfw, "N", "lb")**0.0035 * AR**0.6 * convert(q, "N/m^2", "lb/ft^2")**0.006 * tc**-0.3 * (Nz * convert(Wdg, "n", "lb"))**0.49
+        return convert(Ww, "lb", "N")
+
+class HorizontalTail(component):
+    ch = 0.80 # horizontal tail volume coefficient
+    S = airplane.wing.span
+    c = airplane.wing.chord
+    dt = 0.5 * airplane.fuselage.length # FIXME just an estimation based on tecnam sizes
+    Sht = ch * (S * c / dt)
+    tc = 0.12 # FIXME just used 12% t/c based on NACA ##12 series
+    AR = airplane.span / airplane.chord
+    lambdah = 1 # FIXME Dunno what this is supposed to be
+    horizontalSweep = 0 # maybe we want sweep?
+    Wht = 0.016 * (Nz*convert(Wdg, "n", "lb"))**0.414 * q**0.168 * convert(Sht, "m^2", "ft^2")**0.896 * (100 * tc)**-0.12 * (AR / cos(HorizontalSweep)**2)**0.043 * lambdah**-0.02
+    return convert(Wht, "lb", "N")

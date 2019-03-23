@@ -8,7 +8,15 @@ class Mission:
     segments = None
     
     def simulate(Airplane): # TODO: is this the best place to define this?
-        pass
+        t0 = 0 # s
+        t = t0
+        tstep = 1 # s
+        for segment in self.segments:
+            segment.initialize(airplane, t, t0)
+            while not segment.completed(airplane, t, t0):
+                segment.update(airplane, t, tstep)
+                t0 = t
+                t = t + tstep
 
 class Segments:
     segments = None
@@ -47,8 +55,9 @@ class Airplane:
     flightPathAngle = None # < 5 degrees
     wing = None # wing component object
     engines = [] # [engine object] # list of engines on airplane
+    powerplant = None # powerplant object
     components = [] # [component objects] # list of components making up airplane (including wing)
-    oswaldEfficiencyFactor = None # number : (0.7 < x < 0.85) # fix later maybe
+    oswaldEfficiencyFactor = None # number : (0.7 < x < 0.85) # TODO: get better estimate
     compressibilityDrag = 0 # number : (0 = x) # we fly too slow
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
 
@@ -61,8 +70,9 @@ class Propeller:
     angularVelocity = None # number [rad/s] : (0 <= x) # 0<=x assumes no fanning of engine to regain energy
     efficiency = None
 
-class Engine: # the engines or motors that drive the propeller
+class Engine: # the engines/motors that drive the propeller
     maxPower = None # number [W] : (0 <= x)
+    propeller = None # propeller object
 
 class Powerplant: # the powerplant system configuration
     gas = None # fuel object
@@ -70,17 +80,25 @@ class Powerplant: # the powerplant system configuration
     generator = None # generator object
     percentElectric = None # number : (0 <= x <= 1) # how much of the output energy comes from electricity
     generatorOn = None # bool # is the generator on, giving energy to the battery?
+    
+    @property
+    def fuelMass(self):
+        mg = self.gas.mass if self.gas is not None else 0
+        mb = self.battery.mass if self.battery is not None else 0
+        
+        return mg + mb
 
 class Fuel:
     mass = None # number [kg] : (0 <= x)
     energyDensity = None # number [J/kg] : (0 <= x)
 
 class Generator:
-    pass
+    efficiency = None # number : (0 <= x <= 1)
 
 class Component:
-    formFactor = None # number : (?)
-    interferenceFactor = None # number : (?)
+    mass = None # number : (0 <= x)
+    formFactor = None # number : (1 <= x)
+    interferenceFactor = None # number : (1 <= x)
     wettedArea = None # number [m^2] : (0 <= x)
     referenceLength = None # number [m] : (0 <= x)
 
@@ -127,8 +145,10 @@ class Nacelle(Component):
     
     @property
     def wettedArea(self):
-        # ASSUMPTION: modeling as a cylinder
-        return pi * self.diameter * self.length
+        d = self.diameter
+        l = self.length
+        
+        return pi * d * l # ASSUMPTION: modeling as a cylinder
 
 class Surface(Component):
     planformArea = None
@@ -143,14 +163,30 @@ class Surface(Component):
     @property
     def formFactor(self):
         Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
-        return 1 + Zfactor * self.thicknessToChord + 100 * self.thicknessToChord**4
+        tc = self.thicknessToChord
+        
+        return 1 + Zfactor * tc + 100 * tc**4
     
     @property
     def wettedArea(self):
-        # ASSUMPTION: modeling as a cylinder
-        return self.planformArea * 2 * 1.02
+        S = self.planformArea
+        tc = self.thicknessToChord
+        
+        return S * 2 * (1+tc) # ASSUMPTION: modeling as a cylinder
+    
+    @property
+    def aspectRatio(self):
+        S = self.planformArea
+        b = self.referenceLength
+        
+        return S/b
+    
+    @property
+    def chord(self):
+        b = self.referenceLength
+        AR = self.aspectRatio
+        
+        return AR/b
 
 class Wing(Surface):
-    span = None # number [m] : (0 <= x)
-    aspectRatio = None # number : (0 <= x)
-    chord = None # number [m] : (0 <= x)
+    pass

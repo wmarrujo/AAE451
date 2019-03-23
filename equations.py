@@ -27,7 +27,9 @@ def PayloadWeight(Airplane):
     return (Wpax + Wbag) * pax + pilotWeight * pilots
 
 def FuelWeight(Airplane):
-    pass
+    mf = airplane.powerplant.fuelMass
+    
+    return mf/g
 
 def EmptyWeight(Airplane):
     pass # TODO: component weight buildup
@@ -153,7 +155,7 @@ def climbRangeRate(Altitude, tstep):
     flightPathAngle = Airplane.flightPathAngle
     
     return climbRate / tan(flightPathAngle)
-    
+
 def climbAltitudeCredit(Airplane, tstep):
     climbRate = climbAltitudeRate(Airplane)
     

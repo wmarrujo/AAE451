@@ -60,8 +60,8 @@ def _designMissionInitializeClimb(Airplane, t, t0):
 def _designMissionCompletedClimb(Airplane, t, t0):
     return cruiseAltitude <= Airplane.altitude
 def _designMissionUpdateClimb(Airplane, t, tstep):
-    Airplane.altitude = Airplane.altitude + climbAltitudeCredit(Airplane, tstep)
-    Airplane.position = Airplane.position + climbPositionCredit(Airplane, tstep)
+    Airplane.altitude += climbAltitudeCredit(Airplane, tstep)
+    Airplane.position += climbPositionCredit(Airplane, tstep)
     Airplane.speed = climbVelocity(Airplane)
     
 designMission.segments["climb"].initialize = _designMissionInitializeClimb

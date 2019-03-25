@@ -6,30 +6,30 @@ from scipy import *
 
 class Mission:
     segments = None
-    
+
     def simulate(self, tstep, Airplane, recordingFunction):
         t0 = 0 # s
         t = t0
         iteration = 0
         recordingFunction(t, "Start", Airplane)
-        
+
         for segment in self.segments:
             segment.initialize(Airplane, t, t0)
-            
+
             while not segment.completed(Airplane, t, t0):
                 segment.update(Airplane, t, tstep)
                 recordingFunction(t, segment.name, Airplane)
-                
+
                 t0 = t
                 t = t + tstep
                 iteration += 1
 
 class Segments:
     segments = None
-    
+
     def __init__(self, segments):
         self.segments = segments
-    
+
     def __getitem__(self, key):
         if type(key) is int:
             return self.segments[key]
@@ -38,16 +38,16 @@ class Segments:
 
 class Segment:
     name = None
-    
+
     def __init__(self, name):
         self.name = name
-    
+
     def initialize(Airplane, t, t0): # reset the airplane parameters to simulate going forward, t is total mission time elapsed, t0 is the beginning time of the mission segment
         pass
-    
+
     def checkComplete(Airplane, t, t0): # returns true when mission segment has been completed, t is total mission time elapsed, t0 is the beginning time of the mission segment
         pass
-        
+
     def update(Airplane, t, tstep): # TODO: write comment
         pass
 
@@ -68,6 +68,9 @@ class Airplane:
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
     InitialGrossWeight = None # number : initial guess for gross weight, changes with iterations
     emptyWeight = None # number [N] : (0 <= x) # TODO: replace with component weight, will delete this parameter later
+    takeoffLiftCoefficient = 1.5  # number : (0 <= x) # based on Anderson table 5.3 for plain flap
+    landingLiftCoefficient = 1.85  # number : (0 <= x) # based on Anderson table 5.3 for plain flap
+
 
 ################################################################################
 # COMPONENTS
@@ -88,13 +91,13 @@ class Powerplant: # the powerplant system configuration
     generator = None # generator object
     percentElectric = None # number : (0 <= x <= 1) # how much of the output energy comes from electricity
     generatorOn = None # bool # is the generator on, giving energy to the battery?
-    
-    
+
+
     @property
     def fuelMass(self):
         mg = self.gas.mass if self.gas is not None else 0
         mb = self.battery.mass if self.battery is not None else 0
-        
+
         return mg + mb
 
 class Gas:
@@ -105,7 +108,7 @@ class Battery:
     mass = None # number [kg] : (0 <= x)
     energyDensity = None # number [W*h/kg] : (0 <= x)
     energy = None # number [J] : (0 <= x)
-    
+
 class Generator:
     efficiency = None # number : (0 <= x <= 1)
     power = None # number : (0 <= x) # most efficient power setting, the only one we'll run it at
@@ -120,34 +123,34 @@ class Component:
 class Fuselage(Component):
     diameter = None # number [m] : (0 <= x)
     length = None # number [m]
-    
+
     def __init__(self, interferenceFactor, diameter, length):
         self.interferenceFactor = interferenceFactor
         self.referenceLength = diameter
         self.diameter = diameter
         self.length = length
-    
+
     @property
     def finenessRatio(self):
         l = self.length
         D = self.diameter
-        
+
         return l / D
-    
+
     @property
     def formFactor(self):
         fr = self.finenessRatio
-        
+
         return 1 + 60 / fr**3 + fr / 400
-        
+
     @property
     def wettedArea(self):
         D = self.diameter
         l = self.length
         fr = self.finenessRatio
-        
+
         return pi * D * l * (1 - 2/fr)**(2/3) * (1 + 1/fr**2) # ASSUMPTION: modeling as "hotdog"
-        
+
     @property
     def weight(self):
         Sf = self.wettedArea
@@ -163,69 +166,69 @@ class Fuselage(Component):
 class Nacelle(Component):
     diameter = None
     length = None
-    
+
     def __init__(self, interferenceFactor, diameter, length):
         self.interferenceFactor = interferenceFactor
         self.referenceLength = diameter
         self.diameter = diameter
         self.length = length
-    
+
     @property
     def finenessRatio(self):
         l = self.length
         D = self.diameter
-        
+
         return l / D
-    
+
     @property
     def formFactor(self):
         fr = self.finenessRatio
-        
+
         return 1 + 0.35 / fr
-    
+
     @property
     def wettedArea(self):
         d = self.diameter
         l = self.length
-        
+
         return pi * d * l # ASSUMPTION: modeling as a cylinder
 
 class Surface(Component):
     planformArea = None
     thicknessToChord = None
-    
+
     def __init__(self, interferenceFactor, planformArea, thicknessToChord, span):
         self.interferenceFactor = interferenceFactor
         self.referenceLength = span
         self.thicknessToChord = thicknessToChord
         self.planformArea = planformArea
-    
+
     @property
     def formFactor(self):
         Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
         tc = self.thicknessToChord
-        
+
         return 1 + Zfactor * tc + 100 * tc**4
-    
+
     @property
     def wettedArea(self):
         S = self.planformArea
         tc = self.thicknessToChord
-        
+
         return S * 2 * (1+tc) # ASSUMPTION: modeling as a cylinder
-    
+
     @property
     def aspectRatio(self):
         S = self.planformArea
         b = self.referenceLength
-        
+
         return S/b
-    
+
     @property
     def chord(self):
         b = self.referenceLength
         AR = self.aspectRatio
-        
+
         return AR/b
 
 class Wing(Surface):

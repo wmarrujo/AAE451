@@ -29,7 +29,7 @@ designMission.segments = Segments([
 # STARTUP
 
 def _designMissionInitializeStartup(airplane, t, t0):
-    airplane.throttle = 0.1
+    airplane.throttle = 0.3
     airplane.position = 0
 
 def _designMissionCompletedStartup(airplane, t, t0):
@@ -46,14 +46,13 @@ designMission.segments["startup"].update = _designMissionUpdateStartup
 
 def _designMissionInitializeTakeoff(airplane, t, t0):
     airplane.throttle = 1
-    airplane.position = 0
 
 def _designMissionCompletedTakeoff(airplane, t, t0):
     return TakeoffSpeed(airplane) <= airplane.speed
 
 def _designMissionUpdateTakeoff(airplane, t, tstep):
     # see Raymer-v6 section 17.8.1 
-    acceleration = accelerationOnGround(airplane) # find acceleration from thrust, drag and ground friction
+    acceleration = AccelerationOnGround(airplane) # find acceleration from thrust, drag and ground friction
     airplane.speed += acceleration * tstep # update speed with acceleration
     airplane.position += airplane.speed * tstep # update position with speed
     UpdateFuel(airplane, tstep) # update the fuel

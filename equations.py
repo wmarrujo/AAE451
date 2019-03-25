@@ -24,7 +24,7 @@ def PayloadWeight(airplane):
     Wbag = heavyPassengerBagWeight if airplane.passengers <= 3 else lightPassengerBagWeight
     pax = airplane.passengers
     pilots = airplane.pilots
-
+    
     return (Wpax + Wbag) * pax + pilotWeight * pilots
 
 def FuelWeight(airplane):
@@ -49,41 +49,21 @@ def AirplaneDynamicPressure(airplane):
     
     return 0.5 * rho * V**2
 
-def accelerationOnGround(airplane):
+def AccelerationOnGround(airplane):
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
     D = AirplaneDrag(airplane)
     L = AirplaneLift(airplane)
     mu = runwayFrictionCoefficientNoBrakes
-
-    return g/W * (T - D - mu*(W-L))
-
-def accelerationOnGroundLanding(airplane):
-    W = AirplaneWeight(airplane)
-    T = AirplaneThrust(airplane)
-    D = LandingAirplaneDrag(airplane)
-    L = LandingAirplaneLift(airplane)
-    mu = runwayFrictionCoefficientWithBrakes
-
-    return g/W * (T - D - mu*(W-L))
-
-def AirplaneThrust(airplane):
-    V = airplane.speed
-    if V < 1: # FIXME: find actual static thrust value of propeller & use that
-        V = 1 # m/s
-    Ts = []
-    for engine in airplane.engines:
-        P = enginePower(airplane, engine)
-        etap = engine.propeller.efficiency
-
-        Ts += [P*etap / V]
-
-    return sum(Ts)
+    
+    F = T - D - mu*(W-L)
+    m = W/g
+    return F/m
 
 def enginePower(airplane, engine):
     th = airplane.throttle
     maxP = engine.maxPower
-
+    
     return th * maxP
 
 def AllEnginesPower(airplane):
@@ -91,11 +71,12 @@ def AllEnginesPower(airplane):
     engines = airplane.engines
     maxPs = [engine.maxPower for engine in engines]
     P = sum([th*maxP for maxP in maxPs])
-
+    
     return P
 
-def TotalThrust(airplane):
+def AirplaneThrust(airplane):
     V = airplane.speed
+    V = 20 if V < 20 else V # m/s # FIXME: find actual static thrust value of propeller & use that
     th = airplane.throttle
     engines = airplane.engines
     maxPs = [engine.maxPower for engine in engines]
@@ -110,7 +91,7 @@ def AirplaneDrag(airplane):
     q = AirplaneDynamicPressure(airplane)
     S = WingPlanformArea(airplane)
     CD = DragCoefficient(airplane) 
-
+    
     return q * S * CD
 
 def WingPlanformArea(airplane):
@@ -132,7 +113,7 @@ def ParasiteDrag(airplane):
         Qi = component.interferenceFactor
         Cfi = ComponentSkinFrictionCoefficient(airplane, component)
         Sweti = component.wettedArea
-
+        
         return FFi * Qi * Cfi * Sweti / Sref
     
     CD0Prediction = sum([componentDragContribution(component) for component in airplane.components])
@@ -146,6 +127,7 @@ def ComponentSkinFrictionCoefficient(airplane, component):
     L = component.referenceLength
     
     Re = rho * V * L / mu
+    Re = 10 if Re == 0 else Re # make sure log10 has a value
     return 0.455 / (log10(Re)**2.58) # TODO: better approximation?
 
 def InducedDrag(airplane):
@@ -159,7 +141,7 @@ def DragCoefficient(airplane):
     CD0 = ParasiteDrag(airplane)
     CDi = InducedDrag(airplane)
     CDc = airplane.compressibilityDrag
-
+    
     return CD0 + CDi + CDc
 
 def SteadyLevelFlightLiftCoefficient(airplane):
@@ -208,7 +190,6 @@ from matplotlib.pyplot import * # DEBUG: just to see, remove later
 
 def MaxExcessPower(airplane):
     Vguess = airplane.speed
-    print("V: ", Vguess)
     
     def functionToMinimize(V):
         A = copy.deepcopy(airplane) # make sure we're not messing stuff up
@@ -222,7 +203,7 @@ def MaxExcessPower(airplane):
     return maxExcessPower
 
 def powerAvailableAtAltitude(airplane):
-    T = TotalThrust(airplane)
+    T = AirplaneThrust(airplane)
     V = airplane.speed
     
     return T*V
@@ -290,7 +271,7 @@ def UpdateFuel(airplane, tstep):
     Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
     
     if battery is not None:
-       battery.energy -= Eb
+        battery.energy -= Eb
     if gas is not None:
         gas.mass -= Eg/gas.energyDensity
 

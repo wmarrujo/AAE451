@@ -61,11 +61,14 @@ airplane.angleOfAttack = 0
 ################################################################################
 
 def recordingFunction(t, segmentName, airplane):
-    print("{0:02.0f}:{1:02.0f}:{2:02.0f} {3} | {4:.0f} ".format(
-        floor(t/(60*60)),
-        floor(t/60)%60,
-        t%60,
-        segmentName,
-        AirplaneWeight(airplane)))
+    print("{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f} {segment} | W:{weight:5.0f} lbs - x:{position:5.0f} ft - h:{altitude:5.0f} ft - V:{speed:5.0f} kts".format(
+        hours=floor(t/(60*60)),
+        minutes=floor(t/60)%60,
+        seconds=t%60,
+        segment=segmentName,
+        weight=convert(AirplaneWeight(airplane), "N", "lb"),
+        position=convert(airplane.position, "m", "ft"),
+        altitude=convert(airplane.altitude, "m", "ft"),
+        speed=convert(airplane.speed, "m/s", "kts")))
 
 designMission.simulate(1, airplane, recordingFunction)

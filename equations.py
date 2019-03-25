@@ -55,7 +55,16 @@ def accelerationOnGround(airplane):
     D = AirplaneDrag(airplane)
     L = AirplaneLift(airplane)
     mu = runwayFrictionCoefficientNoBrakes
-    
+
+    return g/W * (T - D - mu*(W-L))
+
+def accelerationOnGroundLanding(airplane):
+    W = AirplaneWeight(airplane)
+    T = AirplaneThrust(airplane)
+    D = LandingAirplaneDrag(airplane)
+    L = LandingAirplaneLift(airplane)
+    mu = runwayFrictionCoefficientWithBrakes
+
     return g/W * (T - D - mu*(W-L))
 
 def AirplaneThrust(airplane):
@@ -66,15 +75,15 @@ def AirplaneThrust(airplane):
     for engine in airplane.engines:
         P = enginePower(airplane, engine)
         etap = engine.propeller.efficiency
-        
+
         Ts += [P*etap / V]
-    
+
     return sum(Ts)
 
 def enginePower(airplane, engine):
     th = airplane.throttle
     maxP = engine.maxPower
-    
+
     return th * maxP
 
 def AllEnginesPower(airplane):
@@ -82,7 +91,7 @@ def AllEnginesPower(airplane):
     engines = airplane.engines
     maxPs = [engine.maxPower for engine in engines]
     P = sum([th*maxP for maxP in maxPs])
-    
+
     return P
 
 def TotalThrust(airplane):
@@ -123,7 +132,7 @@ def ParasiteDrag(airplane):
         Qi = component.interferenceFactor
         Cfi = ComponentSkinFrictionCoefficient(airplane, component)
         Sweti = component.wettedArea
-        
+
         return FFi * Qi * Cfi * Sweti / Sref
     
     CD0Prediction = sum([componentDragContribution(component) for component in airplane.components])
@@ -218,35 +227,6 @@ def powerAvailableAtAltitude(airplane):
     
     return T*V
 
-# def powerAvailableAtAltitude(airplane):
-#     TAalt = thrustAvailableAtAlitude(airplane)
-#     V = airplane.speed
-# 
-#     return TAalt * V
-# 
-# def thrustAvailableAtAlitude(airplane):
-#     ct = coefficientOfThrust(airplane)
-#     rhoAlt = densityAtAltitude(airplane.altitude)
-#     n = 2200 # FIXME: figure out how to calculate
-#     d = airplane.propeller.diameter
-# 
-#     return ct * rhoAlt * n**2 * d ** 4
-# 
-# def coefficientOfThrust(airplane):
-#     cp = coefficientOfPower(airplane)
-#     etap = airplane.propeller.efficiency
-#     V = airplane.speed
-# 
-#     return cp * etap / V
-# 
-# def coefficientOfPower(airplane):
-#     Peng = allEnginesPower(airplane)
-#     rhoAlt = densityAtAltitude(airplane.altitude)
-#     n = 2200 # FIXME: figure out how to calculate
-#     d = airplane.propeller.diameter
-# 
-#     return Peng / ( rhoAlt * n**3 * d**5 )
-
 def PowerRequiredAtAltitude(airplane):
     PRSL = PowerRequiredAtSeaLevel(airplane)
     rhoSL = densityAtAltitude(0)
@@ -313,3 +293,67 @@ def UpdateFuel(airplane, tstep):
        battery.energy -= Eb
     if gas is not None:
         gas.mass -= Eg/gas.energyDensity
+
+################################################################################
+# COST FUNCTIONS
+################################################################################
+
+# This is based on the DAPCA IV model in Raymer v6 Ch. 18.4.2
+# DAPCA assumes all aluminum framing, but provides fudge factors to adjust hour calculations
+
+def engineeringHours(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    Q = Aiplane.productionQuantityNeeded
+    
+    return 5.18 * (We**0.777) * (V**0.894) * (Q**0.163)
+
+def toolingHours(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    Q = Aiplane.productionQuantityNeeded
+    
+    return 7.22 * (We**0.777) * (V**0.696) * (Q**0.263)
+
+def manufacturingHours(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    Q = Aiplane.productionQuantityNeeded
+    
+    return 10.5 * (We**0.82) * (V**0.484) * (Q**0.641)
+
+def qualityControlHours(airplane):
+    mfgHours = manufacturingHours(airplane)
+    
+    return 0.133 * mfgHours
+
+def developmentSupportCost(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    iR = inflation2012to2019
+    
+    return iR * 67.4 * (We**0.630) * (V**1.3)
+
+def flightTestCost(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    FTA = airplane.numberFlightTestAircraft
+    iR = inflation2012to2019
+    
+    return iR * 1947 * (We**0.325) * (V**0.822) * (FTA**1.21)
+
+def manufacturingMaterialsCost(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    Q = Aiplane.productionQuantityNeeded
+    iR = inflation2012to2019
+    
+    return iR * 31.2 * (We**0.921) * (V**0.621) * (Q**0.799)
+
+def passengerAdditionalCost(airplane):
+    N = airplane.passengers
+    P = airplane.pilot
+    Cp = generalAviationPassengerCostFactor
+    iR = inflation2012to2019
+    
+    return Cp * iR * (N + P)

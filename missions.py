@@ -16,7 +16,7 @@ designMission.pilots = 1
 designMission.segments = Segments([
     Segment("startup"),
     Segment("takeoff"),
-    Segment("climb")#,
+    Segment("climb"),
     # Segment("cruise"),
     # Segment("descent"),
     # Segment("abortClimb"),
@@ -92,11 +92,11 @@ designMission.segments["climb"].update = _designMissionUpdateClimb
 # def _designMissionUpdateCruise(airplane, t, tstep):
 #     pass
 #     # use constant CL strategy in Raymer to get level flight
-# 
+#
 # designMission.segments["cruise"].initialize = _designMissionInitializeCruise
 # designMission.segments["cruise"].completed = _designMissionCompletedCruise
 # designMission.segments["cruise"].update = _designMissionUpdateCruise
-# 
+#
 # # DESCENT
 # 
 # def _designMissionInitializeDescent(airplane, t, t0):
@@ -107,11 +107,11 @@ designMission.segments["climb"].update = _designMissionUpdateClimb
 # 
 # def _designMissionUpdateDescent(airplane, t, tstep):
 #     pass
-# 
+#
 # designMission.segments["descent"].initialize = _designMissionInitializeDescent
 # designMission.segments["descent"].completed = _designMissionCompletedDescent
 # designMission.segments["descent"].update = _designMissionUpdateDescent
-# 
+#
 # # ABORT CLIMB
 # 
 # def _designMissionInitializeAbortClimb(airplane, t, t0):
@@ -122,11 +122,11 @@ designMission.segments["climb"].update = _designMissionUpdateClimb
 # 
 # def _designMissionUpdateAbortClimb(airplane, t, tstep):
 #     pass
-# 
+#
 # designMission.segments["abortClimb"].initialize = _designMissionInitializeAbortClimb
 # designMission.segments["abortClimb"].completed = _designMissionCompletedAbortClimb
 # designMission.segments["abortClimb"].update = _designMissionUpdateAbortClimb
-# 
+#
 # # LOITER
 # 
 # def _designMissionInitializeLoiter(airplane, t, t0):
@@ -138,11 +138,11 @@ designMission.segments["climb"].update = _designMissionUpdateClimb
 # def _designMissionUpdateLoiter(airplane, t, tstep):
 #     pass
 #     # use constant CL strategy in Raymer to get level flight
-# 
+#
 # designMission.segments["loiter"].initialize = _designMissionInitializeLoiter
 # designMission.segments["loiter"].completed = _designMissionCompletedLoiter
 # designMission.segments["loiter"].update = _designMissionUpdateLoiter
-# 
+#
 # # ABORT DESCENT
 # 
 # def _designMissionInitializeAbortDescent(airplane, t, t0):
@@ -153,38 +153,42 @@ designMission.segments["climb"].update = _designMissionUpdateClimb
 # 
 # def _designMissionUpdateAbortDescent(airplane, t, tstep):
 #     pass
-# 
+#
 # designMission.segments["abortDescent"].initialize = _designMissionInitializeAbortDescent
 # designMission.segments["abortDescent"].completed = _designMissionCompletedAbortDescent
 # designMission.segments["abortDescent"].update = _designMissionUpdateAbortDescent
-# 
+#
 # # LANDING
 # 
-# def _designMissionInitializeLanding(airplane, t, t0):
-#     airplane.altitude = obstacleHeight
-#     airplane.throttle = 0.1
+# def _designMissionInitializeLanding(Airplane, t, t0):
+#     Airplane.altitude = obstacleHeight
+#     Airplane.throttle = 0.1
 # 
-# def _designMissionCompletedLanding(airplane, t, t0):
-#     return airplane.speed == 0
+# def _designMissionCompletedLanding(Airplane, t, t0):
+#     return Airplane.speed == 0
 # 
-# def _designMissionUpdateLanding(airplane, t, tstep):
-#     pass
+# def _designMissionUpdateLanding(Airplane, t, tstep):
+#     # see Raymer-v6 section 17.8.1
+#     acceleration = accelerationOnGroundLanding(Airplane) # find acceleration from thrust, drag and ground friction
+#     airplane.speed += acceleration * tstep # update speed with acceleration
+#     airplane.position += airplane.speed * tstep # update position with speed
+#     updateFuel(Airplane) # update the fuel
 # 
 # designMission.segments["landing"].initialize = _designMissionInitializeLanding
 # designMission.segments["landing"].completed = _designMissionCompletedLanding
 # designMission.segments["landing"].update = _designMissionUpdateLanding
-# 
+
 # # SHUTDOWN
-# 
-# def _designMissionInitializeShutdown(airplane, t, t0):
-#     airplane.throttle = 0.1
-# 
-# def _designMissionCompletedShutdown(airplane, t, t0):
+#
+# def _designMissionInitializeShutdown(Airplane, t, t0):
+#     Airplane.throttle = 0.1
+#
+# def _designMissionCompletedShutdown(Airplane, t, t0):
 #     return convert(10, "min", "s") <= t - t0
-# 
-# def _designMissionUpdateShutdown(airplane, t, tstep):
+#
+# def _designMissionUpdateShutdown(Airplane, t, tstep):
 #     pass
-# 
+#
 # designMission.segments["shutdown"].initialize = _designMissionInitializeShutdown
 # designMission.segments["shutdown"].completed = _designMissionCompletedShutdown
 # designMission.segments["shutdown"].update = _designMissionUpdateShutdown

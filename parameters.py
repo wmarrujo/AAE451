@@ -70,6 +70,9 @@ class Airplane:
     emptyWeight = None # number [N] : (0 <= x) # TODO: replace with component weight, will delete this parameter later
     takeoffLiftCoefficient = 1.5  # number : (0 <= x) # based on Anderson table 5.3 for plain flap
     landingLiftCoefficient = 1.85  # number : (0 <= x) # based on Anderson table 5.3 for plain flap
+    productionQuantityNeeded = None  # number [planes] : (0 <= x)
+    numberFlightTestAircraft = None  # number [planes] : (2 <= x <= 6)  # Raymer v6 18.4.2
+    avionicsCost = None  # number [USD] : (0 <= x) 
 
 
 ################################################################################
@@ -84,6 +87,7 @@ class Propeller:
 class Engine: # the engines/motors that drive the propeller
     maxPower = None # number [W] : (0 <= x)
     propeller = None # propeller object
+    cost = None # number [USD] : (0 <= x)
 
 class Powerplant: # the powerplant system configuration
     gas = None # gas object

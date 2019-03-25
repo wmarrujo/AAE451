@@ -16,13 +16,13 @@ designMission.pilots = 1
 designMission.segments = Segments([
     Segment("startup"),
     Segment("takeoff"),
-    Segment("climb")#,
+    Segment("climb"),
     # Segment("cruise"),
     # Segment("descent"),
     # Segment("abortClimb"),
     # Segment("loiter"),
     # Segment("abortDescent"),
-    # Segment("landing"),
+    Segment("landing"),
     # Segment("shutdown")
     ])
 

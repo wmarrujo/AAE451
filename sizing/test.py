@@ -15,7 +15,10 @@ from missions import *
 # AIRPLANE DEFINITION
 ################################################################################
 
+airfoil = Airfoil("./data/SF1.csv")
 wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"))
+wing.maximumLiftCoefficient = 2
+wing.airfoil = airfoil
 gas = Gas()
 gas.mass = convert(400, "lb", "N")/g
 gas.energyDensity = avgasEnergyDensity
@@ -46,17 +49,23 @@ airplane.flightPathAngle = 0
 airplane.wing = wing
 airplane.powerplant = powerplant
 airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
-airplane.components = [wing, engineL, engineR] # [component objects] # list of components making up airplane (including wing)
+airplane.components = [wing] # [component objects] # list of components making up airplane (including wing)
 airplane.oswaldEfficiencyFactor = 0.8
 airplane.compressibilityDrag = 0
 airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
 airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with component weight buildup
+airplane.angleOfAttack = 0
 
 ################################################################################
 # EVALUATION
 ################################################################################
 
 def recordingFunction(t, segmentName, airplane):
-    print(convert(t, "s", "min"), segmentName, AirplaneWeight(airplane))
+    print("{0:02.0f}:{1:02.0f}:{2:02.0f} {3} | {4:.0f} ".format(
+        floor(t/(60*60)),
+        floor(t/60)%60,
+        t%60,
+        segmentName,
+        AirplaneWeight(airplane)))
 
 designMission.simulate(1, airplane, recordingFunction)

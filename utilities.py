@@ -23,3 +23,10 @@ def first(iterable, condition = lambda x: True):
     """
 
     return next(x for x in iterable if condition(x))
+
+def transpose(matrix):
+    """
+    transposes a 2 dimensional list
+    """
+    
+    return [[matrix[r][c] for r in range(len(matrix))] for c in range(len(matrix[0]))]

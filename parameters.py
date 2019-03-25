@@ -1,4 +1,5 @@
 from utilities import *
+from csvTools import *
 from convert import convert
 from scipy import *
 
@@ -20,7 +21,6 @@ class Mission:
                 segment.update(Airplane, t, tstep)
                 recordingFunction(t, segment.name, Airplane)
                 
-                t0 = t
                 t = t + tstep
                 iteration += 1
 
@@ -67,6 +67,7 @@ class Airplane:
     compressibilityDrag = 0 # number : (0 = x) # we fly too slow
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
     emptyWeight = None # number [N] : (0 <= x) # TODO: replace with component weight, will delete this parameter later
+    angleOfAttack = None # number [rad]
 
 ################################################################################
 # COMPONENTS
@@ -178,8 +179,9 @@ class Nacelle(Component):
         return pi * d * l # ASSUMPTION: modeling as a cylinder
 
 class Surface(Component):
-    planformArea = None
-    thicknessToChord = None
+    planformArea = None # number [m^2] : (0 <= x)
+    thicknessToChord = None # number : (0 <= x)
+    airfoil = None # airfoil object
     
     def __init__(self, interferenceFactor, planformArea, thicknessToChord, span):
         self.interferenceFactor = interferenceFactor
@@ -204,16 +206,38 @@ class Surface(Component):
     @property
     def aspectRatio(self):
         S = self.planformArea
-        b = self.referenceLength
+        b = self.span
         
         return S/b
     
     @property
+    def span(self):
+        return self.referenceLength
+    
+    @property
     def chord(self):
-        b = self.referenceLength
+        b = self.span
         AR = self.aspectRatio
         
         return AR/b
 
 class Wing(Surface):
-    pass
+    maximumLiftCoefficient = None # number
+
+class Airfoil:
+    data = None # the dictionary containing aerodynamic information
+    
+    def __init__(self, filepath):
+        self.data = CSVToDict(filepath)
+    
+    def liftCoefficientAtAngleOfAttack(self, angleOfAttack):
+        a = angleOfAttack*180/pi # gets angleOfAttack in radians, csv in degrees
+        f = functionFromPairs(pairsFromColumns(self.data, "alpha", "CL"))
+        
+        return f(a)
+    
+    @property
+    def maximumLiftCoefficient(self):
+        CLs = self.data["CL"]
+        
+        return max(CLs)

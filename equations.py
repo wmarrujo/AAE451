@@ -5,263 +5,306 @@ from parameters import *
 from constants import *
 
 from scipy import *
+from scipy.optimize import minimize
 import copy
 
 ################################################################################
 # INFORMATION FUNCTIONS
 ################################################################################
 
-def AirplaneWeight(Airplane): # TODO: calculate with Airplane.mass?
-    Wpay = PayloadWeight(Airplane)
-    Wfuel = FuelWeight(Airplane)
-    Wempty = EmptyWeight(Airplane)
+def AirplaneWeight(airplane): # TODO: calculate with airplane.mass?
+    Wpay = PayloadWeight(airplane)
+    Wfuel = FuelWeight(airplane)
+    Wempty = EmptyWeight(airplane)
     
     return Wpay + Wfuel + Wempty
 
-def PayloadWeight(Airplane):
-    Wpax = heavyPassengerWeight if Airplane.passengers <= 3 else lightPassengerWeight
-    Wbag = heavyPassengerBagWeight if Airplane.passengers <= 3 else lightPassengerBagWeight
-    pax = Airplane.passengers
-    pilots = Airplane.pilots
+def PayloadWeight(airplane):
+    Wpax = heavyPassengerWeight if airplane.passengers <= 3 else lightPassengerWeight
+    Wbag = heavyPassengerBagWeight if airplane.passengers <= 3 else lightPassengerBagWeight
+    pax = airplane.passengers
+    pilots = airplane.pilots
 
     return (Wpax + Wbag) * pax + pilotWeight * pilots
 
-def FuelWeight(Airplane):
-    mf = Airplane.powerplant.fuelMass
+def FuelWeight(airplane):
+    mf = airplane.powerplant.fuelMass
     
     return mf/g
 
-def EmptyWeight(Airplane):
-    Airplane.emptyWeight # TODO: temporary, replace with component weight buildup later
+def EmptyWeight(airplane):
+    return airplane.emptyWeight # TODO: temporary, replace with component weight buildup later
 
-def AirplaneReynoldsNumber(Airplane):
-    rho = densityAtAltitude(Airplane.altitude)
-    V = Airplane.speed
-    L = Airplane.wing.span
-    mu = dynamicViscosityAtAltitude(Airplane.altitude)
+def AirplaneReynoldsNumber(airplane):
+    rho = densityAtAltitude(airplane.altitude)
+    V = airplane.speed
+    L = airplane.wing.span
+    mu = dynamicViscosityAtAltitude(airplane.altitude)
     
     return rho * V * L / mu
 
-def AirplaneDynamicPressure(Airplane):
-    rho = densityAtAltitude(Airplane.altitude)
-    V = Airplane.speed
+def AirplaneDynamicPressure(airplane):
+    rho = densityAtAltitude(airplane.altitude)
+    V = airplane.speed
     
     return 0.5 * rho * V**2
 
-def accelerationOnGround(Airplane):
-    W = AirplaneWeight(Airplane)
-    T = AirplaneThrust(Airplane)
-    D = AirplaneDrag(Airplane)
-    L = AirplaneLift(Airplane)
+def accelerationOnGround(airplane):
+    W = AirplaneWeight(airplane)
+    T = AirplaneThrust(airplane)
+    D = AirplaneDrag(airplane)
+    L = AirplaneLift(airplane)
     mu = runwayFrictionCoefficientNoBrakes
     
     return g/W * (T - D - mu*(W-L))
 
-def AirplaneThrust(Airplane):
-    V = Airplane.speed
+def AirplaneThrust(airplane):
+    V = airplane.speed
+    if V < 1: # FIXME: find actual static thrust value of propeller & use that
+        V = 1 # m/s
     Ts = []
-    for engine in Airplane.engines:
-        P = enginePower(Airplane, engine)
+    for engine in airplane.engines:
+        P = enginePower(airplane, engine)
         etap = engine.propeller.efficiency
         
         Ts += [P*etap / V]
     
     return sum(Ts)
 
-def enginePower(Airplane, engine):
-    th = Airplane.throttle
+def enginePower(airplane, engine):
+    th = airplane.throttle
     maxP = engine.maxPower
     
     return th * maxP
 
-def allEnginesPower(Airplane):
-    th = Airplane.throttle
-    engines = Airplane.engines
+def AllEnginesPower(airplane):
+    th = airplane.throttle
+    engines = airplane.engines
     maxPs = [engine.maxPower for engine in engines]
     P = sum([th*maxP for maxP in maxPs])
     
     return P
 
-def AirplaneDrag(Airplane):
-    q = AirplaneDynamicPressure(Airplane)
-    S = WingPlanformArea(Airplane)
-    CD = DragCoefficient(Airplane) 
+def TotalThrust(airplane):
+    V = airplane.speed
+    th = airplane.throttle
+    engines = airplane.engines
+    maxPs = [engine.maxPower for engine in engines]
+    Ps = [th*maxP for maxP in maxPs]
+    etaps = [engine.propeller.efficiency for engine in engines]
+    PAs = [P*etap for (P, etap) in zip(Ps, etaps)]
+    Ts = [PA/V for PA in PAs]
+    
+    return sum(Ts)
+
+def AirplaneDrag(airplane):
+    q = AirplaneDynamicPressure(airplane)
+    S = WingPlanformArea(airplane)
+    CD = DragCoefficient(airplane) 
 
     return q * S * CD
 
-def WingPlanformArea(Airplane):
-    b = wing.span
-    c = wing.chord
+def WingPlanformArea(airplane):
+    b = airplane.wing.span
+    c = airplane.wing.chord
     
     return b * c
 
-def ParasiteDrag(Airplane, Mission, missionSegment): # FIXME: not working
-    altitude = Airplane.altitude
+def ParasiteDrag(airplane):
+    altitude = airplane.altitude
     rho = densityAtAltitude(altitude)
-    V = Airplane.speed
+    V = airplane.speed
     mu = dynamicViscosityAtAltitude(altitude)
-    Sref = WingPlanformArea(Airplane)
-    CD0miscFactor = Airplane.miscellaneousParasiteDragFactor
+    Sref = WingPlanformArea(airplane)
+    CD0miscFactor = airplane.miscellaneousParasiteDragFactor
     
     def componentDragContribution(component):
         FFi = component.formFactor
         Qi = component.interferenceFactor
-        Cfi = ComponentSkinFrictionCoefficient(Airplane, Component)
+        Cfi = ComponentSkinFrictionCoefficient(airplane, component)
         Sweti = component.wettedArea
         
         return FFi * Qi * Cfi * Sweti / Sref
     
-    CD0Prediction = sum([componentDragContribution(component) for component in Airplane.components])
+    CD0Prediction = sum([componentDragContribution(component) for component in airplane.components])
     
     return CD0Prediction * (1+CD0miscFactor)
 
-def ComponentSkinFrictionCoefficient(Airplane, Component):
-    rho = densityAtAltitude(Airplane.altitude)
-    mu = dynamicViscosityAtAltitude(Airplane.altitude)
-    V = Airplane.speed
-    L = Component.referenceLength
+def ComponentSkinFrictionCoefficient(airplane, component):
+    rho = densityAtAltitude(airplane.altitude)
+    mu = dynamicViscosityAtAltitude(airplane.altitude)
+    V = airplane.speed
+    L = component.referenceLength
     
     Re = rho * V * L / mu
     return 0.455 / (log10(Re)**2.58) # TODO: better approximation?
 
-def InducedDrag(Airplane):
-    CL = LiftCoefficient(Airplane)
-    AR = Airplane.aspectRatio
-    e = Airplane.oswaldEfficiencyFactor
+def InducedDrag(airplane):
+    CL = LiftCoefficient(airplane)
+    AR = airplane.wing.aspectRatio
+    e = airplane.oswaldEfficiencyFactor
     
     return CL**2 / (pi * AR * e)
 
-def DragCoefficient(Airplane):
-    CD0 = ParasiteDrag(Airplane, Mission, missionSegment)
-    CDi = InducedDrag(Airplane)
-    CDc = Airplane.compressibilityDrag
+def DragCoefficient(airplane):
+    CD0 = ParasiteDrag(airplane)
+    CDi = InducedDrag(airplane)
+    CDc = airplane.compressibilityDrag
 
     return CD0 + CDi + CDc
 
-def SteadyLevelFlightLiftCoefficient(Airplane):
-    qinf = AirplaneDynamicPressure(Airplane)
-    W = AirplaneWeight(Airplane)
-    S = WingPlanformArea(Airplane)
+def SteadyLevelFlightLiftCoefficient(airplane):
+    qinf = AirplaneDynamicPressure(airplane)
+    W = AirplaneWeight(airplane)
+    S = WingPlanformArea(airplane)
     
     return W / (qinf * S)
 
-def LiftCoefficient(Airplane):
-    pass
+def LiftCoefficient(airplane):
+    a = airplane.angleOfAttack
+    CL = airplane.wing.airfoil.liftCoefficientAtAngleOfAttack(a)
+    
+    return CL
 
-def AirplaneLift(Airplane):
-    q = AirplaneDynamicPressure(Airplane)
-    S = WingPlanformArea(Airplane)
-    CL = LiftCoefficient(Airplane)
+def AirplaneLift(airplane):
+    q = AirplaneDynamicPressure(airplane)
+    S = WingPlanformArea(airplane)
+    CL = LiftCoefficient(airplane)
     
     return q * S * CL
 
-def climbRangeCredit(Airplane, tstep):
-    rangeRate = climbRangeRate(Airplane)
+def ClimbRangeCredit(airplane, tstep):
+    rangeRate = ClimbRangeRate(airplane, tstep)
     
     return rangeRate * tstep
 
-def climbRangeRate(Altitude, tstep):
-    climbRate = climbAltitudeRate(Airplane)
-    flightPathAngle = Airplane.flightPathAngle
+def ClimbRangeRate(airplane, tstep):
+    climbRate = ClimbAltitudeRate(airplane)
+    flightPathAngle = airplane.flightPathAngle
     
     return climbRate / tan(flightPathAngle)
 
-def climbAltitudeCredit(Airplane, tstep):
-    climbRate = climbAltitudeRate(Airplane)
+def ClimbAltitudeCredit(airplane, tstep):
+    climbRate = ClimbAltitudeRate(airplane)
     
     return climbRate * tstep
 
-def climbAltitudeRate(Airplane):
-    excessPower = maxExcessPower(Airplane)
-    W = AirplaneWeight(Airplane)
+def ClimbAltitudeRate(airplane):
+    excessPower = MaxExcessPower(airplane)
+    W = AirplaneWeight(airplane)
     
     return excessPower / W
 
-def maxExcessPower(Airplane):
-    Vguess = Airplane.speed
+from matplotlib.pyplot import * # DEBUG: just to see, remove later
+
+def MaxExcessPower(airplane):
+    Vguess = airplane.speed
+    print("V: ", Vguess)
+    
     def functionToMinimize(V):
-        A = copy.deepcopy(Airplane) # make sure we're not messing stuff up
-        A.speed = V # allow the sub-calculations to use the speed passed in
+        A = copy.deepcopy(airplane) # make sure we're not messing stuff up
+        A.speed = V[0] # allow the sub-calculations to use the speed passed in
         
-        return powerAvailableAtAltitude(A) - PowerRequiredAtAltitude(A)
+        return -(powerAvailableAtAltitude(A) - PowerRequiredAtAltitude(A))
     
-    return minimize(functionToMinimize, [Vguess])
+    result = minimize(functionToMinimize, [Vguess], bounds=[(0, None)])
+    maxExcessPower = -functionToMinimize(result["x"])
+    
+    return maxExcessPower
 
-def powerAvailableAtAltitude(Airplane):
-    TAalt = thrustAvailableAtAlitude(Airplane)
-    V = Airplane.speed
+def powerAvailableAtAltitude(airplane):
+    T = TotalThrust(airplane)
+    V = airplane.speed
     
-    return TAalt * V
-    
-def thrustAvailableAtAlitude(Airplane):
-    ct = coefficientOfThrust(Airplane)
-    rhoAlt = densityAtAltitude(Airplane.altitude)
-    n = Airplane.engine.PmaxRotationRate
-    d = Airplane.propeller.diameter
-    
-    return ct * rhoAlt * n**2 * d ** 4
-    
-def coefficientOfThrust(Airplane):
-    cp = coefficientOfPower(Airplane)
-    etap = Airplane.propeller.efficiency
-    V = Airplane.speed
-    
-    return cp * etap / V
-    
-def coefficientOfPower(Airplane):
-    Peng = allEnginesPower(Airplane)
-    rhoAlt = densityAtAltitude(Airplane.altitude)
-    n = Airplane.engine.PmaxRotationRate
-    d = Airplane.propeller.diameter
-    
-    return Peng / ( rhoAlt * n**3 * d**5 )
-    
+    return T*V
 
-def powerRequiredAtAltitude(Airplane):
-    PRSL = powerRequiredAtSeaLevel(Airplane)
+# def powerAvailableAtAltitude(airplane):
+#     TAalt = thrustAvailableAtAlitude(airplane)
+#     V = airplane.speed
+# 
+#     return TAalt * V
+# 
+# def thrustAvailableAtAlitude(airplane):
+#     ct = coefficientOfThrust(airplane)
+#     rhoAlt = densityAtAltitude(airplane.altitude)
+#     n = 2200 # FIXME: figure out how to calculate
+#     d = airplane.propeller.diameter
+# 
+#     return ct * rhoAlt * n**2 * d ** 4
+# 
+# def coefficientOfThrust(airplane):
+#     cp = coefficientOfPower(airplane)
+#     etap = airplane.propeller.efficiency
+#     V = airplane.speed
+# 
+#     return cp * etap / V
+# 
+# def coefficientOfPower(airplane):
+#     Peng = allEnginesPower(airplane)
+#     rhoAlt = densityAtAltitude(airplane.altitude)
+#     n = 2200 # FIXME: figure out how to calculate
+#     d = airplane.propeller.diameter
+# 
+#     return Peng / ( rhoAlt * n**3 * d**5 )
+
+def PowerRequiredAtAltitude(airplane):
+    PRSL = PowerRequiredAtSeaLevel(airplane)
     rhoSL = densityAtAltitude(0)
-    rhoAlt = densityAtAltitude(Airplane.altitude)
+    rhoAlt = densityAtAltitude(airplane.altitude)
     
     return PRSL * (rhoAlt / rhoSL)
-    
-def powerRequiredAtSeaLevel(Airplane):
-    TRSL = thrustRequiredAtSeaLevel(Airplane)
-    V = Airplane.speed
+
+def PowerRequiredAtSeaLevel(airplane):
+    TRSL = ThrustRequiredAtSeaLevel(airplane)
+    V = airplane.speed
     
     return TRSL * V
-    
-def thrustRequiredAtSeaLevel(Airplane):
-    LoD = currentLiftOverDrag(Airplane)
-    W = AirplaneWeight(Airplane)
+
+def ThrustRequiredAtSeaLevel(airplane):
+    LoD = CurrentLiftOverDrag(airplane)
+    W = AirplaneWeight(airplane)
     
     return W / LoD
     
-def currentLiftOverDrag(Airplane):
-    CL = SteadyLevelFlightLiftCoefficient(Airplane)
-    CD = DragCoefficient(Airplane)
+def CurrentLiftOverDrag(airplane):
+    CL = SteadyLevelFlightLiftCoefficient(airplane)
+    CD = DragCoefficient(airplane)
     
     return CL/CD
     
-def climbVelocity(Airplane):
-    flightPathAngle = Airplane.flightPathAngle
-    climbRate = climbAltitudeRate(Airplane)
+def ClimbVelocity(airplane):
+    flightPathAngle = airplane.flightPathAngle
+    climbRate = ClimbAltitudeRate(airplane)
     
     return climbRate / sin(flightPathAngle)
+
+def TakeoffSpeed(airplane):
+    Vstall = StallSpeed(airplane)
+    
+    return 1.2*Vstall
+
+def StallSpeed(airplane):
+    W = AirplaneWeight(airplane)
+    rho = densityAtAltitude(airplane.altitude)
+    S = airplane.wing.planformArea
+    CLmax = airplane.wing.maximumLiftCoefficient
+    
+    return sqrt(2*W / (rho * S * CLmax))
 
 ################################################################################
 # UPDATING FUNCTIONS
 ################################################################################
 
-def updateFuel(Airplane, tstep):
-    P = allEnginesPower(Airplane)
+def UpdateFuel(airplane, tstep):
+    P = AllEnginesPower(airplane)
     E = P*tstep
-    gas = Airplane.powerplant.gas
-    battery = Airplane.powerplant.battery
+    gas = airplane.powerplant.gas
+    battery = airplane.powerplant.battery
     mg = gas.mass if gas is not None else 0
     mb = battery.mass if battery is not None else 0
-    generator = Airplane.powerplant.generator
-    percentElectric = Airplane.powerplant.percentElectric
-    generatorOn = Airplane.powerplant.generatorOn
+    generator = airplane.powerplant.generator
+    percentElectric = airplane.powerplant.percentElectric
+    generatorOn = airplane.powerplant.generatorOn
     
     Eb = E*percentElectric # energy requested of battery
     Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas

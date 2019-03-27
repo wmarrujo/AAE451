@@ -60,6 +60,8 @@ def functionFromPairs(pairs): # [(a, b)] -> a -> b
         except Exception as e:
             above = None
         if below == None and above != None: # under bounds
+            if a == pairs[0][0]:
+                return a
             return None
         elif below != None and above == None: # over bounds
             return None

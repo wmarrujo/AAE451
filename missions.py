@@ -70,10 +70,18 @@ def _designMissionCompletedClimb(airplane, t, t0):
     return cruiseAltitude <= airplane.altitude
 
 def _designMissionUpdateClimb(airplane, t, tstep):
-    airplane.altitude += ClimbAltitudeCredit(airplane, tstep)
-    airplane.position += ClimbRangeCredit(airplane, tstep)
-    airplane.speed = ClimbVelocity(airplane)
-    # TODO: update flight path angle
+    # climbstep = ClimbAltitudeCredit(airplane, tstep)
+    # rangestep = ClimbRangeCredit(airplane, tstep)
+    # airplane.altitude += climbstep
+    # airplane.position += rangestep
+    # airplane.flightPathAngle = arctan2(climbstep, rangestep)
+    # airplane.speed = ClimbVelocity(airplane)
+    
+    print(airplane.pitch, MaximumLiftOverDragAngleOfAttack(airplane)) # FIXME: maxLDAoA is negative!
+    airplane.flightPathAngle = airplane.pitch - MaximumLiftOverDragAngleOfAttack(airplane)
+    airplane.altitude += airplane.speed * sin(airplane.flightPathAngle) * tstep
+    airplane.position += airplane.speed * cos(airplane.flightPathAngle) * tstep
+    UpdateFuel(airplane, tstep)
 
 designMission.segments["climb"].initialize = _designMissionInitializeClimb
 designMission.segments["climb"].completed = _designMissionCompletedClimb

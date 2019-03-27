@@ -69,8 +69,8 @@ class Airplane:
     InitialGrossWeight = None # number : initial guess for gross weight, changes with iterations
     emptyWeight = None # number [N] : (0 <= x) # TODO: replace with component weight, will delete this parameter later
     angleOfAttack = None # number [rad]
-    takeoffLiftCoefficient = 1.5  # number : (0 <= x) # based on Anderson table 5.3 for plain flap # FIXME: figure out this takeoff/landing thing
-    landingLiftCoefficient = 1.85  # number : (0 <= x) # based on Anderson table 5.3 for plain flap
+    # takeoffLiftCoefficient = 1.5  # number : (0 <= x) # based on Anderson table 5.3 for plain flap # FIXME: figure out this takeoff/landing thing
+    # landingLiftCoefficient = 1.85  # number : (0 <= x) # based on Anderson table 5.3 for plain flap
     productionQuantityNeeded = None  # number [planes] : (0 <= x)
     numberFlightTestAircraft = None  # number [planes] : (2 <= x <= 6)  # Raymer v6 18.4.2
     avionicsCost = None  # number [USD] : (0 <= x) 
@@ -251,14 +251,22 @@ class Airfoil:
         self.data = CSVToDict(filepath)
     
     def liftCoefficientAtAngleOfAttack(self, angleOfAttack):
-        a = angleOfAttack*180/pi # gets angleOfAttack in radians, csv in degrees
+        a = convert(angleOfAttack, "rad", "deg") # gets angleOfAttack in radians, csv in degrees
         f = functionFromPairs(pairsFromColumns(self.data, "alpha", "CL"))
         
         return f(a)
     
     @property
+    def minimumDefinedAngleOfAttack(self):
+        return convert(float(self.data["alpha"][0]), "deg", "rad")
+    
+    @property
+    def maximumDefinedAngleOfAttack(self):
+        return convert(float(self.data["alpha"][-1]), "deg", "rad")
+    
+    @property
     def maximumLiftCoefficient(self):
-        CLs = self.data["CL"]
+        CLs = float(self.data["CL"])
         
         return max(CLs)
     

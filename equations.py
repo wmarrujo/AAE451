@@ -89,23 +89,17 @@ def AirplaneThrust(airplane):
 
 def AirplaneDrag(airplane):
     q = AirplaneDynamicPressure(airplane)
-    S = WingPlanformArea(airplane)
-    CD = DragCoefficient(airplane) 
+    S = airplane.wing.planformArea
+    CD = DragCoefficient(airplane)
     
     return q * S * CD
-
-def WingPlanformArea(airplane):
-    b = airplane.wing.span
-    c = airplane.wing.chord
-    
-    return b * c
 
 def ParasiteDrag(airplane):
     altitude = airplane.altitude
     rho = densityAtAltitude(altitude)
     V = airplane.speed
     mu = dynamicViscosityAtAltitude(altitude)
-    Sref = WingPlanformArea(airplane)
+    Sref = airplane.wing.planformArea
     CD0miscFactor = airplane.miscellaneousParasiteDragFactor
     
     def componentDragContribution(component):
@@ -144,95 +138,166 @@ def DragCoefficient(airplane):
     
     return CD0 + CDi + CDc
 
-def SteadyLevelFlightLiftCoefficient(airplane):
-    qinf = AirplaneDynamicPressure(airplane)
-    W = AirplaneWeight(airplane)
-    S = WingPlanformArea(airplane)
-    
-    return W / (qinf * S)
+# def SteadyLevelFlightLiftCoefficient(airplane):
+#     qinf = AirplaneDynamicPressure(airplane)
+#     W = AirplaneWeight(airplane)
+#     S = airplane.wing.planformArea
+# 
+#     return W / (qinf * S)
 
 def LiftCoefficient(airplane):
-    a = airplane.angleOfAttack
+    a = airplane.pitch - airplane.flightPathAngle
     CL = airplane.wing.airfoil.liftCoefficientAtAngleOfAttack(a)
     
     return CL
 
 def AirplaneLift(airplane):
     q = AirplaneDynamicPressure(airplane)
-    S = WingPlanformArea(airplane)
+    S = airplane.wing.planformArea
     CL = LiftCoefficient(airplane)
     
     return q * S * CL
 
-def ClimbRangeCredit(airplane, tstep):
-    rangeRate = ClimbRangeRate(airplane, tstep)
-    
-    return rangeRate * tstep
+# TODO: implement
+# angle of attack for best L/D
+# speed for max excess power (lowest PA-PR (T*V-D*V)) at that angle of attack
+# thrust at speed for max excess power
+# pitch such that weight and drag is offset by thrust and lift
 
-def ClimbRangeRate(airplane, tstep):
-    climbRate = ClimbAltitudeRate(airplane)
-    flightPathAngle = airplane.flightPathAngle
+def MaximumLiftOverDragAngleOfAttack(airplane):
+    aguess = airplane.pitch - airplane.flightPathAngle
+    amin = airplane.wing.airfoil.minimumDefinedAngleOfAttack
+    amax = airplane.wing.airfoil.maximumDefinedAngleOfAttack
     
-    return climbRate / tan(flightPathAngle)
-
-def ClimbAltitudeCredit(airplane, tstep):
-    climbRate = ClimbAltitudeRate(airplane)
-    
-    return climbRate * tstep
-
-def ClimbAltitudeRate(airplane):
-    excessPower = MaxExcessPower(airplane)
-    W = AirplaneWeight(airplane)
-    
-    return excessPower / W
-
-from matplotlib.pyplot import * # DEBUG: just to see, remove later
-
-def MaxExcessPower(airplane):
-    Vguess = airplane.speed
-    
-    def functionToMinimize(V):
+    def functionToMinimize(a):
         A = copy.deepcopy(airplane) # make sure we're not messing stuff up
-        A.speed = V[0] # allow the sub-calculations to use the speed passed in
+        A.flightPathAngle = 0 # airplane is going forward
+        A.pitch = a[0] # at a certain angle of attack
         
-        return -(powerAvailableAtAltitude(A) - PowerRequiredAtAltitude(A))
+        CL = LiftCoefficient(A)
+        CD = DragCoefficient(A)
+        
+        return -CL/CD
     
-    result = minimize(functionToMinimize, [Vguess], bounds=[(0, None)])
-    maxExcessPower = -functionToMinimize(result["x"])
+    result = minimize(functionToMinimize, [aguess], bounds=[(amin, amax)])
+    a = result["x"][0]
     
-    return maxExcessPower
+    return a
 
-def powerAvailableAtAltitude(airplane):
-    T = AirplaneThrust(airplane)
-    V = airplane.speed
-    
-    return T*V
+# DEBUG: reworking to be defined by another one of the options
+# def ClimbRangeCredit(airplane, tstep):
+#     rangeRate = ClimbRangeRate(airplane, tstep)
+# 
+#     return rangeRate * tstep
+# 
+# def ClimbRangeRate(airplane, tstep):
+#     climbRate = ClimbAltitudeRate(airplane)
+#     flightPathAngle = airplane.flightPathAngle
+# 
+#     return climbRate / tan(flightPathAngle)
+# 
+# def ClimbAltitudeCredit(airplane, tstep):
+#     climbRate = ClimbAltitudeRate(airplane)
+# 
+#     return climbRate * tstep
+# 
+# def ClimbAltitudeRate(airplane):
+#     # excessPower = MaxExcessPower(airplane)
+#     V = airplane.speed
+#     T = AirplaneThrust(airplane)
+#     D = AirplaneDrag(airplane)
+#     W = AirplaneWeight(airplane)
+# 
+#     print(V, T, D, W, (T*V - D*V) / W)
+#     return (T*V - D*V) / W
 
-def PowerRequiredAtAltitude(airplane):
-    PRSL = PowerRequiredAtSeaLevel(airplane)
-    rhoSL = densityAtAltitude(0)
-    rhoAlt = densityAtAltitude(airplane.altitude)
-    
-    return PRSL * (rhoAlt / rhoSL)
+# from matplotlib.pyplot import * # DEBUG: just to see, remove later
+# 
+# def MaxExcessPower(airplane): # TODO: memoize - cache results for same input
+#     Vguess = airplane.speed
+# 
+#     def functionToMinimize(V):
+#         A = copy.deepcopy(airplane) # make sure we're not messing stuff up
+#         A.speed = V[0] # allow the sub-calculations to use the speed passed in
+# 
+#         return -(powerAvailable(A) - PowerRequired(A))
+# 
+#     result = minimize(functionToMinimize, [Vguess], bounds=[(0, None)])
+# 
+#     # DEBUG: here for debugging when it fails
+#     if result["success"]:
+#         def PAPR(V):
+#             A = copy.deepcopy(airplane) # make sure we're not messing stuff up
+#             A.speed = V # allow the sub-calculations to use the speed passed in
+#             return (powerAvailable(A), PowerRequired(A))
+#         Vs = [convert(V, "kts", "m/s") for V in range(300)]
+#         fs = [PAPR(V) for V in Vs]
+#         PAs = [f[0] for f in fs]
+#         PRs = [f[1] for f in fs]
+#         figure(1)
+#         plot(Vs, PAs, label="PA")
+#         plot(Vs, PRs, label="PR")
+#         legend()
+#         show()
+# 
+#     maxExcessPower = -functionToMinimize(result["x"])
+#     print("maxExcessPower: ", maxExcessPower, " for speed: ", result["x"])
+# 
+#     return maxExcessPower
+# 
+# def powerAvailable(airplane):
+#     T = AirplaneThrust(airplane)
+#     V = airplane.speed
+# 
+#     return T*V
+# 
+# def PowerRequired(airplane):
+#     W = AirplaneWeight(airplane)
+#     CD = DragCoefficient(airplane)
+#     CL = LiftCoefficient(airplane)
+#     rhoinf = densityAtAltitude(airplane.altitude)
+#     S = airplane.wing.planformArea
+# 
+#     return sqrt((2 * W**3 * CD**2) / (rhoinf * S * CL**3))
+# 
+# def PowerRequired(airplane):
+#     D = AirplaneDrag(airplane)
+#     V = airplane.speed
+# 
+#     return TR * V
+# 
+# def ThrustRequired(airplane):
+#     W = AirplaneWeight(airplane)
+#     LD = SteadyLevelFlightLiftOverDrag(airplane)
+# 
+#     return W / LD
+# 
+# def SteadyLevelFlightLiftOverDrag(airplane):
+#     CL = SteadyLevelFlightLiftCoefficient(airplane)
+#     CD = DragCoefficient(airplane)
+# 
+#     return CL/CD
+# 
+# def LiftOverDrag(airplane):
+#     CL = LiftCoefficient(airplane)
+#     CD = DragCoefficient(airplane)
+# 
+#     return CL/CD
+# 
+# def MaximumLiftOverDrag(airplane): # TODO: memoize - cache results for same input
+#     aguess = airplane.angleOfAttack
+# 
+#     def functionToMinimize(a):
+#         L = LiftCoefficient(airplane)
+#         D = DragCoefficient(airplane)
+# 
+#         return -L/D
+# 
+#     result = minimize(functionToMinimize, [aguess])
+#     maxLD = -functionToMinimize(result["x"])
+# 
+#     return maxLD
 
-def PowerRequiredAtSeaLevel(airplane):
-    TRSL = ThrustRequiredAtSeaLevel(airplane)
-    V = airplane.speed
-    
-    return TRSL * V
-
-def ThrustRequiredAtSeaLevel(airplane):
-    LoD = CurrentLiftOverDrag(airplane)
-    W = AirplaneWeight(airplane)
-    
-    return W / LoD
-    
-def CurrentLiftOverDrag(airplane):
-    CL = SteadyLevelFlightLiftCoefficient(airplane)
-    CD = DragCoefficient(airplane)
-    
-    return CL/CD
-    
 def ClimbVelocity(airplane):
     flightPathAngle = airplane.flightPathAngle
     climbRate = ClimbAltitudeRate(airplane)

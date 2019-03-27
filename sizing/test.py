@@ -46,6 +46,7 @@ airplane.throttle = 0
 airplane.pilots = 1
 airplane.passengers = 3
 airplane.flightPathAngle = 0
+airplane.pitch = 0 # pitch angle of airplane (where the nose is pointing)
 airplane.wing = wing
 airplane.powerplant = powerplant
 airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
@@ -54,14 +55,14 @@ airplane.oswaldEfficiencyFactor = 0.8
 airplane.compressibilityDrag = 0
 airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
 airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with component weight buildup
-airplane.angleOfAttack = 0
 
 ################################################################################
 # EVALUATION
 ################################################################################
 
+simulation = {"time":[], "segment":[], "weight":[], "position":[], "altitude":[], "speed":[], "pitch":[], "flightPathAngle":[]}
 def recordingFunction(t, segmentName, airplane):
-    print("{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f} {segment} | W:{weight:5.0f} lbs - x:{position:5.0f} ft - h:{altitude:5.0f} ft - V:{speed:5.0f} kts".format(
+    print("{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f} {segment} | W:{weight:5.0f} lbs - x:{position:5.0f} ft - h:{altitude:5.0f} ft - V:{speed:5.0f} kts - p:{pitch:5.0f} deg - fpa:{flightPathAngle:5.0} deg".format(
         hours=floor(t/(60*60)),
         minutes=floor(t/60)%60,
         seconds=t%60,
@@ -69,6 +70,18 @@ def recordingFunction(t, segmentName, airplane):
         weight=convert(AirplaneWeight(airplane), "N", "lb"),
         position=convert(airplane.position, "m", "ft"),
         altitude=convert(airplane.altitude, "m", "ft"),
-        speed=convert(airplane.speed, "m/s", "kts")))
+        speed=convert(airplane.speed, "m/s", "kts"),
+        pitch=convert(airplane.pitch, "rad", "deg"),
+        flightPathAngle=convert(airplane.flightPathAngle, "rad", "deg")))
+    
+    simulation["time"] += [t]
+    simulation["segment"] += [segmentName]
+    simulation["weight"] += [AirplaneWeight(airplane)]
+    simulation["position"] += [airplane.position]
+    simulation["altitude"] += [airplane.altitude]
+    simulation["speed"] += [airplane.speed]
+    simulation["pitch"] += [airplane.pitch]
+    simulation["flightPathAngle"] += [airplane.flightPathAngle]
 
 designMission.simulate(1, airplane, recordingFunction)
+dictToCSV("./data/testSimulation.csv", simulation)

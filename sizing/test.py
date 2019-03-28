@@ -52,7 +52,7 @@ airplane.powerplant = powerplant
 airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
 airplane.components = [wing] # [component objects] # list of components making up airplane (including wing)
 airplane.oswaldEfficiencyFactor = 0.8
-airplane.compressibilityDrag = 0
+airplane.compressibilityDragCoefficient = 0
 airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
 airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with component weight buildup
 
@@ -62,17 +62,17 @@ airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with co
 
 simulation = {"time":[], "segment":[], "weight":[], "position":[], "altitude":[], "speed":[], "pitch":[], "flightPathAngle":[]}
 def recordingFunction(t, segmentName, airplane):
-    print("{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f} {segment} | W:{weight:5.0f} lbs - x:{position:5.0f} ft - h:{altitude:5.0f} ft - V:{speed:5.0f} kts - p:{pitch:5.0f} deg - fpa:{flightPathAngle:5.0} deg".format(
-        hours=floor(t/(60*60)),
-        minutes=floor(t/60)%60,
-        seconds=t%60,
-        segment=segmentName,
-        weight=convert(AirplaneWeight(airplane), "N", "lb"),
-        position=convert(airplane.position, "m", "ft"),
-        altitude=convert(airplane.altitude, "m", "ft"),
-        speed=convert(airplane.speed, "m/s", "kts"),
-        pitch=convert(airplane.pitch, "rad", "deg"),
-        flightPathAngle=convert(airplane.flightPathAngle, "rad", "deg")))
+    # print("{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f} {segment} | W:{weight:5.0f} lbs - x:{position:5.0f} ft - h:{altitude:5.0f} ft - V:{speed:5.0f} kts - p:{pitch:5.0f} deg - fpa:{flightPathAngle:5.0} deg".format(
+    #     hours=floor(t/(60*60)),
+    #     minutes=floor(t/60)%60,
+    #     seconds=t%60,
+    #     segment=segmentName,
+    #     weight=convert(AirplaneWeight(airplane), "N", "lb"),
+    #     position=convert(airplane.position, "m", "ft"),
+    #     altitude=convert(airplane.altitude, "m", "ft"),
+    #     speed=convert(airplane.speed, "m/s", "kts"),
+    #     pitch=convert(airplane.pitch, "rad", "deg"),
+    #     flightPathAngle=convert(airplane.flightPathAngle, "rad", "deg")))
     
     simulation["time"] += [t]
     simulation["segment"] += [segmentName]
@@ -85,3 +85,27 @@ def recordingFunction(t, segmentName, airplane):
 
 designMission.simulate(1, airplane, recordingFunction)
 dictToCSV("./data/testSimulation.csv", simulation)
+
+ts_min = [convert(t, "s", "min") for t in simulation["time"]]
+hs_ft = [convert(h, "m", "ft") for h in simulation["altitude"]]
+xs_nmi = [convert(x, "m", "nmi") for x in simulation["position"]]
+
+figure(1)
+plot(ts_min, xs_nmi)
+title("Range")
+xlabel("time [min]")
+ylabel("position [nmi]")
+
+figure(2)
+plot(ts_min, hs_ft)
+title("Altitude")
+xlabel("time [min]")
+ylabel("altitude [ft]")
+
+figure(3)
+plot(xs_nmi, hs_ft)
+title("Track")
+xlabel("position [ft]")
+ylabel("altitude [nmi]")
+
+show()

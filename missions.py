@@ -31,6 +31,8 @@ designMission.segments = Segments([
 def _designMissionInitializeStartup(airplane, t, t0):
     airplane.throttle = 0.3
     airplane.position = 0
+    airplane.pitch = 0
+    airplane.flightPathAngle = 0
 
 def _designMissionCompletedStartup(airplane, t, t0):
     return convert(10, "min", "s") <= t - t0
@@ -70,15 +72,13 @@ def _designMissionCompletedClimb(airplane, t, t0):
     return cruiseAltitude <= airplane.altitude
 
 def _designMissionUpdateClimb(airplane, t, tstep):
-    # climbstep = ClimbAltitudeCredit(airplane, tstep)
-    # rangestep = ClimbRangeCredit(airplane, tstep)
-    # airplane.altitude += climbstep
-    # airplane.position += rangestep
-    # airplane.flightPathAngle = arctan2(climbstep, rangestep)
-    # airplane.speed = ClimbVelocity(airplane)
+    a = MaximumLiftOverDragAngleOfAttack(airplane)
+    T = AirplaneThrust(airplane)
+    D = AirplaneDrag(airplane)
+    W = AirplaneWeight(airplane)
     
-    print(airplane.pitch, MaximumLiftOverDragAngleOfAttack(airplane)) # FIXME: maxLDAoA is negative!
-    airplane.flightPathAngle = airplane.pitch - MaximumLiftOverDragAngleOfAttack(airplane)
+    airplane.pitch = arcsin((T-D)/W)
+    airplane.flightPathAngle = airplane.pitch - a/2
     airplane.altitude += airplane.speed * sin(airplane.flightPathAngle) * tstep
     airplane.position += airplane.speed * cos(airplane.flightPathAngle) * tstep
     UpdateFuel(airplane, tstep)

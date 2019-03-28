@@ -64,7 +64,7 @@ class Airplane:
     powerplant = None # powerplant object
     components = [] # [component objects] # list of components making up airplane (including wing)
     oswaldEfficiencyFactor = None # number : (0.7 < x < 0.85) # TODO: get better estimate
-    compressibilityDrag = 0 # number : (0 = x) # we fly too slow
+    compressibilityDragCoefficient = 0 # number : (0 = x) # we fly too slow
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
     InitialGrossWeight = None # number : initial guess for gross weight, changes with iterations
     emptyWeight = None # number [N] : (0 <= x) # TODO: replace with component weight, will delete this parameter later
@@ -253,6 +253,12 @@ class Airfoil:
     def liftCoefficientAtAngleOfAttack(self, angleOfAttack):
         a = convert(angleOfAttack, "rad", "deg") # gets angleOfAttack in radians, csv in degrees
         f = functionFromPairs(pairsFromColumns(self.data, "alpha", "CL"))
+        
+        return f(a)
+    
+    def dragCoefficientAtAngleOfAttack(self, angleOfAttack):
+        a = convert(angleOfAttack, "rad", "deg") # gets angleOfAttack in radians, csv in degrees
+        f = functionFromPairs(pairsFromColumns(self.data, "alpha", "CD"))
         
         return f(a)
     

@@ -78,7 +78,7 @@ def _designMissionUpdateClimb(airplane, t, tstep):
     W = AirplaneWeight(airplane)
     
     airplane.pitch = arcsin((T-D)/W)
-    airplane.flightPathAngle = airplane.pitch - a/2
+    airplane.flightPathAngle = airplane.pitch - a/2 # FIXME: this is a hack, please figure out what this actually should be
     airplane.altitude += airplane.speed * sin(airplane.flightPathAngle) * tstep
     airplane.position += airplane.speed * cos(airplane.flightPathAngle) * tstep
     UpdateFuel(airplane, tstep)

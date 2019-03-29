@@ -151,6 +151,7 @@ def AirplaneLift(airplane):
     
     return q * S * CL
 
+@memoize
 def MaximumLiftOverDragAngleOfAttack(airplane):
     amin = airplane.wing.airfoil.minimumDefinedAngleOfAttack
     amax = airplane.wing.airfoil.maximumDefinedAngleOfAttack

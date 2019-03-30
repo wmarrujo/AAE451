@@ -32,11 +32,20 @@ propeller = Propeller()
 propeller.diameter = convert(6, "ft", "m")
 propeller.angularVelocity = 0
 propeller.efficiency = 0.9
+engineNacelle = Nacelle(1, convert(1.5, "ft", "m"), convert(4, "ft", "m"))
 engine = Engine()
 engine.maxPower = convert(130, "hp", "W")
 engine.propeller = propeller
+engine.nacelle = engineNacelle
 engineL = engine
 engineR = copy.deepcopy(engine)
+fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"))
+horizontalStabilizer = Surface(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"))
+verticalStabilizer = Surface(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"))
+tail = Tail()
+tail.horizontalStabilizer = horizontalStabilizer
+tail.verticalStabilizer = verticalStabilizer
+# landingGear # TODO: add to components of airplane
 
 airplane = Airplane()
 airplane.altitude = 0
@@ -48,9 +57,10 @@ airplane.passengers = 3
 airplane.flightPathAngle = 0
 airplane.pitch = 0 # pitch angle of airplane (where the nose is pointing)
 airplane.wing = wing
+airplane.tail = tail
 airplane.powerplant = powerplant
 airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
-airplane.components = [wing] # [component objects] # list of components making up airplane (including wing)
+airplane.components = [wing, engineL.nacelle, engineR.nacelle, fuselage, horizontalStabilizer, verticalStabilizer] # [component objects] # list of components making up airplane (including parts used elsewhere)
 airplane.oswaldEfficiencyFactor = 0.8
 airplane.compressibilityDragCoefficient = 0
 airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
@@ -126,31 +136,31 @@ print("takeoffFieldLength {0} ft".format(takeoffFieldLength))
 
 # DEBUG: Max Lift over Drag happens at too low of an angle of attack
 
-# alphas = linspace(-10, 20, 50)
-# As = []
-# for a in alphas:
-#     A = copy.copy(airplane)
-#     A.flightPathAngle = 0
-#     A.pitch = convert(a, "deg", "rad")
-# 
-#     As += [A]
-# Ls = [AirplaneLift(A) for A in As]
-# Ds = [AirplaneDrag(A) for A in As]
-# LDs = [L/D for (L, D) in zip(Ls, Ds)]
-# atans = [arctan2(L, D) for (L, D) in zip(Ls, Ds)]
-# 
-# figure()
-# plot(alphas, LDs)
-# 
-# figure()
-# plot(alphas, Ls, label="L")
-# plot(alphas, Ds, label="D")
-# legend()
-# 
-# figure()
-# plot(Ds, Ls)
-# 
-# figure()
-# plot(alphas, atans)
+alphas = linspace(-10, 20, 50)
+As = []
+for a in alphas:
+    A = copy.copy(airplane)
+    A.flightPathAngle = 0
+    A.pitch = convert(a, "deg", "rad")
+
+    As += [A]
+Ls = [AirplaneLift(A) for A in As]
+Ds = [AirplaneDrag(A) for A in As]
+LDs = [L/D for (L, D) in zip(Ls, Ds)]
+atans = [arctan2(L, D) for (L, D) in zip(Ls, Ds)]
+
+figure()
+plot(alphas, LDs)
+
+figure()
+plot(alphas, Ls, label="L")
+plot(alphas, Ds, label="D")
+legend()
+
+figure()
+plot(Ds, Ls)
+
+figure()
+plot(alphas, atans)
 
 show()

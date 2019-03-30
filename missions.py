@@ -17,7 +17,7 @@ designMission.segments = Segments([
     Segment("startup"),
     Segment("takeoff"),
     Segment("climb"),
-    # Segment("cruise"),
+    #Segment("cruise"),
     # Segment("descent"),
     # Segment("abortClimb"),
     # Segment("loiter"),
@@ -67,6 +67,7 @@ designMission.segments["takeoff"].update = _designMissionUpdateTakeoff
 
 def _designMissionInitializeClimb(airplane, t, t0):
     airplane.throttle = 1
+    # FIXME: maybe set this to max L/D velocity, then hold that? (using max excess power Velocity)
 
 def _designMissionCompletedClimb(airplane, t, t0):
     return cruiseAltitude <= airplane.altitude
@@ -94,20 +95,23 @@ designMission.segments["climb"].update = _designMissionUpdateClimb
 # # CRUISE
 # 
 # def _designMissionInitializeCruise(airplane, t, t0):
-#     airplane.altitude = cruiseAltitude
-#     airplane.speed = convert(200, "kts", "m/s")
+#     V, a = MaximumLiftOverDragVelocityAndAngleOfAttack(airplane)
+# 
+#     airplane.speed = V # speed to maintain
+#     airplane.flightPathAngle = 0 # level flight
+#     airplane.pitch = a # angle of attack to maintain
 # 
 # def _designMissionCompletedCruise(airplane, t, t0):
-#     return airplane.range <= convert(300, "nmi", "m")
+#     return airplane.position <= convert(300, "nmi", "m")
 # 
 # def _designMissionUpdateCruise(airplane, t, tstep):
 #     pass
 #     # use constant CL strategy in Raymer to get level flight
-#
+# 
 # designMission.segments["cruise"].initialize = _designMissionInitializeCruise
 # designMission.segments["cruise"].completed = _designMissionCompletedCruise
 # designMission.segments["cruise"].update = _designMissionUpdateCruise
-#
+
 # # DESCENT
 # 
 # def _designMissionInitializeDescent(airplane, t, t0):

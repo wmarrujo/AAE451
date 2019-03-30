@@ -66,3 +66,12 @@ def compareValue(*objects):
     
     hashes = [_compareValue(obj) for obj in objects]
     return str(hashes).__hash__()
+
+def maybeReadAsNumber(string):
+    try:
+        return int(string)
+    except Exception as e:
+        try:
+            return float(string)
+        except Exception as e:
+            return string

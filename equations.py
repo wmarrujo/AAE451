@@ -174,10 +174,34 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
         
         return -L/D
     
-    result = minimize(functionToMinimize, [aguess], bounds=[(amin, amax)])
+    result = minimize(functionToMinimize, [aguess], bounds=[(amin, amax)], method="slsqp")
     a = result["x"][0]
     
     return a
+
+@memoize
+def MaximumLiftOverDragVelocityAndAngleOfAttack(airplane):
+    Vguess = airplane.speed
+    aguess = airplane.angleOfAttack
+    amin = airplane.wing.airfoil.minimumDefinedAngleOfAttack
+    amax = airplane.wing.airfoil.maximumDefinedAngleOfAttack
+    
+    def functionToMinimize(X):
+        A = copy.deepcopy(airplane)
+        A.speed = X[0]
+        A.flightPathAngle = 0
+        A.pitch = X[1]
+        
+        L = AirplaneLift(A)
+        D = AirplaneDrag(A)
+        
+        return -L/D
+    
+    result = minimize(functionToMinimize, [Vguess, aguess], bounds=[(0, None), (amin, amax)])
+    V = result["x"][0]
+    a = result["x"][1]
+    
+    return (V, a)
 
 def ClimbVelocity(airplane):
     flightPathAngle = airplane.flightPathAngle

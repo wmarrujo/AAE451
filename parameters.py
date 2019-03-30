@@ -74,6 +74,7 @@ class Airplane:
     productionQuantityNeeded = None  # number [planes] : (0 <= x)
     numberFlightTestAircraft = None  # number [planes] : (2 <= x <= 6)  # Raymer v6 18.4.2
     avionicsCost = None  # number [USD] : (0 <= x)
+    tail = None # tail object
     
     @property
     def angleOfAttack(self):
@@ -95,6 +96,7 @@ class Engine: # the engines/motors that drive the propeller
     maxPower = None # number [W] : (0 <= x)
     propeller = None # propeller object
     cost = None # number [USD] : (0 <= x)
+    nacelle = None # nacelle object
 
 class Powerplant: # the powerplant system configuration
     gas = None # gas object
@@ -297,6 +299,10 @@ class Airfoil:
     # def weight(self):
     #     Ww = 0.036*convert(Sw, "m^2", "ft^2")**0.758 * convert(Wfw, "N", "lb")**0.0035 * AR**0.6 * convert(q, "N/m^2", "lb/ft^2")**0.006 * tc**-0.3 * (Nz * convert(Wdg, "n", "lb"))**0.49
     #     return convert(Ww, "lb", "N")
+
+class Tail:
+    horizontalStabilizer = None # Surface Object
+    verticalStabilizer = None # Surface Object
 
 # class HorizontalTail(component):
 #     ch = 0.80 # horizontal tail volume coefficient

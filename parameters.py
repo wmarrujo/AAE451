@@ -73,8 +73,14 @@ class Airplane:
     # landingLiftCoefficient = 1.85  # number : (0 <= x) # based on Anderson table 5.3 for plain flap
     productionQuantityNeeded = None  # number [planes] : (0 <= x)
     numberFlightTestAircraft = None  # number [planes] : (2 <= x <= 6)  # Raymer v6 18.4.2
-    avionicsCost = None  # number [USD] : (0 <= x) 
-
+    avionicsCost = None  # number [USD] : (0 <= x)
+    
+    @property
+    def angleOfAttack(self):
+        p = self.pitch
+        fpA = self.flightPathAngle
+        
+        return p - fpA
 
 ################################################################################
 # COMPONENTS

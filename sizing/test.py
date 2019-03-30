@@ -88,24 +88,69 @@ dictToCSV("./data/testSimulation.csv", simulation)
 
 ts_min = [convert(t, "s", "min") for t in simulation["time"]]
 hs_ft = [convert(h, "m", "ft") for h in simulation["altitude"]]
+xs_ft = [convert(x, "m", "ft") for x in simulation["position"]]
 xs_nmi = [convert(x, "m", "nmi") for x in simulation["position"]]
+ps_deg = [convert(p, "rad", "deg") for p in simulation["pitch"]]
+fpas_deg = [convert(a, "rad", "deg") for a in simulation["flightPathAngle"]]
+aoas_deg = [p - fpa for (p, fpa) in zip(ps_deg, fpas_deg)]
 
-figure(1)
+figure()
+plot(xs_nmi, hs_ft)
+title("Track")
+xlabel("position [nmi]")
+ylabel("altitude [ft]")
+
+figure()
 plot(ts_min, xs_nmi)
-title("Range")
+title("Range History")
 xlabel("time [min]")
 ylabel("position [nmi]")
 
-figure(2)
+figure()
 plot(ts_min, hs_ft)
-title("Altitude")
+title("Altitude History")
 xlabel("time [min]")
 ylabel("altitude [ft]")
 
-figure(3)
-plot(xs_nmi, hs_ft)
-title("Track")
-xlabel("position [ft]")
-ylabel("altitude [nmi]")
+figure()
+plot(ts_min, ps_deg, label="pitch")
+plot(ts_min, fpas_deg, label="flight path angle")
+plot(ts_min, aoas_deg, label="angle of Attack")
+title("Angle History")
+xlabel("time [min]")
+ylabel("angle [deg]")
+legend()
+
+takeoffFieldLength = xs_ft[hs_ft.index(first(hs_ft, condition=lambda x: 50 <= x))]
+print("takeoffFieldLength {0} ft".format(takeoffFieldLength))
+
+# DEBUG: Max Lift over Drag happens at too low of an angle of attack
+
+# alphas = linspace(-10, 20, 50)
+# As = []
+# for a in alphas:
+#     A = copy.copy(airplane)
+#     A.flightPathAngle = 0
+#     A.pitch = convert(a, "deg", "rad")
+# 
+#     As += [A]
+# Ls = [AirplaneLift(A) for A in As]
+# Ds = [AirplaneDrag(A) for A in As]
+# LDs = [L/D for (L, D) in zip(Ls, Ds)]
+# atans = [arctan2(L, D) for (L, D) in zip(Ls, Ds)]
+# 
+# figure()
+# plot(alphas, LDs)
+# 
+# figure()
+# plot(alphas, Ls, label="L")
+# plot(alphas, Ds, label="D")
+# legend()
+# 
+# figure()
+# plot(Ds, Ls)
+# 
+# figure()
+# plot(alphas, atans)
 
 show()

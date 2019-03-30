@@ -139,7 +139,7 @@ def DragCoefficient(airplane):
     return CD0 + CDi + CDc
 
 def LiftCoefficient(airplane):
-    a = airplane.pitch - airplane.flightPathAngle
+    a = airplane.angleOfAttack
     CL = airplane.wing.airfoil.liftCoefficientAtAngleOfAttack(a)
     
     return CL
@@ -156,11 +156,26 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
     amin = airplane.wing.airfoil.minimumDefinedAngleOfAttack
     amax = airplane.wing.airfoil.maximumDefinedAngleOfAttack
     
-    alphas = linspace(amin, amax, num=50)
-    CLs = [airplane.wing.airfoil.liftCoefficientAtAngleOfAttack(a) for a in alphas]
-    CDs = [airplane.wing.airfoil.dragCoefficientAtAngleOfAttack(a) for a in alphas]
-    LDs = [CL/CD for CL, CD in zip(CLs, CDs)]
-    a = alphas[LDs.index(max(LDs))]
+    # alphas = linspace(amin, amax, num=50)
+    # CLs = [airplane.wing.airfoil.liftCoefficientAtAngleOfAttack(a) for a in alphas]
+    # CDs = [airplane.wing.airfoil.dragCoefficientAtAngleOfAttack(a) for a in alphas]
+    # LDs = [CL/CD for CL, CD in zip(CLs, CDs)]
+    # a = alphas[LDs.index(max(LDs))]
+    
+    aguess = airplane.angleOfAttack
+    
+    def functionToMinimize(a):
+        A = copy.deepcopy(airplane)
+        A.flightPathAngle = 0
+        A.pitch = a[0]
+        
+        L = AirplaneLift(A)
+        D = AirplaneDrag(A)
+        
+        return -L/D
+    
+    result = minimize(functionToMinimize, [aguess], bounds=[(amin, amax)])
+    a = result["x"][0]
     
     return a
 
@@ -182,29 +197,6 @@ def StallSpeed(airplane):
     CLmax = airplane.wing.maximumLiftCoefficient
     
     return sqrt(2*W / (rho * S * CLmax))
-
-################################################################################
-# UPDATING FUNCTIONS
-################################################################################
-
-def UpdateFuel(airplane, tstep):
-    P = AllEnginesPower(airplane)
-    E = P*tstep
-    gas = airplane.powerplant.gas
-    battery = airplane.powerplant.battery
-    mg = gas.mass if gas is not None else 0
-    mb = battery.mass if battery is not None else 0
-    generator = airplane.powerplant.generator
-    percentElectric = airplane.powerplant.percentElectric
-    generatorOn = airplane.powerplant.generatorOn
-    
-    Eb = E*percentElectric # energy requested of battery
-    Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
-    
-    if battery is not None:
-        battery.energy -= Eb
-    if gas is not None:
-        gas.mass -= Eg/gas.energyDensity
 
 ################################################################################
 # COST FUNCTIONS
@@ -269,3 +261,26 @@ def passengerAdditionalCost(airplane):
     iR = inflation2012to2019
     
     return Cp * iR * (N + P)
+
+################################################################################
+# UPDATING FUNCTIONS
+################################################################################
+
+def UpdateFuel(airplane, tstep):
+    P = AllEnginesPower(airplane)
+    E = P*tstep
+    gas = airplane.powerplant.gas
+    battery = airplane.powerplant.battery
+    mg = gas.mass if gas is not None else 0
+    mb = battery.mass if battery is not None else 0
+    generator = airplane.powerplant.generator
+    percentElectric = airplane.powerplant.percentElectric
+    generatorOn = airplane.powerplant.generatorOn
+    
+    Eb = E*percentElectric # energy requested of battery
+    Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
+    
+    if battery is not None:
+        battery.energy -= Eb
+    if gas is not None:
+        gas.mass -= Eg/gas.energyDensity

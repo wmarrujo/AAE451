@@ -8,12 +8,12 @@ def first(iterable, condition = lambda x: True):
     """
     Returns the first item in the `iterable` that
     satisfies the `condition`.
-
+    
     If the condition is not given, returns the first item of
     the iterable.
-
+    
     Raises `StopIteration` if no item satysfing the condition is found.
-
+    
     >>> first( (1,2,3), condition=lambda x: x % 2 == 0)
     2
     >>> first(range(3, 100))
@@ -48,7 +48,9 @@ class memoize:
 def compareValue(*objects):
     """
     provides a method which returns a comparable value (a dictionary) for any object
-    this dictionary contains all the instance variables (also recursively comparable)
+    this dictionary contains all the instance variables (also recursively comparable).
+    Note: it only works with objects that really should be considered structures
+    and are made up of basic types like ints, floats, and strings
     """
     def _compareValue(obj):
         if "parameters" in str(type(obj)): # if it's an object (that's defined in parameters), make it recursive

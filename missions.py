@@ -17,7 +17,7 @@ designMission.segments = Segments([
     Segment("startup"),
     Segment("takeoff"),
     Segment("climb"),
-    #Segment("cruise"),
+    Segment("cruise"),
     # Segment("descent"),
     # Segment("abortClimb"),
     # Segment("loiter"),
@@ -67,23 +67,19 @@ designMission.segments["takeoff"].update = _designMissionUpdateTakeoff
 
 def _designMissionInitializeClimb(airplane, t, t0):
     airplane.throttle = 1
-    # FIXME: maybe set this to max L/D velocity, then hold that? (using max excess power Velocity)
+    # TODO: maybe set this to max L/D velocity, then hold that? (using max excess power Velocity)
 
 def _designMissionCompletedClimb(airplane, t, t0):
     return cruiseAltitude <= airplane.altitude
 
 def _designMissionUpdateClimb(airplane, t, tstep):
-    a = MaximumLiftOverDragAngleOfAttack(airplane) # FIXME: Angle of Attack not right
+    a = MaximumLiftOverDragAngleOfAttack(airplane)
     T = AirplaneThrust(airplane)
     D = AirplaneDrag(airplane)
     W = AirplaneWeight(airplane)
     
     airplane.pitch = arcsin((T-D)/W)
     airplane.flightPathAngle = airplane.pitch - a
-    
-    # FIXME: make it actually solve for the right values
-    # airplane.pitch = 
-    # airplane.flightPathAngle = 
     airplane.altitude += airplane.speed * sin(airplane.flightPathAngle) * tstep
     airplane.position += airplane.speed * cos(airplane.flightPathAngle) * tstep
     UpdateFuel(airplane, tstep)
@@ -92,25 +88,23 @@ designMission.segments["climb"].initialize = _designMissionInitializeClimb
 designMission.segments["climb"].completed = _designMissionCompletedClimb
 designMission.segments["climb"].update = _designMissionUpdateClimb
 
-# # CRUISE
-# 
-# def _designMissionInitializeCruise(airplane, t, t0):
-#     V, a = MaximumLiftOverDragVelocityAndAngleOfAttack(airplane)
-# 
-#     airplane.speed = V # speed to maintain
-#     airplane.flightPathAngle = 0 # level flight
-#     airplane.pitch = a # angle of attack to maintain
-# 
-# def _designMissionCompletedCruise(airplane, t, t0):
-#     return airplane.position <= convert(300, "nmi", "m")
-# 
-# def _designMissionUpdateCruise(airplane, t, tstep):
-#     pass
-#     # use constant CL strategy in Raymer to get level flight
-# 
-# designMission.segments["cruise"].initialize = _designMissionInitializeCruise
-# designMission.segments["cruise"].completed = _designMissionCompletedCruise
-# designMission.segments["cruise"].update = _designMissionUpdateCruise
+# CRUISE
+
+def _designMissionInitializeCruise(airplane, t, t0):
+    airplane.flightPathAngle = 0 # level flight
+    airplane.pitch = 0 # angle of attack to maintain
+    airplane.speed = MaximumLiftOverDragVelocity(airplane) # speed to maintain
+
+def _designMissionCompletedCruise(airplane, t, t0):
+    return convert(300, "nmi", "m") <= airplane.position
+
+def _designMissionUpdateCruise(airplane, t, tstep):
+    airplane.position += airplane.speed * tstep
+    UpdateFuel(airplane, tstep)
+
+designMission.segments["cruise"].initialize = _designMissionInitializeCruise
+designMission.segments["cruise"].completed = _designMissionCompletedCruise
+designMission.segments["cruise"].update = _designMissionUpdateCruise
 
 # # DESCENT
 # 
@@ -207,9 +201,3 @@ designMission.segments["climb"].update = _designMissionUpdateClimb
 # designMission.segments["shutdown"].initialize = _designMissionInitializeShutdown
 # designMission.segments["shutdown"].completed = _designMissionCompletedShutdown
 # designMission.segments["shutdown"].update = _designMissionUpdateShutdown
-
-# REFERENCE MISSION
-
-referenceMission = Mission()
-referenceMission.passengers = 3
-referenceMission.pilots = 1

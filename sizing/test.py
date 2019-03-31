@@ -72,13 +72,13 @@ airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with co
 
 simulation = {"time":[], "segment":[], "weight":[], "position":[], "altitude":[], "speed":[], "pitch":[], "flightPathAngle":[]}
 def recordingFunction(t, segmentName, airplane):
-    print("{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f} {segment} | W:{weight:5.0f} lbs - x:{position:5.0f} ft - h:{altitude:5.0f} ft - V:{speed:5.0f} kts - p:{pitch:5.0f} deg - fpa:{flightPathAngle:5.0} deg".format(
+    print("{hours:02.0f}:{minutes:02.0f}:{seconds:02.0f} {segment} | W:{weight:5.0f} lbs - x:{position:5.0f} nmi - h:{altitude:5.0f} ft - V:{speed:5.0f} kts - p:{pitch:5.0f} deg - fpa:{flightPathAngle:5.0} deg".format(
         hours=floor(t/(60*60)),
         minutes=floor(t/60)%60,
         seconds=t%60,
         segment=segmentName,
         weight=convert(AirplaneWeight(airplane), "N", "lb"),
-        position=convert(airplane.position, "m", "ft"),
+        position=convert(airplane.position, "m", "nmi"),
         altitude=convert(airplane.altitude, "m", "ft"),
         speed=convert(airplane.speed, "m/s", "kts"),
         pitch=convert(airplane.pitch, "rad", "deg"),
@@ -132,35 +132,27 @@ ylabel("angle [deg]")
 legend()
 
 takeoffFieldLength = xs_ft[hs_ft.index(first(hs_ft, condition=lambda x: 50 <= x))]
-print("takeoffFieldLength {0} ft".format(takeoffFieldLength))
+print("takeoffFieldLength: {0} ft".format(takeoffFieldLength))
+timeToClimb = ts_min[hs_ft.index(first(hs_ft, condition=lambda x: 8000 <= x))]
+print("timeToClimb: {0} min".format(timeToClimb))
 
-# DEBUG: Max Lift over Drag happens at too low of an angle of attack
+# DEBUG:
 
-alphas = linspace(-10, 20, 50)
-As = []
-for a in alphas:
-    A = copy.copy(airplane)
-    A.flightPathAngle = 0
-    A.pitch = convert(a, "deg", "rad")
-
-    As += [A]
-Ls = [AirplaneLift(A) for A in As]
-Ds = [AirplaneDrag(A) for A in As]
-LDs = [L/D for (L, D) in zip(Ls, Ds)]
-atans = [arctan2(L, D) for (L, D) in zip(Ls, Ds)]
+Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
+As = [copy.copy(airplane) for v in Vs]
+for i, (A, V) in enumerate(zip(As, Vs)):
+    A.speed = V
+    As[i] = A
+qs = [AirplaneDynamicPressure(A) for A in As]
+Ls = [LiftCoefficient(A) for A in As]
+Ds = [DragCoefficient(A) for A in As]
 
 figure()
-plot(alphas, LDs)
-
-figure()
-plot(alphas, Ls, label="L")
-plot(alphas, Ds, label="D")
+plot(Vs, Ls, label="L")
+plot(Vs, Ds, label="D")
 legend()
 
 figure()
-plot(Ds, Ls)
-
-figure()
-plot(alphas, atans)
+plot(Vs, qs)
 
 show()

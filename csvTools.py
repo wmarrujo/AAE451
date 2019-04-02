@@ -1,4 +1,5 @@
 import csv
+from utilities import *
 
 ################################################################################
 # READING
@@ -19,8 +20,8 @@ def CSVToDict(filename):
     """reads a csv file and returns a dictionary where the column names (the first row of the csv) are the keys, and the column values are a list corresponding to that key"""
     m = CSVToMatrix(filename)
     keys = m[0]
-    mt = list(map(list, zip(*m[1:])))
-    return dict(zip(m[0], mt))
+    mt = transpose(m[1:])
+    return dict(zip(keys, mt))
 
 ################################################################################
 # WRITING
@@ -59,6 +60,8 @@ def functionFromPairs(pairs): # [(a, b)] -> a -> b
         except Exception as e:
             above = None
         if below == None and above != None: # under bounds
+            if a == pairs[0][0]:
+                return a
             return None
         elif below != None and above == None: # over bounds
             return None

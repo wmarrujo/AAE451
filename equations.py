@@ -95,10 +95,6 @@ def AirplaneDrag(airplane):
     return q * S * CD
 
 def ParasiteDragCoefficient(airplane):
-    altitude = airplane.altitude
-    rho = densityAtAltitude(altitude)
-    V = airplane.speed
-    mu = dynamicViscosityAtAltitude(altitude)
     Sref = airplane.wing.planformArea
     CD0miscFactor = airplane.miscellaneousParasiteDragFactor
     
@@ -156,18 +152,12 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
     amin = airplane.wing.airfoil.minimumDefinedAngleOfAttack
     amax = airplane.wing.airfoil.maximumDefinedAngleOfAttack
     
-    # alphas = linspace(amin, amax, num=50)
-    # CLs = [airplane.wing.airfoil.liftCoefficientAtAngleOfAttack(a) for a in alphas]
-    # CDs = [airplane.wing.airfoil.dragCoefficientAtAngleOfAttack(a) for a in alphas]
-    # LDs = [CL/CD for CL, CD in zip(CLs, CDs)]
-    # a = alphas[LDs.index(max(LDs))]
-    
     aguess = airplane.angleOfAttack
     
-    def functionToMinimize(a):
+    def functionToMinimize(X):
         A = copy.deepcopy(airplane)
         A.flightPathAngle = 0
-        A.pitch = a[0]
+        A.pitch = X[0]
         
         L = AirplaneLift(A)
         D = AirplaneDrag(A)
@@ -179,29 +169,30 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
     
     return a
 
-@memoize
-def MaximumLiftOverDragVelocityAndAngleOfAttack(airplane):
-    Vguess = airplane.speed
-    aguess = airplane.angleOfAttack
-    amin = airplane.wing.airfoil.minimumDefinedAngleOfAttack
-    amax = airplane.wing.airfoil.maximumDefinedAngleOfAttack
+def MaximumLiftOverDragVelocity(airplane):
+    # Vguess = airplane.speed
+    # 
+    # def functionToMinimize(X):
+    #     A = copy.deepcopy(airplane)
+    #     A.speed = X[0]
+    # 
+    #     L = AirplaneLift(A)
+    #     D = AirplaneDrag(A)
+    # 
+    #     return -L/D
+    # 
+    # result = minimize(functionToMinimize, [Vguess], bounds=[(0, None)])
+    # V = result["x"][0]
+    # 
+    # return V
     
-    def functionToMinimize(X):
-        A = copy.deepcopy(airplane)
-        A.speed = X[0]
-        A.flightPathAngle = 0
-        A.pitch = X[1]
-        
-        L = AirplaneLift(A)
-        D = AirplaneDrag(A)
-        
-        return -L/D
+    # TODO: verify that this equation works (Raymer 2018 equation 17.10)
+    rho = densityAtAltitude(airplane.altitude)
+    CL = LiftCoefficient(airplane)
+    W = AirplaneWeight(airplane)
+    S = airplane.wing.planformArea
     
-    result = minimize(functionToMinimize, [Vguess, aguess], bounds=[(0, None), (amin, amax)])
-    V = result["x"][0]
-    a = result["x"][1]
-    
-    return (V, a)
+    return sqrt(2 / (rho * CL) * (W/S))
 
 def ClimbVelocity(airplane):
     flightPathAngle = airplane.flightPathAngle
@@ -221,6 +212,9 @@ def StallSpeed(airplane):
     CLmax = airplane.wing.maximumLiftCoefficient
     
     return sqrt(2*W / (rho * S * CLmax))
+
+def AirplaneSpecificFuelConsumption(airplane):
+    pass # TODO: implement, then use in UseFuel function
 
 ################################################################################
 # COST FUNCTIONS

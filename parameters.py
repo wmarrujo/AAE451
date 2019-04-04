@@ -9,12 +9,12 @@ class Mission:
     segments = None
     
     def simulate(self, tstep, Airplane, recordingFunction):
-        t0 = 0 # s
-        t = t0
+        t = 0 # s
         iteration = 0
         recordingFunction(t, "Start", Airplane)
         
         for segment in self.segments:
+            t0 = t
             segment.initialize(Airplane, t, t0)
 
             while not segment.completed(Airplane, t, t0):
@@ -116,6 +116,7 @@ class Powerplant: # the powerplant system configuration
 class Gas:
     mass = None # number [kg] : (0 <= x)
     energyDensity = None # number [J/kg] : (0 <= x)
+    density = None # number [kg/m^3] : (0 <= x)
 
 class Battery:
     mass = None # number [kg] : (0 <= x)

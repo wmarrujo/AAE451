@@ -31,6 +31,7 @@ def CSVToDict(filename):
 def writeCSVLine(filename, row):
     """writes a single line to a file, delimited by commas"""
     with open(filename, "a") as file:
+        print(1)
         writer = csv.writer(file)
         writer.writerows(row)
 

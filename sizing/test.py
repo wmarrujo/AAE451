@@ -22,6 +22,7 @@ wing.airfoil = airfoil
 gas = Gas()
 gas.mass = convert(400, "lb", "N")/g
 gas.energyDensity = avgasEnergyDensity
+gas.density = avgasDensity
 powerplant = Powerplant()
 powerplant.gas = gas
 powerplant.battery = None

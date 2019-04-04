@@ -52,6 +52,7 @@ class Segment:
         pass
 
 class Airplane:
+    name = None # string : name of the airplane (mostly so that we can name simulation files uniquely)
     altitude = None # number [m] : (0 <= x)
     position = None # number [m] : (0 <= x) # how far the airplane has gone so far
     speed = None # number [m/s]
@@ -315,5 +316,5 @@ class Tail:
 #     lambdah = 1 # FIXME Dunno what this is supposed to be
 #     horizontalSweep = 0 # maybe we want sweep?
 #     Wht = 0.016 * (Nz*convert(Wdg, "N", "lb"))**0.414 * q**0.168 * convert(Sht, "m^2", "ft^2")**0.896 * (100 * tc)**-0.12 * (AR / cos(HorizontalSweep)**2)**0.043 * lambdah**-0.02
-# 
+#
 #     return convert(Wht, "lb", "N") # FIXME: not sure what this return is doing here, but it isn't python

@@ -40,6 +40,7 @@ engineL = engine
 engineR = copy.deepcopy(engine)
 
 airplane = Airplane()
+airplane.name = "testcraft"
 airplane.altitude = 0
 airplane.position = 0
 airplane.speed = 0
@@ -56,12 +57,3 @@ airplane.oswaldEfficiencyFactor = 0.8
 airplane.compressibilityDragCoefficient = 0
 airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
 airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with component weight buildup
-
-def defineAirplane(drivingParameters):
-    # currently expects WS and TW
-    # rewrites "airplane" variable using drivingParameters passed in
-    W0 = None
-    dTO = None
-    Ps = None
-    # return the "airplane" object
-    return [W0, dTO, Ps]

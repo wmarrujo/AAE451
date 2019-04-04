@@ -21,11 +21,18 @@ def CSVToDict(filename):
     m = CSVToMatrix(filename)
     keys = m[0]
     mt = transpose(m[1:])
+    mt = [[maybeReadAsNumber(cell) for cell in row] for row in mt] # TODO: test
     return dict(zip(keys, mt))
 
 ################################################################################
 # WRITING
 ################################################################################
+
+def writeCSVLine(filename, row):
+    """writes a single line to a file, delimited by commas"""
+    with open(filename, "a") as file:
+        writer = csv.writer(file)
+        writer.writerows(row)
 
 def matrixToCSV(filename, matrix):
     """writes a csv file given a list of lists corresponding to rows of the file"""

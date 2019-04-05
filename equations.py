@@ -49,12 +49,23 @@ def AirplaneDynamicPressure(airplane):
     
     return 0.5 * rho * V**2
 
-def AccelerationOnGround(airplane):
+def AccelerationOnTakeoff(airplane):
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
     D = AirplaneDrag(airplane)
     L = AirplaneLift(airplane)
     mu = runwayFrictionCoefficientNoBrakes
+    
+    F = T - D - mu*(W-L)
+    m = W/g
+    return F/m
+
+def AccelerationOnLanding(airplane):
+    W = AirplaneWeight(airplane)
+    T = AirplaneThrust(airplane)
+    D = AirplaneDrag(airplane)
+    L = AirplaneLift(airplane)
+    mu = runwayFrictionCoefficientWithBrakes
     
     F = T - D - mu*(W-L)
     m = W/g
@@ -280,6 +291,26 @@ def passengerAdditionalCost(airplane):
     
     return Cp * iR * (N + P)
 
+def MinimumPowerSpeed(airplane):
+    W = AirplaneWeight(airplane)
+    S = airplane.wing.planformArea
+    rho = densityAtAltitude(airplane.altitude)
+    CD0 = ParasiteDragCoefficient(airplane)
+    AR = airplane.wing.aspectRatio
+    e = airplane.oswaldEfficiencyFactor
+    
+    return sqrt(2/rho * W/S * sqrt(1 / (3 * CD0 * pi * AR * e)))
+
+def BestRateOfClimbSpeed(airplane):
+    W = AirplaneWeight(airplane)
+    S = airplane.wing.planformArea
+    rho = densityAtAltitude(airplane.altitude)
+    CD0 = ParasiteDragCoefficient(airplane)
+    AR = airplane.wing.aspectRatio
+    e = airplane.oswaldEfficiencyFactor
+    
+    return sqrt(2/rho * W/S * sqrt(1 / (CD0 * pi * AR * e)))
+
 ################################################################################
 # UPDATING FUNCTIONS
 ################################################################################
@@ -302,3 +333,53 @@ def UpdateFuel(airplane, tstep):
         battery.energy -= Eb
     if gas is not None:
         gas.mass -= Eg/gas.energyDensity
+
+def UpdateWaiting(airplane, t, tstep):
+    UpdateFuel(airplane, tstep)
+
+def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
+    acceleration = AccelerationOnTakeoff(airplane) # find acceleration from thrust, drag and ground friction
+    airplane.speed += acceleration * tstep # update speed with acceleration
+    airplane.position += airplane.speed * tstep # update position with speed
+    UpdateFuel(airplane, tstep) # update the fuel
+
+def UpdateClimb(airplane, t, tstep):
+    T = AirplaneThrust(airplane)
+    D = AirplaneDrag(airplane)
+    W = AirplaneWeight(airplane)
+    gamma = arcsin((T-D)/W)
+    VminP = MinimumPowerSpeed(airplane)
+    # TODO: determine throttle to keep this condition (that way fuel usage will be correct)
+    
+    airplane.flightPathAngle = gamma
+    airplane.pitch = gamma
+    airplane.speed = VminP
+    airplane.altitude += VminP * sin(gamma) * tstep
+    airplane.position += VminP * cos(gamma) * tstep
+    UpdateFuel(airplane, tstep)
+
+def UpdateCruise(airplane, t, tstep):
+    VbestR = BestRateOfClimbSpeed(airplane)
+    
+    airplane.speed = VbestR
+    airplane.position += VbestR * tstep
+    UpdateFuel(airplane, tstep)
+
+def UpdateDescent(airplane, t, tstep):
+    gamma = arctan2(convert(-1000, "ft", "m"), convert(3, "nmi", "m")) # using "rule of threes" (for passenger comfort) - glide ratio of 3nmi per 1000ft of descent
+    VminP = MinimumPowerSpeed(airplane)
+    # TODO: update throttle setting
+    
+    airplane.flightPathAngle = gamma
+    airplane.pitch = gamma
+    airplane.speed = VminP
+    airplane.altitude += VminP * sin(gamma) * tstep
+    airplane.position += VminP * cos(gamma) * tstep
+    UpdateFuel(airplane, tstep)
+
+def UpdateLanding(airplane, t, tstep):
+    acceleration = AccelerationOnLanding(airplane) # find acceleration from thrust, drag and ground friction
+    airplane.speed += acceleration * tstep # update speed with acceleration
+    airplane.position += airplane.speed * tstep # update position with speed
+    
+    UpdateFuel(airplane, tstep) # update the fuel

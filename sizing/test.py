@@ -132,28 +132,23 @@ xlabel("time [min]")
 ylabel("angle [deg]")
 legend()
 
-takeoffFieldLength = xs_ft[hs_ft.index(first(hs_ft, condition=lambda x: 50 <= x))]
-print("takeoffFieldLength: {0} ft".format(takeoffFieldLength))
-timeToClimb = ts_min[hs_ft.index(first(hs_ft, condition=lambda x: 8000 <= x))]
-print("timeToClimb: {0} min".format(timeToClimb))
-
 # DEBUG:
 
-Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
-As = [copy.copy(airplane) for v in Vs]
-for i, (A, V) in enumerate(zip(As, Vs)):
-    A.speed = V
-    As[i] = A
-qs = [AirplaneDynamicPressure(A) for A in As]
-Ls = [LiftCoefficient(A) for A in As]
-Ds = [DragCoefficient(A) for A in As]
-
-figure()
-plot(Vs, Ls, label="L")
-plot(Vs, Ds, label="D")
-legend()
-
-figure()
-plot(Vs, qs)
+# Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
+# As = [copy.copy(airplane) for v in Vs]
+# for i, (A, V) in enumerate(zip(As, Vs)):
+#     A.speed = V
+#     As[i] = A
+# qs = [AirplaneDynamicPressure(A) for A in As]
+# Ls = [LiftCoefficient(A) for A in As]
+# Ds = [DragCoefficient(A) for A in As]
+# 
+# figure()
+# plot(Vs, Ls, label="L")
+# plot(Vs, Ds, label="D")
+# legend()
+# 
+# figure()
+# plot(Vs, qs)
 
 show()

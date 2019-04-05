@@ -1,6 +1,7 @@
-from convert import convert
-from parameters import *
+from utilities import *
+
 from constants import *
+from parameters import *
 from equations import *
 
 ################################################################################

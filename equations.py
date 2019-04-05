@@ -1,8 +1,7 @@
 from utilities import *
-from stdatmo import *
-from convert import convert
-from parameters import *
+
 from constants import *
+from parameters import *
 
 from scipy import *
 from scipy.optimize import minimize

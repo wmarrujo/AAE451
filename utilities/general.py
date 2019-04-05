@@ -28,7 +28,7 @@ def first(iterable, condition = lambda x: True):
 
 def transpose(matrix):
     """
-    transposes a 2 dimensional list
+    transposes a 2-dimensional list
     """
     
     return [[matrix[r][c] for r in range(len(matrix))] for c in range(len(matrix[0]))]

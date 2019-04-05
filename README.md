@@ -25,9 +25,9 @@ The missions file is where each mission is defined. Each mission has a segments 
 
 ### Sizing
 
-This is where the calculations are called and the airplane configurations are tested for their performance values. Any iteration is done here.
+This file defines how the aircraft sizing is done.
 
-This is also where the airplane is defined.
+It has a function to close the aircraft weight by finding the guessed weight of the airplane that leads to the same prediction.s
 
 ## Unit Conversions
 

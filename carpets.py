@@ -1,14 +1,4 @@
-from convert import convert
-from matplotlib.pyplot import *
-from scipy import *
-from stdatmo import *
-from csvTools import *
-
-import sys
-sys.path.insert(0, sys.path[0] + "./sizing")
-from testConfig import *
-
-from equations import *
+from utilities import *
 
 ################################################################################
 # FUNCTIONS
@@ -16,10 +6,16 @@ from equations import *
 
 def performanceParameters(drivingParameters, defaultAirplane):
     """Calculate the aircraft performance for each driving parameter combination"""
+    
+    # DEFINE AIRPLANE
+    
     airplane = defineAirplane(drivingParameters, defaultAirplane) # Here's the airplane we're going to simulate
     
-    #Grab the airplane configuration before it starts simulating stuff
-    emptyWeight = airplane.emptyWeight
+    # GET INITIAL AIRPLANE PERFORMANCE PARAMETERS
+    
+    emptyWeight = airplane.emptyWeight #Grab the airplane configuration before it starts simulating stuff
+    
+    # SIMULATE MISSION
     
     filename = "./data/simulations/" + airplane.name + str(compareValue(drivingParameters)) + ".csv" # make unique filename based on driving parameters
     #TODO verify if function exists for same inputs (then just use that file, otherwise continue to simulate)
@@ -27,7 +23,8 @@ def performanceParameters(drivingParameters, defaultAirplane):
     designMission.simulate(1, airplane, lambda t, s, a: recordingFunction(t, s, a, filename)) # simulate the airplane
     simulation = CSVToDict(filename) # store this run of the simulation to a dictionary
     
-    # Performance parameter calculations
+    # GET PERFORMANCE PARAMETERS FROM SIMULATION
+    
     dTO  = simulation["position"][simulation.index(first(simulation["altitude"], condition = lambda altitude: altitude >= 50))]
     range = simulation["position"][-1]
     
@@ -40,7 +37,8 @@ def performanceParameters(drivingParameters, defaultAirplane):
     
     fuelUsed  = simulation["fuelWeight"][0] - simulation["fuelWeight"][-1]
     
-    # return as tuple or whatever
+    # RETURN PERFORMANCE PARAMETERS
+    
     return [emptyWeight, dTO, range, groundSpeed, flightTime, fuelUsed]
 
 def defineAirplane(drivingParameters, defaultAirplane):
@@ -60,9 +58,8 @@ def recordingFunction(t, segmentTitle, airplane, filename):
     h = airplane.altitude
     thrust = AirplaneThrust(airplane)
     
-    
     writeLineToFile(filename, [t, segmentTitle, W]) # write line to CSV file (don't forget to add each element)
-    
+
 ################################################################################
 # CARPET PLOTS
 ################################################################################
@@ -77,7 +74,7 @@ WS_matrix = [WS * 0.8, WS, WS * 1.2]
 TW_matrix = [TW * 0.8, TW, TW * 1.2]
 
 # FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
-p = [[performanceParameters([WS, TW], airplane) for WS in WS_matrix] for TW in TW_matrix]
+p = [[performanceParameters([WS, TW], testcraft) for WS in WS_matrix] for TW in TW_matrix]
 
 ###### W0 TRENDS
 # Create WS vs. W0 vector

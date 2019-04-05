@@ -1,6 +1,4 @@
 from utilities import *
-from csvTools import *
-from convert import convert
 from scipy import *
 
 ################################################################################
@@ -11,18 +9,21 @@ class Mission:
     def simulate(self, tstep, Airplane, recordingFunction):
         t = 0 # s
         iteration = 0
+        kill = False
         recordingFunction(t, "Start", Airplane)
         
         for segment in self.segments:
             t0 = t
             segment.initialize(Airplane, t, t0)
-
-            while not segment.completed(Airplane, t, t0):
+            
+            while not kill and not segment.completed(Airplane, t, t0):
                 segment.update(Airplane, t, tstep)
                 recordingFunction(t, segment.name, Airplane)
                 
                 t = t + tstep
                 iteration += 1
+                
+                kill = validateState(iteration, t, airplane)
 
 class Segments:
     segments = None
@@ -137,7 +138,7 @@ class Component:
 class Fuselage(Component):
     diameter = None # number [m] : (0 <= x)
     length = None # number [m]
-
+    
     def __init__(self, interferenceFactor, diameter, length):
         self.interferenceFactor = interferenceFactor
         self.referenceLength = diameter

@@ -1,6 +1,4 @@
-from parameters import *
-from convert import convert
-from stdatmo import *
+from utilities import *
 
 ################################################################################
 # FUNDAMENTAL CONSTANTS

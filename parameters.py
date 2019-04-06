@@ -144,6 +144,12 @@ class Powerplant: # the powerplant system configuration
             self.gas.mass = m
         if p == 1: # fully battery
             self.battery.mass = m
+    
+    @property
+    def emptyFuelMass(self):
+        mb = self.battery.mass if self.battery is not None else 0 # TODO: approximation that battery mass is constant with charge & stuff
+        
+        return mb
 
 class Gas:
     mass = None # number [kg] : (0 <= x)

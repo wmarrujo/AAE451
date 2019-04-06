@@ -3,7 +3,7 @@ from parameters import *
 from missions import *
 
 import copy
-from scipy.optimize import minimize
+from scipy.optimize import root
 
 ################################################################################
 # PERFORMANCE
@@ -59,20 +59,21 @@ def defineAirplane(drivingParameters, defaultAirplane):
     # CLOSE WEIGHT
     
     def functionToMinimize(X):
-        print("X:", X)
         A = defineAirplaneWithX(airplane, X)
+        
+        WFe = A.powerplant.emptyFuelMass
         
         success = designMission.simulate(timestep, A)
         penalty = 0 if success else 1e10 # make sure it actually finishes
         
         WFf = FuelWeight(A)
-        
-        print(WFf, penalty)
-        return abs(WFf) + penalty # fuel weight at end of mission should be 0
+                
+        print(X[0], WFf, WFe, penalty)
+        return WFf - WFe + penalty # fuel weight at end of mission should be 0
     
     X0 = [convert(3500, "lb", "N")] # [W0]
-    CS = [(0, None)] # contraints
-    result = minimize(functionToMinimize, X0, bounds=CS)
+    #CS = [(0, None)] # contraints
+    result = root(functionToMinimize, X0)
     XE = result["x"]
     airplane = defineAirplaneWithX(defaultAirplane, XE)
     

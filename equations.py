@@ -29,7 +29,7 @@ def PayloadWeight(airplane):
 def FuelWeight(airplane):
     mf = airplane.powerplant.fuelMass
     
-    return mf/g
+    return mf*g
 
 def EmptyWeight(airplane):
     W0 = airplane.initialGrossWeight

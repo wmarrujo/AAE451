@@ -9,12 +9,12 @@ class Mission:
     segments = None
     
     def simulate(self, tstep, Airplane, recordingFunction):
-        t0 = 0 # s
-        t = t0
+        t = 0 # s
         iteration = 0
         recordingFunction(t, "Start", Airplane)
         
         for segment in self.segments:
+            t0 = t
             segment.initialize(Airplane, t, t0)
 
             while not segment.completed(Airplane, t, t0):
@@ -52,6 +52,7 @@ class Segment:
         pass
 
 class Airplane:
+    name = None # string : name of the airplane (mostly so that we can name simulation files uniquely)
     altitude = None # number [m] : (0 <= x)
     position = None # number [m] : (0 <= x) # how far the airplane has gone so far
     speed = None # number [m/s]
@@ -116,6 +117,7 @@ class Powerplant: # the powerplant system configuration
 class Gas:
     mass = None # number [kg] : (0 <= x)
     energyDensity = None # number [J/kg] : (0 <= x)
+    density = None # number [kg/m^3] : (0 <= x)
 
 class Battery:
     mass = None # number [kg] : (0 <= x)

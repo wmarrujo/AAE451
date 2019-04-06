@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.insert(0, sys.path[0] + "/../")
 from convert import convert # unit conversions
 from stdatmo import * # standard atmospheric conditions
@@ -26,20 +27,6 @@ gas = Gas()
 gas.mass = convert(400, "lb", "N")/g
 gas.energyDensity = avgasEnergyDensity
 
-airfoil = Airfoil("./data/SF1.csv")
-wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"), airplane)
-wing.maximumLiftCoefficient = 2
-wing.airfoil = airfoil
-
-fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"), airplane)
-airplane.fuselage = fuselage
-
-print("fuselage weight", airplane.fuselage, "--")
-
-horizontalStabilizer = Surface(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"), airplane)
-verticalStabilizer = Surface(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"), airplane)
-
-
 powerplant = Powerplant()
 powerplant.gas = gas
 powerplant.battery = None
@@ -47,6 +34,23 @@ powerplant.generator = None
 powerplant.percentElectric = 0
 powerplant.generatorOn = False
 airplane.powerplant = powerplant
+
+
+airfoil = Airfoil(os.path.join(sys.path[0], "data", "SF1.csv"))
+wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"), 0, 1, airplane)
+wing.maximumLiftCoefficient = 2
+wing.airfoil = airfoil
+airplane.wing = wing
+
+fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"), airplane)
+airplane.fuselage = fuselage
+
+print("fuselage weight", airplane.fuselage, "--")
+
+horizontalStabilizer = HorizontalStabilizer(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"), 0, 1, airplane)
+verticalStabilizer = VerticalStabilizer(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"), 0, 1, airplane)
+
+
 propeller = Propeller()
 propeller.diameter = convert(6, "ft", "m")
 propeller.angularVelocity = 0
@@ -63,9 +67,9 @@ tail = Tail()
 tail.horizontalStabilizer = horizontalStabilizer
 tail.verticalStabilizer = verticalStabilizer
 
-Nland = airplane.LoadFactor * 1.5 # Ultimate Load Factor
-mainGear = MainGear(NLand, convert(1, "m", "ft"))# First input = LandingLoadFactor, Second input = lengthMainGear (m)
-frontGear = FrontGear(NLand, convert(1, "m", "ft")) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
+NLand = airplane.LoadFactor * 1.5 # Ultimate Load Factor
+mainGear = MainGear(NLand, convert(1, "m", "ft"), airplane)# First input = LandingLoadFactor, Second input = lengthMainGear (m)
+frontGear = FrontGear(NLand, convert(1, "m", "ft"), airplane) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
 
 airplane = Airplane()
 airplane.altitude = 0
@@ -76,7 +80,6 @@ airplane.pilots = 1
 airplane.passengers = 3
 airplane.flightPathAngle = 0
 airplane.pitch = 0 # pitch angle of airplane (where the nose is pointing)
-airplane.wing = wing
 airplane.tail = tail
 
 airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane

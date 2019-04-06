@@ -17,15 +17,12 @@ from missions import *
 ################################################################################
 airplane = Airplane()
 airplane.InitialGrossWeight = convert(4500, "lb", "N") # [N]
-airplane.LoadFactor = 1 # FIXME what load factor do we size with for a twin engine GA aricraft? 3?
-airplane.HorizontalTaper = 1 # taper of horiztontal tail
-airplane.HorizontalSweep = 0 # [deg] sweep of horzontal tail
-airplane.WingTaper = 1 # taper of main wing
-airplane.WingSweep = 0 # [deg] sweep of main wing
+airplane.LoadFactor = 3.5 # FIXME what load factor do we size with for a twin engine GA aricraft? 3?
 
 gas = Gas()
 gas.mass = convert(400, "lb", "N")/g
 gas.energyDensity = avgasEnergyDensity
+gas.density = avgasDensity
 
 powerplant = Powerplant()
 powerplant.gas = gas
@@ -35,7 +32,6 @@ powerplant.percentElectric = 0
 powerplant.generatorOn = False
 airplane.powerplant = powerplant
 
-
 airfoil = Airfoil(os.path.join(sys.path[0], "data", "SF1.csv"))
 wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"), 0, 1, airplane)
 wing.maximumLiftCoefficient = 2
@@ -44,8 +40,6 @@ airplane.wing = wing
 
 fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"), airplane)
 airplane.fuselage = fuselage
-
-print("fuselage weight", airplane.fuselage, "--")
 
 horizontalStabilizer = HorizontalStabilizer(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"), 0, 1, airplane)
 verticalStabilizer = VerticalStabilizer(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"), 0, 1, airplane)
@@ -66,30 +60,46 @@ engineR = copy.deepcopy(engine)
 tail = Tail()
 tail.horizontalStabilizer = horizontalStabilizer
 tail.verticalStabilizer = verticalStabilizer
+airplane.tail = tail
 
 NLand = airplane.LoadFactor * 1.5 # Ultimate Load Factor
 mainGear = MainGear(NLand, convert(1, "m", "ft"), airplane)# First input = LandingLoadFactor, Second input = lengthMainGear (m)
 frontGear = FrontGear(NLand, convert(1, "m", "ft"), airplane) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
 
-airplane = Airplane()
+airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
+installedEngine = InstalledEngine(airplane)
+
+fuelSystem = FuelSystem(airplane)
+airplane.fuelSystem = fuelSystem
+flightControls = FlightControls(airplane)
+airplane.flightControls = flightControls
+hydraulics = Hydraulics(airplane)
+airplane.hydraulics = hydraulics
+avionics = Avionics(4000) # INPUT = uninstalled avioncs weight [N] (typically 800-1400 lb or 3558 - 6227 N)
+airplane.avionics = avionics
+electronics = Electronics(airplane)
+airplane.electronics = electronics
+
+airplane.pilots = 1
+airplane.passengers = 3
+airconIce = AirConIce(airplane) # Airconditioning and Anti Ice
+airplane.airconIce = airconIce
+
+furnishings = Furnishings(airplane)
+airplane.furnishings = furnishings
+
+airplane.components = [wing, engineL.nacelle, engineR.nacelle, fuselage, horizontalStabilizer, verticalStabilizer, installedEngine, mainGear, frontGear, fuelSystem, hydraulics, flightControls, avionics, electronics, airconIce, furnishings] # [component objects] # list of components making up airplane (including parts used elsewhere)
+airplane.oswaldEfficiencyFactor = 0.8
+airplane.compressibilityDragCoefficient = 0
+airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
+airplane.emptyWeight = sum([component.mass for component in airplane.components]) # TODO: will be replaced with component weight buildup
+print(airplane.emptyWeight)
 airplane.altitude = 0
 airplane.position = 0
 airplane.speed = 0
 airplane.throttle = 0
-airplane.pilots = 1
-airplane.passengers = 3
 airplane.flightPathAngle = 0
 airplane.pitch = 0 # pitch angle of airplane (where the nose is pointing)
-airplane.tail = tail
-
-airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
-installedEngine = InstalledEngine(airplane)
-
-airplane.components = [wing, engineL.nacelle, engineR.nacelle, fuselage, horizontalStabilizer, verticalStabilizer] # [component objects] # list of components making up airplane (including parts used elsewhere)
-airplane.oswaldEfficiencyFactor = 0.8
-airplane.compressibilityDragCoefficient = 0
-airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
-airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with component weight buildup
 
 ################################################################################
 # EVALUATION
@@ -118,66 +128,67 @@ def recordingFunction(t, segmentName, airplane):
     simulation["pitch"] += [airplane.pitch]
     simulation["flightPathAngle"] += [airplane.flightPathAngle]
 
-designMission.simulate(1, airplane, recordingFunction)
-dictToCSV("./data/testSimulation.csv", simulation)
-
-ts_min = [convert(t, "s", "min") for t in simulation["time"]]
-hs_ft = [convert(h, "m", "ft") for h in simulation["altitude"]]
-xs_ft = [convert(x, "m", "ft") for x in simulation["position"]]
-xs_nmi = [convert(x, "m", "nmi") for x in simulation["position"]]
-ps_deg = [convert(p, "rad", "deg") for p in simulation["pitch"]]
-fpas_deg = [convert(a, "rad", "deg") for a in simulation["flightPathAngle"]]
-aoas_deg = [p - fpa for (p, fpa) in zip(ps_deg, fpas_deg)]
-
-figure()
-plot(xs_nmi, hs_ft)
-title("Track")
-xlabel("position [nmi]")
-ylabel("altitude [ft]")
-
-figure()
-plot(ts_min, xs_nmi)
-title("Range History")
-xlabel("time [min]")
-ylabel("position [nmi]")
-
-figure()
-plot(ts_min, hs_ft)
-title("Altitude History")
-xlabel("time [min]")
-ylabel("altitude [ft]")
-
-figure()
-plot(ts_min, ps_deg, label="pitch")
-plot(ts_min, fpas_deg, label="flight path angle")
-plot(ts_min, aoas_deg, label="angle of Attack")
-title("Angle History")
-xlabel("time [min]")
-ylabel("angle [deg]")
-legend()
-
-takeoffFieldLength = xs_ft[hs_ft.index(first(hs_ft, condition=lambda x: 50 <= x))]
-print("takeoffFieldLength: {0} ft".format(takeoffFieldLength))
-timeToClimb = ts_min[hs_ft.index(first(hs_ft, condition=lambda x: 8000 <= x))]
-print("timeToClimb: {0} min".format(timeToClimb))
-
-# DEBUG:
-
-Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
-As = [copy.copy(airplane) for v in Vs]
-for i, (A, V) in enumerate(zip(As, Vs)):
-    A.speed = V
-    As[i] = A
-qs = [AirplaneDynamicPressure(A) for A in As]
-Ls = [LiftCoefficient(A) for A in As]
-Ds = [DragCoefficient(A) for A in As]
-
-figure()
-plot(Vs, Ls, label="L")
-plot(Vs, Ds, label="D")
-legend()
-
-figure()
-plot(Vs, qs)
-
-show()
+######################################
+# designMission.simulate(1, airplane, recordingFunction)
+# dictToCSV("./data/testSimulation.csv", simulation)
+#
+# ts_min = [convert(t, "s", "min") for t in simulation["time"]]
+# hs_ft = [convert(h, "m", "ft") for h in simulation["altitude"]]
+# xs_ft = [convert(x, "m", "ft") for x in simulation["position"]]
+# xs_nmi = [convert(x, "m", "nmi") for x in simulation["position"]]
+# ps_deg = [convert(p, "rad", "deg") for p in simulation["pitch"]]
+# fpas_deg = [convert(a, "rad", "deg") for a in simulation["flightPathAngle"]]
+# aoas_deg = [p - fpa for (p, fpa) in zip(ps_deg, fpas_deg)]
+#
+# figure()
+# plot(xs_nmi, hs_ft)
+# title("Track")
+# xlabel("position [nmi]")
+# ylabel("altitude [ft]")
+#
+# figure()
+# plot(ts_min, xs_nmi)
+# title("Range History")
+# xlabel("time [min]")
+# ylabel("position [nmi]")
+#
+# figure()
+# plot(ts_min, hs_ft)
+# title("Altitude History")
+# xlabel("time [min]")
+# ylabel("altitude [ft]")
+#
+# figure()
+# plot(ts_min, ps_deg, label="pitch")
+# plot(ts_min, fpas_deg, label="flight path angle")
+# plot(ts_min, aoas_deg, label="angle of Attack")
+# title("Angle History")
+# xlabel("time [min]")
+# ylabel("angle [deg]")
+# legend()
+#
+# takeoffFieldLength = xs_ft[hs_ft.index(first(hs_ft, condition=lambda x: 50 <= x))]
+# print("takeoffFieldLength: {0} ft".format(takeoffFieldLength))
+# timeToClimb = ts_min[hs_ft.index(first(hs_ft, condition=lambda x: 8000 <= x))]
+# print("timeToClimb: {0} min".format(timeToClimb))
+#
+# # DEBUG:
+#
+# Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
+# As = [copy.copy(airplane) for v in Vs]
+# for i, (A, V) in enumerate(zip(As, Vs)):
+#     A.speed = V
+#     As[i] = A
+# qs = [AirplaneDynamicPressure(A) for A in As]
+# Ls = [LiftCoefficient(A) for A in As]
+# Ds = [DragCoefficient(A) for A in As]
+#
+# figure()
+# plot(Vs, Ls, label="L")
+# plot(Vs, Ds, label="D")
+# legend()
+#
+# figure()
+# plot(Vs, qs)
+#
+# show()

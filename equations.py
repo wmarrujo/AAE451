@@ -32,7 +32,9 @@ def FuelWeight(airplane):
     return mf/g
 
 def EmptyWeight(airplane):
-    return airplane.emptyWeight # TODO: temporary, replace with component weight buildup later
+    W0 = airplane.initialGrossWeight
+    
+    return convert(2500, "lb", "N") # TODO: temporary, replace with component weight buildup later
 
 def AirplaneReynoldsNumber(airplane):
     rho = densityAtAltitude(airplane.altitude)

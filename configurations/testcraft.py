@@ -2,13 +2,16 @@ import sys
 import os
 sys.path.append(os.path.join(sys.path[0], ".."))
 
+from constants import *
 from parameters import *
+
+import copy
 
 ################################################################################
 # AIRPLANE DEFINITION
 ################################################################################
 
-airfoil = Airfoil("../data/SF1.csv")
+airfoil = Airfoil(os.path.join(sys.path[0], "data", "SF1.csv"))
 wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"))
 wing.maximumLiftCoefficient = 2
 wing.airfoil = airfoil
@@ -42,6 +45,7 @@ tail.verticalStabilizer = verticalStabilizer
 # landingGear # TODO: add to components of airplane
 
 airplane = Airplane()
+airplane.name = "testcraft"
 airplane.altitude = 0
 airplane.position = 0
 airplane.speed = 0
@@ -58,4 +62,4 @@ airplane.components = [wing, engineL.nacelle, engineR.nacelle, fuselage, horizon
 airplane.oswaldEfficiencyFactor = 0.8
 airplane.compressibilityDragCoefficient = 0
 airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
-airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with component weight buildup
+airplane.initialGrossWeight = convert(4000, "lb", "N")

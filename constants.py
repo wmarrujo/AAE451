@@ -16,7 +16,15 @@ batteryEnergyDensity = convert(265, "Wh/kg", "J/kg")
 avgasDensity = convert(0.721, "kg/L", "kg/m^3")
 
 ################################################################################
-# USE CASE CONSTANTS
+# SIMULATION
+################################################################################
+
+timestep = 1 # s
+iterationCap = 100000
+timeCap = convert(10, "hr", "s")
+
+################################################################################
+# AIRPLANE
 ################################################################################
 
 heavyPassengerWeight = convert(180, "lb", "N") # weight of a heavy passenger

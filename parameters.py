@@ -1,4 +1,6 @@
 from utilities import *
+from constants import *
+
 from scipy import *
 
 ################################################################################
@@ -6,24 +8,42 @@ from scipy import *
 class Mission:
     segments = None
     
-    def simulate(self, tstep, Airplane, recordingFunction):
+    def simulate(self, tstep, airplane, recordingFunction=(lambda t, s, a: None)):
+        """
+        takes a time step, an airplane definition, and an optional recording function to run each iteration
+        returns the success of the simulation. If it was able to complete it, it returns True, if it encountered something that broke the verification, it returns False
+        
+        the recording function takes the simulation time, the segment name, and the airplane in its current state
+        """
+        
         t = 0 # s
         iteration = 0
-        kill = False
-        recordingFunction(t, "Start", Airplane)
+        verified = verifySimulation(iteration, t, "Start", airplane)
+        recordingFunction(t, "Start", airplane)
         
         for segment in self.segments:
             t0 = t
-            segment.initialize(Airplane, t, t0)
+            segment.initialize(airplane, t, t0)
             
-            while not kill and not segment.completed(Airplane, t, t0):
-                segment.update(Airplane, t, tstep)
-                recordingFunction(t, segment.name, Airplane)
+            while verified and not segment.completed(airplane, t, t0):
+                segment.update(airplane, t, tstep)
+                recordingFunction(t, segment.name, airplane)
                 
                 t = t + tstep
                 iteration += 1
                 
-                kill = validateState(iteration, t, airplane)
+                verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
+        
+        return verified
+
+def verifySimulation(iteration, t, segmentName, airplane):
+    if iterationCap <= iteration:
+        print("WARNING: simulation iteration cap reached")
+        return False
+    if timeCap <= t:
+        print("WARNING: simulation time cap reached")
+        return False
+    return True
 
 class Segments:
     segments = None
@@ -60,7 +80,8 @@ class Airplane:
     throttle = None # number : (0 <= x <= 1)
     pilots = None # number : (0 < x)
     passengers = None # number : (0 <= x)
-    flightPathAngle = None # < 5 degrees
+    pitch = None # number [rad]
+    flightPathAngle = None # number [rad]
     wing = None # wing component object
     engines = [] # [engine object] # list of engines on airplane
     powerplant = None # powerplant object
@@ -68,11 +89,7 @@ class Airplane:
     oswaldEfficiencyFactor = None # number : (0.7 < x < 0.85) # TODO: get better estimate
     compressibilityDragCoefficient = 0 # number : (0 = x) # we fly too slow
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
-    InitialGrossWeight = None # number : initial guess for gross weight, changes with iterations
-    emptyWeight = None # number [N] : (0 <= x) # TODO: replace with component weight, will delete this parameter later
-    angleOfAttack = None # number [rad]
-    # takeoffLiftCoefficient = 1.5  # number : (0 <= x) # based on Anderson table 5.3 for plain flap # FIXME: figure out this takeoff/landing thing
-    # landingLiftCoefficient = 1.85  # number : (0 <= x) # based on Anderson table 5.3 for plain flap
+    initialGrossWeight = None # number : initial guess for gross weight, changes with iterations
     productionQuantityNeeded = None  # number [planes] : (0 <= x)
     numberFlightTestAircraft = None  # number [planes] : (2 <= x <= 6)  # Raymer v6 18.4.2
     avionicsCost = None  # number [USD] : (0 <= x)
@@ -219,6 +236,11 @@ class Surface(Component):
         self.referenceLength = span
         self.thicknessToChord = thicknessToChord
         self.planformArea = planformArea
+    
+    def setPlanformAreaWhileMaintainingAspectRatio(self, S):
+        AR = self.aspectRatio
+        self.planformArea = S
+        self.referenceLength = sqrt(AR * S) # set the span
     
     @property
     def formFactor(self):

@@ -1,4 +1,4 @@
 from .convert import *
-from .csvTools import *
 from .general import *
+from .csvTools import *
 from .stdatmo import *

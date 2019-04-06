@@ -14,20 +14,39 @@ from missions import *
 ################################################################################
 # AIRPLANE DEFINITION
 ################################################################################
+airplane = Airplane()
+airplane.InitialGrossWeight = convert(4500, "lb", "N") # [N]
+airplane.LoadFactor = 1 # FIXME what load factor do we size with for a twin engine GA aricraft? 3?
+airplane.HorizontalTaper = 1 # taper of horiztontal tail
+airplane.HorizontalSweep = 0 # [deg] sweep of horzontal tail
+airplane.WingTaper = 1 # taper of main wing
+airplane.WingSweep = 0 # [deg] sweep of main wing
 
-airfoil = Airfoil("./data/SF1.csv")
-wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"))
-wing.maximumLiftCoefficient = 2
-wing.airfoil = airfoil
 gas = Gas()
 gas.mass = convert(400, "lb", "N")/g
 gas.energyDensity = avgasEnergyDensity
+
+airfoil = Airfoil("./data/SF1.csv")
+wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"), airplane)
+wing.maximumLiftCoefficient = 2
+wing.airfoil = airfoil
+
+fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"), airplane)
+airplane.fuselage = fuselage
+
+print("fuselage weight", airplane.fuselage, "--")
+
+horizontalStabilizer = Surface(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"), airplane)
+verticalStabilizer = Surface(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"), airplane)
+
+
 powerplant = Powerplant()
 powerplant.gas = gas
 powerplant.battery = None
 powerplant.generator = None
 powerplant.percentElectric = 0
 powerplant.generatorOn = False
+airplane.powerplant = powerplant
 propeller = Propeller()
 propeller.diameter = convert(6, "ft", "m")
 propeller.angularVelocity = 0
@@ -37,15 +56,16 @@ engine = Engine()
 engine.maxPower = convert(130, "hp", "W")
 engine.propeller = propeller
 engine.nacelle = engineNacelle
+engine.mass = 98 # kg
 engineL = engine
 engineR = copy.deepcopy(engine)
-fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"))
-horizontalStabilizer = Surface(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"))
-verticalStabilizer = Surface(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"))
 tail = Tail()
 tail.horizontalStabilizer = horizontalStabilizer
 tail.verticalStabilizer = verticalStabilizer
-# landingGear # TODO: add to components of airplane
+
+Nland = airplane.LoadFactor * 1.5 # Ultimate Load Factor
+mainGear = MainGear(NLand, convert(1, "m", "ft"))# First input = LandingLoadFactor, Second input = lengthMainGear (m)
+frontGear = FrontGear(NLand, convert(1, "m", "ft")) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
 
 airplane = Airplane()
 airplane.altitude = 0
@@ -58,8 +78,10 @@ airplane.flightPathAngle = 0
 airplane.pitch = 0 # pitch angle of airplane (where the nose is pointing)
 airplane.wing = wing
 airplane.tail = tail
-airplane.powerplant = powerplant
+
 airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
+installedEngine = InstalledEngine(airplane)
+
 airplane.components = [wing, engineL.nacelle, engineR.nacelle, fuselage, horizontalStabilizer, verticalStabilizer] # [component objects] # list of components making up airplane (including parts used elsewhere)
 airplane.oswaldEfficiencyFactor = 0.8
 airplane.compressibilityDragCoefficient = 0

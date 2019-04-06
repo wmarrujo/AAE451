@@ -123,13 +123,27 @@ class Powerplant: # the powerplant system configuration
     generator = None # generator object
     percentElectric = None # number : (0 <= x <= 1) # how much of the output energy comes from electricity
     generatorOn = None # bool # is the generator on, giving energy to the battery?
-
+    
     @property
     def fuelMass(self):
         mg = self.gas.mass if self.gas is not None else 0
         mb = self.battery.mass if self.battery is not None else 0
         
         return mg + mb
+    
+    @fuelMass.setter
+    def fuelMass(self, m):
+        edg = self.gas.energyDensity if self.gas else 0
+        edb = self.battery.energyDensity if self.battery else 0
+        p = self.percentElectric
+        
+        if 0 < p and p < 1: # hybrid
+            self.gas.mass = m*edb*(1-p) / (edg*p + edb*(1-p))
+            self.battery.mass = m*edg*p / (edb*(1-p) + edg*p)
+        if p == 0: # fully gas
+            self.gas.mass = m
+        if p == 1: # fully battery
+            self.battery.mass = m
 
 class Gas:
     mass = None # number [kg] : (0 <= x)
@@ -139,7 +153,15 @@ class Gas:
 class Battery:
     mass = None # number [kg] : (0 <= x)
     energyDensity = None # number [W*h/kg] : (0 <= x)
-    energy = None # number [J] : (0 <= x)
+    capacity = None # number [J] : (0 <= x)
+    charge = None # number : (0 <= x <= 1)
+    
+    @property
+    def energy(self):
+        E = self.capacity
+        C = self.charge
+        
+        return E*C
 
 class Generator:
     efficiency = None # number : (0 <= x <= 1)
@@ -240,7 +262,7 @@ class Surface(Component):
     def setPlanformAreaWhileMaintainingAspectRatio(self, S):
         AR = self.aspectRatio
         self.planformArea = S
-        self.referenceLength = sqrt(AR * S) # set the span
+        self.span = sqrt(AR * S) # set the span
     
     @property
     def formFactor(self):
@@ -261,11 +283,14 @@ class Surface(Component):
         S = self.planformArea
         b = self.span
         
-        return S/b
+        return b**2/S
     
     @property
     def span(self):
         return self.referenceLength
+    @span.setter
+    def span(self, b):
+        self.referenceLength = b
     
     @property
     def chord(self):

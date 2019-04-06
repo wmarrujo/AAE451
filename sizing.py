@@ -40,32 +40,37 @@ def defineAirplane(drivingParameters, defaultAirplane):
     
     def defineAirplaneWithX(A, X):
         B = copy.deepcopy(A)
-        S = airplane.wing.planformArea
-        Engines = airplane.engines
+        S = B.wing.planformArea
+        Engines = B.engines
         W0 = X[0] # initial gross weight
+        We = EmptyWeight(A)
+        Wpay = PayloadWeight(A)
         
         S = W0 / WS
-        B.InitialGrossWeight = W0
+        Wf = W0 - We - Wpay
+        B.initialGrossWeight = W0
+        B.powerplant.fuelMass = Wf/g # put on just enough fuel to get through mission
         B.wing.setPlanformAreaWhileMaintainingAspectRatio(S)
         for engine in Engines:
-            engine.maxPower = PW/len(Engines) * B.InitialGrossWeight # TODO: assuming all engines are the same size, change to each proportionally if needed
+            engine.maxPower = PW/len(Engines) * W0 # TODO: assuming all engines are the same size, change to each proportionally if needed
         
         return B
     
     # CLOSE WEIGHT
     
     def functionToMinimize(X):
+        print("X:", X)
         A = defineAirplaneWithX(airplane, X)
         
         success = designMission.simulate(timestep, A)
-        penalty = 0 if success else float("inf") # make sure it actually finishes
+        penalty = 0 if success else 1e10 # make sure it actually finishes
         
-        FW = FuelWeight(A) # fuel weight at end of mission
+        WFf = FuelWeight(A)
         
-        print("FW:", FW, penalty)
-        return abs(FW) + penalty # fuel weight at end of mission should be 0
+        print(WFf, penalty)
+        return abs(WFf) + penalty # fuel weight at end of mission should be 0
     
-    X0 = [convert(4000, "lb", "N")] # [W0]
+    X0 = [convert(3500, "lb", "N")] # [W0]
     CS = [(0, None)] # contraints
     result = minimize(functionToMinimize, X0, bounds=CS)
     XE = result["x"]

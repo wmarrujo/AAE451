@@ -15,7 +15,7 @@ from missions import *
 # AIRPLANE DEFINITION
 ################################################################################
 
-airfoil = Airfoil("./data/SF1.csv")
+airfoil = Airfoil("../data/SF1.csv")
 wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"))
 wing.maximumLiftCoefficient = 2
 wing.airfoil = airfoil

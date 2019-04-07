@@ -348,6 +348,11 @@ class MainGear(Component):
         self.gearLength = Lm
         print(Lm, self.gearLength, self.referenceLength)
         self.mass = self.calculateMainGearMass(airplane)
+        
+        # FIXME: all of these are hard-coded to nothing because we don't have a relationship for them yet
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
     
     def calculateMainGearMass(self, airplane):
         Wland = airplane.InitialGrossWeight # FIXME: do we just use T/O weight in case of an early failure?
@@ -372,6 +377,11 @@ class FrontGear(Component):
         self.landloadfactor = Nland
         self.gearLength = Ln
         self.mass = self.calculateFrontGearMass(airplane)
+        
+        # FIXME: all of these are hard-coded to nothing because we don't have a relationship for them yet
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
 
     def calculateFrontGearMass(self, airplane):
         Wland = airplane.InitialGrossWeight # FIXME
@@ -393,6 +403,12 @@ class FuelSystem(Component):
     def __init__(self, airplane):
         self.mass = self.calculateFuelSystemMass(airplane)
         
+        # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
+        self.referenceLength = 0
+        
     def calculateFuelSystemMass(self, airplane):
         if airplane.powerplant.gas: # make sure gas system exists
             Vt = airplane.powerplant.gas.mass / airplane.powerplant.gas.density # number [L] - total fuel volume
@@ -409,6 +425,12 @@ class FuelSystem(Component):
 class FlightControls(Component):
     def __init__(self, airplane):
         self.mass = self.calculateFlightControlsMass(airplane)
+        
+        # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
+        self.referenceLength = 0
     
     def calculateFlightControlsMass(self, airplane):
         Lfueselage = airplane.fuselage.length # number [m]
@@ -423,6 +445,12 @@ class FlightControls(Component):
 class Hydraulics(Component):
     def __init__(self, airplane):
         self.mass = self.calculateHydraulicsMass(airplane)
+        
+        # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
+        self.referenceLength = 0
 
     def calculateHydraulicsMass(self, airplane):
         Wdg = airplane.InitialGrossWeight
@@ -433,6 +461,12 @@ class Hydraulics(Component):
 class Avionics(Component):
     def __init__(self, Wuav):
         self.mass = self.calculateAvionicsMass(Wuav)
+        
+        # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
+        self.referenceLength = 0
 
     def calculateAvionicsMass(self, Wuav):
         WuninAvi = Wuav # number [N] - weight of uninstalled avionics (typically 800-1400 lb or 3558 - 6227 N)
@@ -445,6 +479,12 @@ class Avionics(Component):
 class Electronics(Component):
     def __init__(self, airplane):
         self.mass = self.calculateElectronicsMass(airplane)
+        
+        # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
+        self.referenceLength = 0
 
     def calculateElectronicsMass(self, airplane):
         Wfs = airplane.fuelSystem.mass * g # Fuel system weight [N] (FIXME: IS THIS THE RIGHT CALL FORMAT?)
@@ -457,6 +497,12 @@ class Electronics(Component):
 class AirConIce(Component):
     def __init__(self, airplane):
         self.mass = self.calculateAirConIceMass(airplane)
+        
+        # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
+        self.referenceLength = 0
 
     def calculateAirConIceMass(self, airplane):
         Wdg = airplane.InitialGrossWeight
@@ -471,6 +517,12 @@ class AirConIce(Component):
 class Furnishings(Component):
     def __init__(self, airplane):
         self.mass = self.calculateFurnishingsMass(airplane)
+        
+        # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
+        self.formFactor = 0
+        self.interferenceFactor = 1
+        self.wettedArea = 0
+        self.referenceLength = 0
 
     def calculateFurnishingsMass(self, airplane):
         Wdg = airplane.InitialGrossWeight

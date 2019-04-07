@@ -115,7 +115,6 @@ def ParasiteDragCoefficient(airplane):
         Cfi = ComponentSkinFrictionCoefficient(airplane, component)
         Sweti = component.wettedArea
         
-        print(FFi, Qi, Cfi, Sweti, Sref, component)
         return FFi * Qi * Cfi * Sweti / Sref
     
     CD0Prediction = sum([componentDragContribution(component) for component in airplane.components])

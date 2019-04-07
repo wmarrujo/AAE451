@@ -13,8 +13,6 @@ sys.path.append(simulationPath)
 # PERFORMANCE
 ################################################################################
 
-from hashlib import sha256
-
 def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     # get from cache if the simulation has already been done
     dirName = defaultAirplane.name + compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane))
@@ -58,7 +56,7 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     # CALCULATE PERFORMANCE
     # initialAirplane, finalAirplane, & simulation are defined by now
     
-    print(initialAirplane, finalAirplane, simulation["time"][-1])
+    
     
     return {}
 

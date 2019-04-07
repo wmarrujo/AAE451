@@ -29,6 +29,10 @@ This file defines how the aircraft sizing is done.
 
 It has a function to close the aircraft weight by finding the guessed weight of the airplane that leads to the same prediction.s
 
+## Simulations
+
+This folder is where the simulation cache goes. It is not tracked by git so we can all test independently. To clear the cache, just delete the contents of the directory.
+
 ## Unit Conversions
 
 examples:

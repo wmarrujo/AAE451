@@ -127,6 +127,7 @@ def ComponentSkinFrictionCoefficient(airplane, component):
     V = airplane.speed
     L = component.referenceLength
     
+    print(rho, mu, V, L, component)
     Re = rho * V * L / mu
     Re = 10 if Re == 0 else Re # make sure log10 has a value
     return 0.455 / (log10(Re)**2.58) # TODO: better approximation?

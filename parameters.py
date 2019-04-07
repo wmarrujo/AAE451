@@ -95,13 +95,6 @@ class Propeller:
     angularVelocity = None # number [rad/s] : (0 <= x) # 0<=x assumes no fanning of engine to regain energy
     efficiency = None
 
-class Engine: # the engines/motors that drive the propeller
-    maxPower = None # number [W] : (0 <= x)
-    propeller = None # propeller object
-    cost = None # number [USD] : (0 <= x)
-    nacelle = None # nacelle object
-    mass = None # number [kg] : uninstalled engine mass
-
 class Powerplant: # the powerplant system configuration
     gas = None # gas object
     battery = None # battery object
@@ -136,6 +129,48 @@ class Component:
     interferenceFactor = None # number : (1 <= x)
     wettedArea = None # number [m^2] : (0 <= x)
     referenceLength = None # number [m] : (0 <= x)
+
+class Engine(Component): # the engines/motors that drive the propeller
+    maxPower = None # number [W] : (0 <= x)
+    propeller = None # propeller object
+    cost = None # number [USD] : (0 <= x)
+    mass = None # number [kg] : (0 <= x) # uninstalled engine mass
+    
+    diameter = None # number [m] : (0 <= x)
+    length = None # number [m] : (0 <= x)
+    
+    def __init__(self, interferenceFactor, diameter, length, uninstalledMass, numberOfEngines):
+        self.interferenceFactor = interferenceFactor
+        self.referenceLength = diameter
+        self.diameter = diameter
+        self.length = length
+        self.mass = self.installedEngineMass(uninstalledMass, numberOfEngines)
+    
+    def installedEngineMass(self, uninstalledMass, numberOfEngines):
+        WengImperial = 2.575 * convert(uninstalledMass, "N", "lb")**0.922 * numberOfEngines
+        WengMetric = convert(WengImperial, "lb", "N")
+        
+        return WengMetric/g
+    
+    @property
+    def finenessRatio(self):
+        l = self.length
+        D = self.diameter
+        
+        return l / D
+    
+    @property
+    def formFactor(self):
+        fr = self.finenessRatio
+        
+        return 1 + 0.35 / fr
+    
+    @property
+    def wettedArea(self):
+        d = self.diameter
+        l = self.length
+        
+        return pi * d * l # ASSUMPTION: modeling as a cylinder
 
 class Fuselage(Component):
     diameter = None # number [m] : (0 <= x)
@@ -182,37 +217,6 @@ class Fuselage(Component):
         WfMetric = convert(WfImperial, "lb", "N")
         
         return WfMetric / g
-
-class Nacelle(Component):
-    diameter = None
-    length = None
-    
-    def __init__(self, interferenceFactor, diameter, length):
-        self.interferenceFactor = interferenceFactor
-        self.referenceLength = diameter
-        self.diameter = diameter
-        self.length = length
-        self.mass = 0
-    
-    @property
-    def finenessRatio(self):
-        l = self.length
-        D = self.diameter
-        
-        return l / D
-    
-    @property
-    def formFactor(self):
-        fr = self.finenessRatio
-        
-        return 1 + 0.35 / fr
-    
-    @property
-    def wettedArea(self):
-        d = self.diameter
-        l = self.length
-        
-        return pi * d * l # ASSUMPTION: modeling as a cylinder
 
 class Surface(Component):
     planformArea = None # number [m^2] : (0 <= x)
@@ -344,12 +348,12 @@ class MainGear(Component):
         self.landloadfactor = NLand
         self.gearlength = Lm
         self.mass = self.calculateMainGearMass(airplane)
-
+    
     def calculateMainGearMass(self, airplane):
-        Wland = airplane.InitialGrossWeight # FIXME do we just use T/O weight in case of an early failure?
-        Nz = self.landloadfactor #FIXME do we use a different load factor? 3 or something?
+        Wland = airplane.InitialGrossWeight # FIXME: do we just use T/O weight in case of an early failure?
+        Nz = self.landloadfactor # FIXME: do we use a different load factor? 3 or something?
         Lm = self.gearlength
-
+        
         WmgImperial = 0.095 * (Nz * convert(Wland, "N", "lb"))**0.768 * (convert(Lm, "m", "in")/12)**0.409
         WmgMetric = convert(WmgImperial, "lb", "N")
         return WmgMetric / g
@@ -373,38 +377,26 @@ class FrontGear(Component):
         WngMetric = convert(WngImperial, "lb", "N")
         return WngMetric / g
 
-class InstalledEngine(Component): # FIXME - IS THIS ACUTALLY GOING TO BE CONTAINED IN THE ENGINE OBJECT?
-    def __init__(self, airplane):
-        self.mass = self.calculateInstalledEngineMass(airplane)
-    
-
-    def calculateInstalledEngineMass(self, airplane):
-        WengUnin = airplane.engines[0].mass # number [m] - weight of individual engine NOTE: ASSUMED MASS IS EQUAL FOR ALL ENGINES
-        Neng = len(airplane.engines) # number of engines
-
-        WengImperial = 2.575 * convert(WengUnin, "N", "lb")**0.922 * Neng
-        WengMetric = convert(WengImperial, "lb", "N")
-
-        return WengMetric / g
-
 class FuelSystem(Component):
     def __init__(self, airplane):
         self.mass = self.calculateFuelSystemMass(airplane)
-
+        
     def calculateFuelSystemMass(self, airplane):
-        Vt = airplane.powerplant.gas.mass / airplane.powerplant.gas.density # number [L] - total fuel volume
-        Vi = Vt # number [L] - total integral tanks volume (should be same as Vt as we have no drop tanks...or DO we??? O_o)
-        Nt = 2 # number of fuel tanks ###FIXME HARD NUM
-        Neng = len(airplane.engines) # number of engines
-
-        Wfs = 2.49 * convert(Vt, "L", "gal")**0.726 * (1 / (Vi/Vt))**0.363 * Nt**0.242 * Neng**0.157
-
-        return convert(Wfs, "lb", "N")
+        if airplane.powerplant.gas: # make sure gas system exists
+            Vt = airplane.powerplant.gas.mass / airplane.powerplant.gas.density # number [L] - total fuel volume
+            Vi = Vt # number [L] - total integral tanks volume (should be same as Vt as we have no drop tanks...or DO we??? O_o)
+            Nt = 2 # number of fuel tanks # FIXME: HARD NUM
+            Neng = len(airplane.engines) # number of engines
+            
+            Wfs = 2.49 * convert(Vt, "L", "gal")**0.726 * (1 / (Vi/Vt))**0.363 * Nt**0.242 * Neng**0.157
+            
+            return convert(Wfs, "lb", "N")
+        else:
+            return 0 # TODO: implement for if no gas fuel system
 
 class FlightControls(Component):
     def __init__(self, airplane):
         self.mass = self.calculateFlightControlsMass(airplane)
-
     
     def calculateFlightControlsMass(self, airplane):
         Lfueselage = airplane.fuselage.length # number [m]

@@ -59,16 +59,12 @@ propeller.angularVelocity = 0
 propeller.efficiency = 0.9
 
 ############### ENGINE INPUT AREA ###############
-engineNacelle = Nacelle(1, convert(1.5, "ft", "m"), convert(4, "ft", "m"))
-engine = Engine()
+engine = Engine(1, convert(1.5, "ft", "m"), convert(4, "ft", "m"), 98, 2)
 engine.maxPower = convert(130, "hp", "W")
 engine.propeller = propeller
-engine.nacelle = engineNacelle
-engine.mass = 98 # kg
 engineL = engine
 engineR = copy.deepcopy(engine)
 airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
-installedEngine = InstalledEngine(airplane)
 
 ############### LANDING GEAR INPUT AREA ###############
 NLand = airplane.LoadFactor * 1.5 # Ultimate Load Factor
@@ -93,7 +89,7 @@ airplane.airconIce = airconIce
 furnishings = Furnishings(airplane)
 airplane.furnishings = furnishings
 
-airplane.components = [wing, engineL.nacelle, engineR.nacelle, fuselage, horizontalStabilizer, verticalStabilizer, installedEngine, mainGear, frontGear, fuelSystem, hydraulics, flightControls, avionics, electronics, airconIce, furnishings] # [component objects] # list of components making up airplane (including parts used elsewhere)
+airplane.components = [wing, engineL, engineR, fuselage, horizontalStabilizer, verticalStabilizer, mainGear, frontGear, fuelSystem, hydraulics, flightControls, avionics, electronics, airconIce, furnishings] # [component objects] # list of components making up airplane (including parts used elsewhere)
 
 airplane.oswaldEfficiencyFactor = 0.8
 airplane.compressibilityDragCoefficient = 0

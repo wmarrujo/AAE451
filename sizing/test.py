@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.insert(0, sys.path[0] + "/../")
 from convert import convert # unit conversions
 from stdatmo import * # standard atmospheric conditions
@@ -14,58 +15,97 @@ from missions import *
 ################################################################################
 # AIRPLANE DEFINITION
 ################################################################################
+airplane = Airplane()
+airplane.InitialGrossWeight = convert(4500, "lb", "N") # [N]
+airplane.LoadFactor = 3.5 # FIXME what load factor do we size with for a twin engine GA aricraft? 3?
 
-airfoil = Airfoil("./data/SF1.csv")
-wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"))
-wing.maximumLiftCoefficient = 2
-wing.airfoil = airfoil
 gas = Gas()
 gas.mass = convert(400, "lb", "N")/g
 gas.energyDensity = avgasEnergyDensity
 gas.density = avgasDensity
+
 powerplant = Powerplant()
 powerplant.gas = gas
 powerplant.battery = None
 powerplant.generator = None
 powerplant.percentElectric = 0
 powerplant.generatorOn = False
+airplane.powerplant = powerplant
+
+############### MAIN WING INPUT AREA ###############
+airfoil = Airfoil(os.path.join(sys.path[0], "data", "SF1.csv"))
+wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"), 0, 1, airplane)
+wing.maximumLiftCoefficient = 2
+wing.airfoil = airfoil
+airplane.wing = wing
+
+############### FUSELAGE INPUT AREA ###############
+fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"), airplane)
+airplane.fuselage = fuselage
+
+############### STABILIZERS INPUT AREA ###############
+horizontalStabilizer = HorizontalStabilizer(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"), 0, 1, airplane)
+verticalStabilizer = VerticalStabilizer(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"), 0, 1, airplane)
+tail = Tail()
+tail.horizontalStabilizer = horizontalStabilizer
+tail.verticalStabilizer = verticalStabilizer
+airplane.tail = tail
+
+
+############### PROPELLER INPUT AREA ###############
 propeller = Propeller()
 propeller.diameter = convert(6, "ft", "m")
 propeller.angularVelocity = 0
 propeller.efficiency = 0.9
+
+############### ENGINE INPUT AREA ###############
 engineNacelle = Nacelle(1, convert(1.5, "ft", "m"), convert(4, "ft", "m"))
 engine = Engine()
 engine.maxPower = convert(130, "hp", "W")
 engine.propeller = propeller
 engine.nacelle = engineNacelle
+engine.mass = 98 # kg
 engineL = engine
 engineR = copy.deepcopy(engine)
-fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"))
-horizontalStabilizer = Surface(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"))
-verticalStabilizer = Surface(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"))
-tail = Tail()
-tail.horizontalStabilizer = horizontalStabilizer
-tail.verticalStabilizer = verticalStabilizer
-# landingGear # TODO: add to components of airplane
+airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
+installedEngine = InstalledEngine(airplane)
 
-airplane = Airplane()
+############### LANDING GEAR INPUT AREA ###############
+NLand = airplane.LoadFactor * 1.5 # Ultimate Load Factor
+mainGear = MainGear(NLand, convert(1, "m", "ft"), airplane)# First input = LandingLoadFactor, Second input = lengthMainGear (m)
+frontGear = FrontGear(NLand, convert(1, "m", "ft"), airplane) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
+
+############### MISCELLANEOUS COMPONENT INPUT AREA ###############
+fuelSystem = FuelSystem(airplane)
+airplane.fuelSystem = fuelSystem
+flightControls = FlightControls(airplane)
+airplane.flightControls = flightControls
+hydraulics = Hydraulics(airplane)
+airplane.hydraulics = hydraulics
+avionics = Avionics(4000) # INPUT = uninstalled avioncs weight [N] (typically 800-1400 lb or 3558 - 6227 N)
+airplane.avionics = avionics
+electronics = Electronics(airplane)
+airplane.electronics = electronics
+airplane.pilots = 1
+airplane.passengers = 3
+airconIce = AirConIce(airplane) # Airconditioning and Anti Ice
+airplane.airconIce = airconIce
+furnishings = Furnishings(airplane)
+airplane.furnishings = furnishings
+
+airplane.components = [wing, engineL.nacelle, engineR.nacelle, fuselage, horizontalStabilizer, verticalStabilizer, installedEngine, mainGear, frontGear, fuelSystem, hydraulics, flightControls, avionics, electronics, airconIce, furnishings] # [component objects] # list of components making up airplane (including parts used elsewhere)
+
+airplane.oswaldEfficiencyFactor = 0.8
+airplane.compressibilityDragCoefficient = 0
+airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
+airplane.emptyWeight = sum([component.mass for component in airplane.components]) # TODO: will be replaced with component weight buildup
+
 airplane.altitude = 0
 airplane.position = 0
 airplane.speed = 0
 airplane.throttle = 0
-airplane.pilots = 1
-airplane.passengers = 3
 airplane.flightPathAngle = 0
 airplane.pitch = 0 # pitch angle of airplane (where the nose is pointing)
-airplane.wing = wing
-airplane.tail = tail
-airplane.powerplant = powerplant
-airplane.engines = [engineL, engineR] # [engine object] # list of engines on airplane
-airplane.components = [wing, engineL.nacelle, engineR.nacelle, fuselage, horizontalStabilizer, verticalStabilizer] # [component objects] # list of components making up airplane (including parts used elsewhere)
-airplane.oswaldEfficiencyFactor = 0.8
-airplane.compressibilityDragCoefficient = 0
-airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: ?
-airplane.emptyWeight = convert(4000, "lb", "N") # TODO: will be replaced with component weight buildup
 
 ################################################################################
 # EVALUATION
@@ -94,9 +134,9 @@ def recordingFunction(t, segmentName, airplane):
     simulation["pitch"] += [airplane.pitch]
     simulation["flightPathAngle"] += [airplane.flightPathAngle]
 
-designMission.simulate(1, airplane, recordingFunction)
-dictToCSV("./data/testSimulation.csv", simulation)
-
+# designMission.simulate(1, airplane, recordingFunction)
+# dictToCSV("./data/testSimulation.csv", simulation)
+#
 # ts_min = [convert(t, "s", "min") for t in simulation["time"]]
 # hs_ft = [convert(h, "m", "ft") for h in simulation["altitude"]]
 # xs_ft = [convert(x, "m", "ft") for x in simulation["position"]]

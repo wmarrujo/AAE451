@@ -1,4 +1,3 @@
-from parameters import *
 from convert import convert
 from stdatmo import *
 

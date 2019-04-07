@@ -346,7 +346,6 @@ class MainGear(Component):
     def __init__(self, NLand, Lm, airplane):
         self.landloadfactor = NLand
         self.gearLength = Lm
-        print(Lm, self.gearLength, self.referenceLength)
         self.mass = self.calculateMainGearMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because we don't have a relationship for them yet

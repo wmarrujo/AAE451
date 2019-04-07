@@ -13,11 +13,11 @@ sys.path.append(simulationPath)
 # PERFORMANCE
 ################################################################################
 
+from hashlib import sha256
+
 def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     # get from cache if the simulation has already been done
-    dirName = defaultAirplane.name + str(compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane)))
-    # FIXME: ^ dirName is not being uniquely defined, it's defining multiple for each time it runs
-    print(dirName)
+    dirName = defaultAirplane.name + compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane))
     dir = os.path.join(simulationPath, dirName)
     cached = os.path.isdir(dir)
     if cache and not cached: # only if you want to cache

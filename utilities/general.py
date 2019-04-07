@@ -2,6 +2,7 @@ from functools import reduce
 import copy
 import numpy
 import pickle
+from hashlib import sha256
 
 product = lambda L: reduce((lambda x, y: x * y), L)
 
@@ -48,25 +49,27 @@ class memoize:
 
 def compareValue(*objects):
     """
-    provides a method which returns a comparable value (a dictionary) for any object
-    this dictionary contains all the instance variables (also recursively comparable).
-    Note: it only works with objects that really should be considered structures
-    and are made up of basic types like ints, floats, and strings
+    provides a method which returns a comparable value (as a string) for any object
+    defined solely by the values it contains (not its position in memory)
     """
+    
+    def hash(obj):
+        return sha256(str(obj).encode("utf-8")).hexdigest()
+    
     def _compareValue(obj):
         if "parameters" in str(type(obj)): # if it's an object (that's defined in parameters), make it recursive
-            return str(_compareValue(obj.__dict__)).__hash__() # return a dictionary of comparable values
+            return hash(_compareValue(obj.__dict__)) # return a dictionary of comparable values
         elif type(obj) == list:
-            return str([_compareValue(item) for item in obj]).__hash__()
+            return hash([_compareValue(item) for item in obj])
         elif type(obj) == dict:
-            return str({k:_compareValue(v) for (k, v) in obj.items()}).__hash__()
+            return hash({k:_compareValue(v) for (k, v) in obj.items()})
         elif type(obj) == numpy.float64: # numpy doesn't have __hash__ defined
             return _compareValue(obj.__repr__())
         else:
-            return obj.__hash__()
+            return hash(obj)
     
     hashes = [_compareValue(obj) for obj in objects]
-    return str(hashes).__hash__()
+    return hash(hashes)
 
 def saveObject(object, filePath):
     file = open(filePath, "wb")

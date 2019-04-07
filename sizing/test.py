@@ -68,8 +68,8 @@ airplane.engines = [engineL, engineR] # [engine object] # list of engines on air
 
 ############### LANDING GEAR INPUT AREA ###############
 NLand = airplane.LoadFactor * 1.5 # Ultimate Load Factor
-mainGear = MainGear(NLand, convert(1, "m", "ft"), airplane)# First input = LandingLoadFactor, Second input = lengthMainGear (m)
-frontGear = FrontGear(NLand, convert(1, "m", "ft"), airplane) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
+mainGear = MainGear(NLand, 1, airplane) # First input = LandingLoadFactor, Second input = lengthMainGear (m)
+frontGear = FrontGear(NLand, 1, airplane) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
 
 ############### MISCELLANEOUS COMPONENT INPUT AREA ###############
 fuelSystem = FuelSystem(airplane)

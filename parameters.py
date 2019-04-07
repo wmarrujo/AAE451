@@ -342,40 +342,52 @@ class VerticalStabilizer(Surface):
 
 class MainGear(Component):
     landloadfactor = None
-    gearlength = None
     
     def __init__(self, NLand, Lm, airplane):
         self.landloadfactor = NLand
-        self.gearlength = Lm
+        self.gearLength = Lm
+        print(Lm, self.gearLength, self.referenceLength)
         self.mass = self.calculateMainGearMass(airplane)
     
     def calculateMainGearMass(self, airplane):
         Wland = airplane.InitialGrossWeight # FIXME: do we just use T/O weight in case of an early failure?
         Nz = self.landloadfactor # FIXME: do we use a different load factor? 3 or something?
-        Lm = self.gearlength
+        Lm = self.gearLength
         
         WmgImperial = 0.095 * (Nz * convert(Wland, "N", "lb"))**0.768 * (convert(Lm, "m", "in")/12)**0.409
         WmgMetric = convert(WmgImperial, "lb", "N")
         return WmgMetric / g
+    
+    @property
+    def gearLength(self):
+        return self.referenceLength
+    @gearLength.setter
+    def gearLength(self, length):
+        self.referenceLength = length
 
 class FrontGear(Component):
     landloadfactor = None
-    gearlength = None
     
     def __init__(self, Nland, Ln, airplane):
         self.landloadfactor = Nland
-        self.gearlength = Ln
+        self.gearLength = Ln
         self.mass = self.calculateFrontGearMass(airplane)
-        
 
     def calculateFrontGearMass(self, airplane):
         Wland = airplane.InitialGrossWeight # FIXME
         Nland = self.landloadfactor
-        Ln = self.gearlength
+        Ln = self.gearLength
         
         WngImperial = 0.125 * (Nland * convert(Wland, "N", "lb"))**0.566 * (convert(Ln, "m", "in") / 12)**0.845
         WngMetric = convert(WngImperial, "lb", "N")
         return WngMetric / g
+    
+    @property
+    def gearLength(self):
+        return self.referenceLength
+    @gearLength.setter
+    def gearLength(self, length):
+        self.referenceLength = length
 
 class FuelSystem(Component):
     def __init__(self, airplane):

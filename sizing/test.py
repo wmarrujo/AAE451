@@ -97,58 +97,66 @@ def recordingFunction(t, segmentName, airplane):
 designMission.simulate(1, airplane, recordingFunction)
 dictToCSV("./data/testSimulation.csv", simulation)
 
-ts_min = [convert(t, "s", "min") for t in simulation["time"]]
-hs_ft = [convert(h, "m", "ft") for h in simulation["altitude"]]
-xs_ft = [convert(x, "m", "ft") for x in simulation["position"]]
-xs_nmi = [convert(x, "m", "nmi") for x in simulation["position"]]
-ps_deg = [convert(p, "rad", "deg") for p in simulation["pitch"]]
-fpas_deg = [convert(a, "rad", "deg") for a in simulation["flightPathAngle"]]
-aoas_deg = [p - fpa for (p, fpa) in zip(ps_deg, fpas_deg)]
+# ts_min = [convert(t, "s", "min") for t in simulation["time"]]
+# hs_ft = [convert(h, "m", "ft") for h in simulation["altitude"]]
+# xs_ft = [convert(x, "m", "ft") for x in simulation["position"]]
+# xs_nmi = [convert(x, "m", "nmi") for x in simulation["position"]]
+# ps_deg = [convert(p, "rad", "deg") for p in simulation["pitch"]]
+# fpas_deg = [convert(a, "rad", "deg") for a in simulation["flightPathAngle"]]
+# aoas_deg = [p - fpa for (p, fpa) in zip(ps_deg, fpas_deg)]
+# 
+# figure()
+# plot(xs_nmi, hs_ft)
+# title("Track")
+# xlabel("position [nmi]")
+# ylabel("altitude [ft]")
+# 
+# figure()
+# plot(ts_min, xs_nmi)
+# title("Range History")
+# xlabel("time [min]")
+# ylabel("position [nmi]")
+# 
+# figure()
+# plot(ts_min, hs_ft)
+# title("Altitude History")
+# xlabel("time [min]")
+# ylabel("altitude [ft]")
+# 
+# figure()
+# plot(ts_min, ps_deg, label="pitch")
+# plot(ts_min, fpas_deg, label="flight path angle")
+# plot(ts_min, aoas_deg, label="angle of Attack")
+# title("Angle History")
+# xlabel("time [min]")
+# ylabel("angle [deg]")
+# legend()
+
+# DEBUG: Drag buildup
+
+Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
+As = [copy.copy(airplane) for v in Vs]
+for i, (A, V) in enumerate(zip(As, Vs)):
+    A.speed = V
+    As[i] = A
+qs = [AirplaneDynamicPressure(A) for A in As]
+Ls = [AirplaneLift(A) for A in As]
+Ds = [AirplaneDrag(A) for A in As]
+CLs = [LiftCoefficient(A) for A in As]
+CDs = [DragCoefficient(A) for A in As]
+CD0s = [ParasiteDragCoefficient(A) for A in As]
+CDis = [InducedDragCoefficient(A) for A in As]
 
 figure()
-plot(xs_nmi, hs_ft)
-title("Track")
-xlabel("position [nmi]")
-ylabel("altitude [ft]")
-
-figure()
-plot(ts_min, xs_nmi)
-title("Range History")
-xlabel("time [min]")
-ylabel("position [nmi]")
-
-figure()
-plot(ts_min, hs_ft)
-title("Altitude History")
-xlabel("time [min]")
-ylabel("altitude [ft]")
-
-figure()
-plot(ts_min, ps_deg, label="pitch")
-plot(ts_min, fpas_deg, label="flight path angle")
-plot(ts_min, aoas_deg, label="angle of Attack")
-title("Angle History")
-xlabel("time [min]")
-ylabel("angle [deg]")
+plot(Vs, Ls, label="L")
+plot(Vs, Ds, label="D")
 legend()
 
-# DEBUG:
-
-# Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
-# As = [copy.copy(airplane) for v in Vs]
-# for i, (A, V) in enumerate(zip(As, Vs)):
-#     A.speed = V
-#     As[i] = A
-# qs = [AirplaneDynamicPressure(A) for A in As]
-# Ls = [LiftCoefficient(A) for A in As]
-# Ds = [DragCoefficient(A) for A in As]
-# 
-# figure()
-# plot(Vs, Ls, label="L")
-# plot(Vs, Ds, label="D")
-# legend()
-# 
-# figure()
-# plot(Vs, qs)
+figure()
+plot(Vs, CLs, label="CL")
+plot(Vs, CDs, label="CD")
+plot(Vs, CD0s, label="CD0")
+plot(Vs, CDis, label="CDi")
+legend()
 
 show()

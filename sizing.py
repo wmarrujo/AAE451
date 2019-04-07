@@ -4,27 +4,63 @@ from missions import *
 
 import copy
 from scipy.optimize import root
+import sys
+import os
+simulationPath = os.path.join(sys.path[0], "simulations")
+sys.path.append(simulationPath)
 
 ################################################################################
 # PERFORMANCE
 ################################################################################
 
-def getPerformanceParameters(drivingParameters, defaultAirplane):
-    # DEFINE AIRPLANE
+def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
+    # get from cache if the simulation has already been done
+    dirName = defaultAirplane.name + str(compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane)))
+    # FIXME: ^ dirName is not being uniquely defined, it's defining multiple for each time it runs
+    print(dirName)
+    dir = os.path.join(simulationPath, dirName)
+    cached = os.path.isdir(dir)
+    if cache and not cached: # only if you want to cache
+        os.mkdir(dir) # make dir so that it can be read from and written to later
+    initialObjectFilePath = os.path.join(dir, "initial.pyobj")
+    finalObjectFilePath = os.path.join(dir, "final.pyobj")
+    simulationFilePath = os.path.join(dir, "simulation.csv")
     
-    airplane = defineAirplane(drivingParameters, defaultAirplane)
-    
-    # RUN SIMULATION
-    
-    
+    if not cache or not cached: # if it shouldn't cache or was not cached, continue to simulate
+        
+        # DEFINE AIRPLANE
+        
+        airplane = defineAirplane(drivingParameters, defaultAirplane)
+        initialAirplane = copy.deepcopy(airplane)
+        if cache: # only if you want to cache
+            saveObject(airplane, initialObjectFilePath) # save initial state
+        
+        # RUN SIMULATION
+        
+        simulation = {"time":[], "segment":[]}
+        def recordingFunction(time, segmentName, airplane):
+            simulation["time"].append(time)
+            simulation["segment"].append(segmentName)
+            # TODO: fill in with anything else that you want the simulation to record to calculate the performance parameters with or to plot later
+        
+        success = designMission.simulate(timestep, airplane, recordingFunction)
+        
+        finalAirplane = airplane
+        if cache: # only if you want to cache
+            dictToCSV(simulationFilePath, simulation) # save simulation
+            saveObject(airplane, finalObjectFilePath) # save final state
+        
+    else: # was cached
+        initialAirplane = loadObject(initialObjectFilePath)
+        finalAirplane = loadObject(finalObjectFilePath)
+        simulation = CSVToDict(simulationFilePath)
     
     # CALCULATE PERFORMANCE
+    # initialAirplane, finalAirplane, & simulation are defined by now
     
+    print(initialAirplane, finalAirplane, simulation["time"][-1])
     
-    
-    # TODO: define airplane
-    # TODO: run a simulation with that airplane
-    # TODO: calculate the performance parameters with that airplane & simulation
+    return {}
 
 ################################################################################
 # AIRPLANE
@@ -67,8 +103,7 @@ def defineAirplane(drivingParameters, defaultAirplane):
         penalty = 0 if success else 1e10 # make sure it actually finishes
         
         WFf = FuelWeight(A)
-                
-        print(X[0], WFf, WFe, penalty)
+        
         return WFf - WFe + penalty # fuel weight at end of mission should be 0
     
     X0 = [convert(3500, "lb", "N")] # [W0]

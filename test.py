@@ -15,20 +15,22 @@ from matplotlib.pyplot import *
 
 DPS = [convert(50, "lb/ft^2", "N/m^2"), convert(0.072, "hp/lb", "W/N")]
 
-airplane = defineAirplane(DPS, testcraft)
+PPs = getPerformanceParameters(DPS, testcraft)
 
-Wi = airplane.initialGrossWeight
-W0 = AirplaneWeight(airplane)
-We = EmptyWeight(airplane)
-Wpay = PayloadWeight(airplane)
-WF = FuelWeight(airplane)
-
-print("Wi: {:.0f} lb - W0:  {:.0f} lb - We: {:.0f} lb - Wpay: {:.0f} lb - WF: {:.0f} lb".format(
-    convert(Wi, "N", "lb"),
-    convert(W0, "N", "lb"),
-    convert(We, "N", "lb"),
-    convert(Wpay, "N", "lb"),
-    convert(WF, "N", "lb")))
+# airplane = defineAirplane(DPS, testcraft)
+# 
+# Wi = airplane.initialGrossWeight
+# W0 = AirplaneWeight(airplane)
+# We = EmptyWeight(airplane)
+# Wpay = PayloadWeight(airplane)
+# WF = FuelWeight(airplane)
+# 
+# print("Wi: {:.0f} lb - W0:  {:.0f} lb - We: {:.0f} lb - Wpay: {:.0f} lb - WF: {:.0f} lb".format(
+#     convert(Wi, "N", "lb"),
+#     convert(W0, "N", "lb"),
+#     convert(We, "N", "lb"),
+#     convert(Wpay, "N", "lb"),
+#     convert(WF, "N", "lb")))
 
 # DEBUG: Testing that airplane runs
 

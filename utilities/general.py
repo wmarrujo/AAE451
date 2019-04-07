@@ -1,6 +1,7 @@
 from functools import reduce
 import copy
 import numpy
+import pickle
 
 product = lambda L: reduce((lambda x, y: x * y), L)
 
@@ -66,6 +67,17 @@ def compareValue(*objects):
     
     hashes = [_compareValue(obj) for obj in objects]
     return str(hashes).__hash__()
+
+def saveObject(object, filePath):
+    file = open(filePath, "wb")
+    pickle.dump(object, file)
+    file.close()
+
+def loadObject(filePath):
+    file = open(filePath, "rb")
+    obj = pickle.load(file)
+    file.close()
+    return obj
 
 def maybeReadAsNumber(string):
     try:

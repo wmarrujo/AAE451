@@ -15,7 +15,7 @@ sys.path.append(simulationPath)
 
 def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     # get from cache if the simulation has already been done
-    dirName = defaultAirplane.name + compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane))
+    dirName = defaultAirplane.name + "-" + compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane))
     dir = os.path.join(simulationPath, dirName)
     cached = os.path.isdir(dir)
     if cache and not cached: # only if you want to cache

@@ -1,73 +1,13 @@
 from utilities import *
 
 ################################################################################
-# FUNCTIONS
-################################################################################
-
-def performanceParameters(drivingParameters, defaultAirplane):
-    """Calculate the aircraft performance for each driving parameter combination"""
-    
-    # DEFINE AIRPLANE
-    
-    airplane = defineAirplane(drivingParameters, defaultAirplane) # Here's the airplane we're going to simulate
-    
-    # GET INITIAL AIRPLANE PERFORMANCE PARAMETERS
-    
-    emptyWeight = airplane.emptyWeight #Grab the airplane configuration before it starts simulating stuff
-    
-    # SIMULATE MISSION
-    
-    filename = "./data/simulations/" + airplane.name + str(compareValue(drivingParameters)) + ".csv" # make unique filename based on driving parameters
-    #TODO verify if function exists for same inputs (then just use that file, otherwise continue to simulate)
-    writeCSVLine(filename, ["time", "segment", "weight", "fuelWeight"]) # write header line to CSV files
-    designMission.simulate(1, airplane, lambda t, s, a: recordingFunction(t, s, a, filename)) # simulate the airplane
-    simulation = CSVToDict(filename) # store this run of the simulation to a dictionary
-    
-    # GET PERFORMANCE PARAMETERS FROM SIMULATION
-    
-    dTO  = simulation["position"][simulation.index(first(simulation["altitude"], condition = lambda altitude: altitude >= 50))]
-    range = simulation["position"][-1]
-    
-    cruiseStartPosition  = simulation["position"][simulation.index(first(simulation["segment"], condition = lambda segment: segment == "cruise"))]
-    cruiseStartTime  = simulation["time"][simulation.index(first(simulation["segment"], condition = lambda segment: segment == "cruise"))]
-    cruiseEndPosition  = simulation["position"][simulation.index(first(reversed(simulation["segment"]), condition = lambda segment: segment == "cruise"))]
-    cruiseEndTime  = simulation["time"][simulation.index(first(reversed(simulation["segment"]), condition = lambda segment: segment == "cruise"))]
-    groundSpeed = (cruiseEndPosition - cruiseStartPosition) / (cruiseEndTime - cruiseStartTime)
-    flightTime = cruiseEndTime - cruiseStartTime
-    
-    fuelUsed  = simulation["fuelWeight"][0] - simulation["fuelWeight"][-1]
-    
-    # RETURN PERFORMANCE PARAMETERS
-    
-    return [emptyWeight, dTO, range, groundSpeed, flightTime, fuelUsed]
-
-def defineAirplane(drivingParameters, defaultAirplane):
-    """Apply the driving parameters to the relevant airplane parameters"""
-    airplane = copy.deepcopy(defaultAirplane)
-    
-    # Empty Weight
-    airplane.emptyWeight = WS * airplane.wing.span # Keep span constant
-    
-    return airplane
-
-def recordingFunction(t, segmentTitle, airplane, filename):
-    """Records a single line (time step) in the CSV file during simulation"""
-    # Stuff you need to calculate performance parameters
-    W = AirplaneWeight(airplane)
-    d = airplane.position
-    h = airplane.altitude
-    thrust = AirplaneThrust(airplane)
-    
-    writeLineToFile(filename, [t, segmentTitle, W]) # write line to CSV file (don't forget to add each element)
-
-################################################################################
 # CARPET PLOTS
 ################################################################################
 
 ###### Create sizing matrix
 # Obtain center cell W/S and T/W from guess or previous best carpet plot result
 WS = convert(50, "lb/ft^2", "N/m^2")
-TW = 1
+TW = 1 # convert(0.072, "hp/lb", "W/N") # TODO: validate this number, it's power to weight though. but T/W should not be 1!
 
 # Driving parameters
 WS_matrix = [WS * 0.8, WS, WS * 1.2]

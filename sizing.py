@@ -37,9 +37,16 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
         
         simulation = {"time":[], "segment":[]}
         def recordingFunction(time, segmentName, airplane):
+            W = AirplaneWeight(airplane)
+            T = AirplaneThrust(airplane)
+            
+            
             simulation["time"].append(time)
             simulation["segment"].append(segmentName)
-            # TODO: fill in with anything else that you want the simulation to record to calculate the performance parameters with or to plot later
+            simulation["position"].append(airplane.position)
+            simulation["altitude"].append(airplane.altitude)
+            simulation["weight"].append(W)
+            simulation["thrust"].append(T)
         
         success = designMission.simulate(timestep, airplane, recordingFunction)
         
@@ -56,9 +63,44 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     # CALCULATE PERFORMANCE
     # initialAirplane, finalAirplane, & simulation are defined by now
     
+    ts = simulation["time"]
+    ss = simulation["segment"]
+    ps = simulation["position"]
+    hs = simulation["altitude"]
+    Ws = simulation["weight"]
+    Ts = simulation["thrust"]
     
+    emptyWeight = EmptyWeight(initialAirplane)
+    dTO = ps[firstIndex(hs, lambda h: h >= 50)]
+    range = ps[-1]
+    cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")
+    cruiseEndIndex = lastIndex(ss, lambda s: s == "cruise")
+    cruiseFlightTime = ts[cruiseEndIndex] - ts[cruiseStartIndex]
+    cruiseRange = ps[cruiseEndIndex] - ps[cruiseStartIndex]
+    avgGroundSpeedInCruise = cruiseRange / cruiseFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
+    fuelWeightUsed = Ws[0] - Ws[-1]
     
-    return {}
+    # dTO  = simulation["position"][simulation.index(first(simulation["altitude"], condition = lambda altitude: altitude >= 50))]
+    # range = simulation["position"][-1]
+    # 
+    # cruiseStartPosition  = simulation["position"][simulation.index(first(simulation["segment"], condition = lambda segment: segment == "cruise"))]
+    # cruiseStartTime  = simulation["time"][simulation.index(first(simulation["segment"], condition = lambda segment: segment == "cruise"))]
+    # cruiseEndPosition  = simulation["position"][simulation.index(first(reversed(simulation["segment"]), condition = lambda segment: segment == "cruise"))]
+    # cruiseEndTime  = simulation["time"][simulation.index(first(reversed(simulation["segment"]), condition = lambda segment: segment == "cruise"))]
+    # groundSpeed = (cruiseEndPosition - cruiseStartPosition) / (cruiseEndTime - cruiseStartTime)
+    # flightTime = cruiseEndTime - cruiseStartTime
+    # 
+    # fuelUsed  = simulation["fuelWeight"][0] - simulation["fuelWeight"][-1]
+    # 
+    # [emptyWeight, dTO, range, groundSpeed, flightTime, fuelUsed]
+    
+    return {
+        "empty weight": emptyWeight,
+        "takeoff distance": dTO,
+        "range": range,
+        "average ground speed": avgGroundSpeedInCruise,
+        "flight time": cruiseFlightTime,
+        "fuel used": fuelWeightUsed}
 
 ################################################################################
 # AIRPLANE

@@ -28,6 +28,15 @@ def first(iterable, condition = lambda x: True):
 
     return next(x for x in iterable if condition(x))
 
+def last(iterable, condition = lambda x: True):
+    return first(reversed(iterable), condition)
+
+def firstIndex(iterable, condition = lambda x: True):
+    return iterable[first(iterable, condition)]
+
+def lastIndex(iterable, condition = lambda x: True):
+    return iterable[last(iterable, condition)]
+
 def transpose(matrix):
     """
     transposes a 2-dimensional list

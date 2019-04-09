@@ -5,7 +5,8 @@ from sizing import *
 from matplotlib.pyplot import *
 import sys
 import os
-sys.path.append(os.path.join(sys.path[0], "configurations"))
+root = os.path.join(sys.path[0], "..")
+sys.path.append(root)
 from testcraft import airplane as testcraft
 
 ################################################################################
@@ -28,42 +29,42 @@ p = [[getPerformanceParameters([WS, PW], testcraft) for WS in WSs] for PW in PWs
 
 # Plot W0 as function of W/S for each T/W
 figure()
-plot(WSs, [i["empty weight"] for i in p[0]])
-plot(WSs, [i["empty weight"] for i in p[1]])
-plot(WSs, [i["empty weight"] for i in p[2]])
+plot([i["empty weight"] for i in p[0]], WSs)
+plot([i["empty weight"] for i in p[1]], WSs)
+plot([i["empty weight"] for i in p[2]], WSs)
 title("W0 Trends")
-xlabel("Wing Loading [N/m^2]")
-ylabel("Gross Weight [N]")
+ylabel("Wing Loading [N/m^2]")
+xlabel("Gross Weight [N]")
 
 ###### CROSS PLOTS
 # Plot dTO as function of W/S for each T/W
 figure()
-plot(WSs, [i["takeoff distance"] for i in p[0]])
-plot(WSs, [i["takeoff distance"] for i in p[1]])
-plot(WSs, [i["takeoff distance"] for i in p[2]])
+plot([i["takeoff distance"] for i in p[0]], WSs)
+plot([i["takeoff distance"] for i in p[1]], WSs)
+plot([i["takeoff distance"] for i in p[2]], WSs)
 title("Takeoff Distance")
-xlabel("Wing Loading [N/m^2]")
-ylabel("Takeoff Distance [m]")
+ylabel("Wing Loading [N/m^2]")
+xlabel("Takeoff Distance [m]")
 # Find intersection of curve with dT0 limit
 
 # Plot range as function of W/S for each T/W
 figure()
-plot(WSs, [i["range"] for i in p[0]])
-plot(WSs, [i["range"] for i in p[1]])
-plot(WSs, [i["range"] for i in p[2]])
+plot([i["range"] for i in p[0]], WSs)
+plot([i["range"] for i in p[1]], WSs)
+plot([i["range"] for i in p[2]], WSs)
 title("Range")
-xlabel("Wing Loading [N/m^2]")
-ylabel("Range [m]")
+ylabel("Wing Loading [N/m^2]")
+xlabel("Range [m]")
 # Find intersection of curve with axis
 
 # Plot flight time as function of W/S for each T/W
 figure()
-plot(WSs, [i["flight time"] for i in p[0]])
-plot(WSs, [i["flight time"] for i in p[1]])
-plot(WSs, [i["flight time"] for i in p[2]])
+plot([i["flight time"] for i in p[0]], WSs)
+plot([i["flight time"] for i in p[1]], WSs)
+plot([i["flight time"] for i in p[2]], WSs)
 title("Flight Time")
-xlabel("Wing Loading [N/m^2]")
-ylabel("Flight Time [s]")
+ylabel("Wing Loading [N/m^2]")
+xlabel("Flight Time [s]")
 # Find intersection of curve with axis
 
 ###### SIZING PLOT

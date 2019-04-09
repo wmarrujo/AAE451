@@ -17,9 +17,9 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     # get from cache if the simulation has already been done
     dirName = defaultAirplane.name + "-" + compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane))
     dir = os.path.join(simulationPath, dirName)
-    cached = os.path.isdir(dir)
+    cached = os.path.exists(dir)
     if cache and not cached: # only if you want to cache
-        os.mkdir(dir) # make dir so that it can be read from and written to later
+        os.makedirs(dir) # make dir so that it can be read from and written to later
     initialObjectFilePath = os.path.join(dir, "initial.pyobj")
     finalObjectFilePath = os.path.join(dir, "final.pyobj")
     simulationFilePath = os.path.join(dir, "simulation.csv")

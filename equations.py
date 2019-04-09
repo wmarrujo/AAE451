@@ -1,8 +1,7 @@
 from utilities import *
-from stdatmo import *
-from convert import convert
-from parameters import *
+
 from constants import *
+from parameters import *
 
 from scipy import *
 from scipy.optimize import minimize
@@ -30,10 +29,12 @@ def PayloadWeight(airplane):
 def FuelWeight(airplane):
     mf = airplane.powerplant.fuelMass
     
-    return mf/g
+    return mf*g
 
 def EmptyWeight(airplane):
-    return airplane.emptyWeight # TODO: temporary, replace with component weight buildup later
+    W0 = airplane.initialGrossWeight
+    
+    return convert(2000, "lb", "N") # TODO: temporary, replace with component weight buildup later
 
 def AirplaneReynoldsNumber(airplane):
     rho = densityAtAltitude(airplane.altitude)

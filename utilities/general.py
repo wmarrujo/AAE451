@@ -1,6 +1,8 @@
 from functools import reduce
 import copy
 import numpy
+import pickle
+from hashlib import sha256
 
 product = lambda L: reduce((lambda x, y: x * y), L)
 
@@ -28,7 +30,7 @@ def first(iterable, condition = lambda x: True):
 
 def transpose(matrix):
     """
-    transposes a 2 dimensional list
+    transposes a 2-dimensional list
     """
     
     return [[matrix[r][c] for r in range(len(matrix))] for c in range(len(matrix[0]))]
@@ -47,25 +49,38 @@ class memoize:
 
 def compareValue(*objects):
     """
-    provides a method which returns a comparable value (a dictionary) for any object
-    this dictionary contains all the instance variables (also recursively comparable).
-    Note: it only works with objects that really should be considered structures
-    and are made up of basic types like ints, floats, and strings
+    provides a method which returns a comparable value (as a string) for any object
+    defined solely by the values it contains (not its position in memory)
     """
+    
+    def hash(obj):
+        return sha256(str(obj).encode("utf-8")).hexdigest()
+    
     def _compareValue(obj):
         if "parameters" in str(type(obj)): # if it's an object (that's defined in parameters), make it recursive
-            return str(_compareValue(obj.__dict__)).__hash__() # return a dictionary of comparable values
+            return hash(_compareValue(obj.__dict__)) # return a dictionary of comparable values
         elif type(obj) == list:
-            return str([_compareValue(item) for item in obj]).__hash__()
+            return hash([_compareValue(item) for item in obj])
         elif type(obj) == dict:
-            return str({k:_compareValue(v) for (k, v) in obj.items()}).__hash__()
+            return hash({k:_compareValue(v) for (k, v) in obj.items()})
         elif type(obj) == numpy.float64: # numpy doesn't have __hash__ defined
             return _compareValue(obj.__repr__())
         else:
-            return obj.__hash__()
+            return hash(obj)
     
     hashes = [_compareValue(obj) for obj in objects]
-    return str(hashes).__hash__()
+    return hash(hashes)
+
+def saveObject(object, filePath):
+    file = open(filePath, "wb")
+    pickle.dump(object, file)
+    file.close()
+
+def loadObject(filePath):
+    file = open(filePath, "rb")
+    obj = pickle.load(file)
+    file.close()
+    return obj
 
 def maybeReadAsNumber(string):
     try:

@@ -24,7 +24,10 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     finalObjectFilePath = os.path.join(dir, "final.pyobj")
     simulationFilePath = os.path.join(dir, "simulation.csv")
     
+    print("Getting Aircraft Parameters for {}".format(dirName), end="", flush=True)
+    
     if not cache or not cached: # if it shouldn't cache or was not cached, continue to simulate
+        print(" - No Cache, Simulating")
         
         # DEFINE AIRPLANE
         
@@ -35,11 +38,10 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
         
         # RUN SIMULATION
         
-        simulation = {"time":[], "segment":[]}
+        simulation = {"time":[], "segment":[], "position":[], "altitude":[], "weight":[], "thrust":[]}
         def recordingFunction(time, segmentName, airplane):
             W = AirplaneWeight(airplane)
             T = AirplaneThrust(airplane)
-            
             
             simulation["time"].append(time)
             simulation["segment"].append(segmentName)
@@ -56,6 +58,7 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
             saveObject(airplane, finalObjectFilePath) # save final state
         
     else: # was cached
+        print(" - Cache exists, Loading From Cache")
         initialAirplane = loadObject(initialObjectFilePath)
         finalAirplane = loadObject(finalObjectFilePath)
         simulation = CSVToDict(simulationFilePath)
@@ -80,20 +83,6 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     avgGroundSpeedInCruise = cruiseRange / cruiseFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
     fuelWeightUsed = Ws[0] - Ws[-1]
     
-    # dTO  = simulation["position"][simulation.index(first(simulation["altitude"], condition = lambda altitude: altitude >= 50))]
-    # range = simulation["position"][-1]
-    # 
-    # cruiseStartPosition  = simulation["position"][simulation.index(first(simulation["segment"], condition = lambda segment: segment == "cruise"))]
-    # cruiseStartTime  = simulation["time"][simulation.index(first(simulation["segment"], condition = lambda segment: segment == "cruise"))]
-    # cruiseEndPosition  = simulation["position"][simulation.index(first(reversed(simulation["segment"]), condition = lambda segment: segment == "cruise"))]
-    # cruiseEndTime  = simulation["time"][simulation.index(first(reversed(simulation["segment"]), condition = lambda segment: segment == "cruise"))]
-    # groundSpeed = (cruiseEndPosition - cruiseStartPosition) / (cruiseEndTime - cruiseStartTime)
-    # flightTime = cruiseEndTime - cruiseStartTime
-    # 
-    # fuelUsed  = simulation["fuelWeight"][0] - simulation["fuelWeight"][-1]
-    # 
-    # [emptyWeight, dTO, range, groundSpeed, flightTime, fuelUsed]
-    
     return {
         "empty weight": emptyWeight,
         "takeoff distance": dTO,
@@ -107,6 +96,8 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
 ################################################################################
 
 def defineAirplane(drivingParameters, defaultAirplane):
+    print("Closing Aircraft Weight")
+    
     WS = drivingParameters[0]
     PW = drivingParameters[1]
     

@@ -20,6 +20,7 @@ class Mission:
         iteration = 0
         verified = verifySimulation(iteration, t, "Start", airplane)
         recordingFunction(t, "Start", airplane)
+        print("Simulating {} ".format(airplane.name), end="", flush="True")
         
         for segment in self.segments:
             t0 = t
@@ -33,7 +34,11 @@ class Mission:
                 iteration += 1
                 
                 verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
+                
+                if iteration % 100 == 0:
+                    print(".", end="", flush="True")
         
+        print(" DONE - {}".format("succeeded" if verified else "failed"))
         return verified
 
 def verifySimulation(iteration, t, segmentName, airplane):

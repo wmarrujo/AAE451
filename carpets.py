@@ -1,5 +1,13 @@
 from utilities import *
 
+from sizing import *
+
+from matplotlib.pyplot import *
+import sys
+import os
+sys.path.append(os.path.join(sys.path[0], "configurations"))
+from testcraft import airplane as testcraft
+
 ################################################################################
 # CARPET PLOTS
 ################################################################################
@@ -7,51 +15,59 @@ from utilities import *
 ###### Create sizing matrix
 # Obtain center cell W/S and T/W from guess or previous best carpet plot result
 WS = convert(50, "lb/ft^2", "N/m^2")
-TW = 1 # convert(0.072, "hp/lb", "W/N") # TODO: validate this number, it's power to weight though. but T/W should not be 1!
+PW = convert(0.072, "hp/lb", "W/N")
 
 # Driving parameters
-WS_matrix = [WS * 0.8, WS, WS * 1.2]
-TW_matrix = [TW * 0.8, TW, TW * 1.2]
+WSs = [WS * 0.8, WS, WS * 1.2]
+PWs = [PW * 0.8, PW, PW * 1.2]
 
 # FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
-p = [[performanceParameters([WS, TW], testcraft) for WS in WS_matrix] for TW in TW_matrix]
+p = [[getPerformanceParameters([WS, PW], testcraft) for WS in WSs] for PW in PWs]
 
 ###### W0 TRENDS
-# Create WS vs. W0 vector
-W0_WS = [i[0] for i in p]
 
 # Plot W0 as function of W/S for each T/W
 figure()
-plot(WS_matrix, W0_WS)
+plot(WSs, [i["empty weight"] for i in p[0]])
+plot(WSs, [i["empty weight"] for i in p[1]])
+plot(WSs, [i["empty weight"] for i in p[2]])
 title("W0 Trends")
-xlabel("W_0 / S")
-ylabel("W_0")
+xlabel("Wing Loading [N/m^2]")
+ylabel("Gross Weight [N]")
 
 ###### CROSS PLOTS
 # Plot dTO as function of W/S for each T/W
 figure()
-plot(WS_matrix, [i[1] for i in p])
+plot(WSs, [i["takeoff distance"] for i in p[0]])
+plot(WSs, [i["takeoff distance"] for i in p[1]])
+plot(WSs, [i["takeoff distance"] for i in p[2]])
 title("Takeoff Distance")
-xlabel("W_0 / S")
-ylabel("d_{TO}")
+xlabel("Wing Loading [N/m^2]")
+ylabel("Takeoff Distance [m]")
 # Find intersection of curve with dT0 limit
 
 # Plot range as function of W/S for each T/W
 figure()
-plot(WS_matrix, [i[2] for i in p])
+plot(WSs, [i["range"] for i in p[0]])
+plot(WSs, [i["range"] for i in p[1]])
+plot(WSs, [i["range"] for i in p[2]])
 title("Range")
-xlabel("W_0 / S")
-ylabel("Range")
+xlabel("Wing Loading [N/m^2]")
+ylabel("Range [m]")
 # Find intersection of curve with axis
 
 # Plot flight time as function of W/S for each T/W
 figure()
-plot(WS_matrix, [i[4] for i in p])
+plot(WSs, [i["flight time"] for i in p[0]])
+plot(WSs, [i["flight time"] for i in p[1]])
+plot(WSs, [i["flight time"] for i in p[2]])
 title("Flight Time")
-xlabel("W_0 / S")
-ylabel("Flight Time")
+xlabel("Wing Loading [N/m^2]")
+ylabel("Flight Time [s]")
 # Find intersection of curve with axis
 
 ###### SIZING PLOT
 # Plot fit curve of dTO on sizing plot
 # Plot fit curve of Ps on sizing plot
+
+show()

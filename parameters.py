@@ -2,7 +2,6 @@ from utilities import *
 from constants import *
 
 from scipy import *
-from stdatmo import *
 
 ################################################################################
 

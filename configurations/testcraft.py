@@ -1,6 +1,8 @@
 import sys
 import os
-sys.path.append(os.path.join(sys.path[0], ".."))
+
+root = os.path.join(sys.path[0], "..")
+sys.path.append(root)
 
 from constants import *
 from parameters import *

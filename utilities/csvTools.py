@@ -9,11 +9,9 @@ def CSVToMatrix(filename):
     """reads a csv file and returns a list of lists where each list item is a row in the csv"""
     with open(filename) as csvfile:
         reader = csv.reader(csvfile, delimiter=",")
-        
         csvmatrix = []
         for row in reader:
             csvmatrix.append(row)
-        
         return csvmatrix
 
 def CSVToDict(filename):

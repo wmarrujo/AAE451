@@ -134,20 +134,24 @@ legend()
 
 # DEBUG:
 
-# Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
-# As = [copy.copy(airplane) for v in Vs]
-# for i, (A, V) in enumerate(zip(As, Vs)):
-#     A.speed = V
-#     As[i] = A
-# qs = [AirplaneDynamicPressure(A) for A in As]
+Vs = [convert(v, "kts", "m/s") for v in range(0, 300)]
+As = [copy.copy(airplane) for v in Vs]
+for i, (A, V) in enumerate(zip(As, Vs)):
+     A.speed = V
+     As[i] = A
+qs = [AirplaneDynamicPressure(A) for A in As]
 # Ls = [LiftCoefficient(A) for A in As]
-# Ds = [DragCoefficient(A) for A in As]
-# 
-# figure()
+CDP = [ParasiteDragCoefficient(A) for A in As]
+CDI = [InducedDragCoefficient(A) for A in As]
+CDT = [DragCoefficient(A) for A in As]
+#
+figure()
 # plot(Vs, Ls, label="L")
-# plot(Vs, Ds, label="D")
-# legend()
-# 
+plot(Vs, CDP, label="CD0")
+plot(Vs, CDI, label="CDi")
+plot(Vs, CDT, label="CD")
+legend()
+#
 # figure()
 # plot(Vs, qs)
 

@@ -110,7 +110,7 @@ def ParasiteDragCoefficient(airplane):
     CD0miscFactor = airplane.miscellaneousParasiteDragFactor
     
     def componentDragContribution(component):
-        FFi = component.formFactor
+        FFi = component.formFactor(airplane)
         Qi = component.interferenceFactor
         Cfi = ComponentSkinFrictionCoefficient(airplane, component)
         Sweti = component.wettedArea
@@ -182,19 +182,19 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
 
 def MaximumLiftOverDragVelocity(airplane):
     # Vguess = airplane.speed
-    # 
+    #
     # def functionToMinimize(X):
     #     A = copy.deepcopy(airplane)
     #     A.speed = X[0]
-    # 
+    #
     #     L = AirplaneLift(A)
     #     D = AirplaneDrag(A)
-    # 
+    #
     #     return -L/D
-    # 
+    #
     # result = minimize(functionToMinimize, [Vguess], bounds=[(0, None)])
     # V = result["x"][0]
-    # 
+    #
     # return V
     
     # TODO: verify that this equation works (Raymer 2018 equation 17.10)
@@ -349,6 +349,7 @@ def UpdateClimb(airplane, t, tstep):
     W = AirplaneWeight(airplane)
     gamma = arcsin((T-D)/W)
     VminP = MinimumPowerSpeed(airplane)
+    #throttle =  (MaxEnginePower / lapseRate )
     # TODO: determine throttle to keep this condition (that way fuel usage will be correct)
     
     airplane.flightPathAngle = gamma

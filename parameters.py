@@ -2,6 +2,7 @@ from utilities import *
 from csvTools import *
 from convert import convert
 from scipy import *
+from stdatmo import *
 
 ################################################################################
 
@@ -129,7 +130,6 @@ class Generator:
 
 class Component:
     mass = None # number : (0 <= x)
-    formFactor = None # number : (1 <= x)
     interferenceFactor = None # number : (1 <= x)
     wettedArea = None # number [m^2] : (0 <= x)
     referenceLength = None # number [m] : (0 <= x)
@@ -151,8 +151,7 @@ class Fuselage(Component):
         
         return l / D
     
-    @property
-    def formFactor(self):
+    def formFactor(self, airplane):
         fr = self.finenessRatio
         
         return 1 + 60 / fr**3 + fr / 400
@@ -195,8 +194,7 @@ class Nacelle(Component):
         
         return l / D
     
-    @property
-    def formFactor(self):
+    def formFactor(self, airplane):
         fr = self.finenessRatio
         
         return 1 + 0.35 / fr
@@ -219,9 +217,11 @@ class Surface(Component):
         self.thicknessToChord = thicknessToChord
         self.planformArea = planformArea
     
-    @property
-    def formFactor(self):
-        Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
+    def formFactor(self, airplane):
+        V = airplane.speed
+        a = machAtAltitude(airplane.altitude)
+        M = V / a
+        Zfactor = ( 2 - M**2 ) / sqrt( 1 - M**2 ) # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
         tc = self.thicknessToChord
         
         return 1 + Zfactor * tc + 100 * tc**4

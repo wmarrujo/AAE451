@@ -5,8 +5,7 @@ from sizing import *
 from matplotlib.pyplot import *
 import sys
 import os
-root = os.path.join(sys.path[0], "..")
-sys.path.append(root)
+sys.path.append(os.path.join(sys.path[0], "configurations"))
 from testcraft import airplane as testcraft
 
 ################################################################################

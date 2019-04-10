@@ -178,6 +178,9 @@ class Component:
     interferenceFactor = None # number : (1 <= x)
     wettedArea = None # number [m^2] : (0 <= x)
     referenceLength = None # number [m] : (0 <= x)
+    
+    def formFactor(self, airplane):
+        return 0 # default, to be overwritten if defined
 
 class Engine(Component): # the engines/motors that drive the propeller
     maxPower = None # number [W] : (0 <= x)
@@ -405,7 +408,6 @@ class MainGear(Component):
         self.mass = self.calculateMainGearMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because we don't have a relationship for them yet
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
     
@@ -434,7 +436,6 @@ class FrontGear(Component):
         self.mass = self.calculateFrontGearMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because we don't have a relationship for them yet
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
 
@@ -459,7 +460,6 @@ class FuelSystem(Component):
         self.mass = self.calculateFuelSystemMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
         self.referenceLength = 0
@@ -482,7 +482,6 @@ class FlightControls(Component):
         self.mass = self.calculateFlightControlsMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
         self.referenceLength = 0
@@ -502,7 +501,6 @@ class Hydraulics(Component):
         self.mass = self.calculateHydraulicsMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
         self.referenceLength = 0
@@ -518,7 +516,6 @@ class Avionics(Component):
         self.mass = self.calculateAvionicsMass(Wuav)
         
         # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
         self.referenceLength = 0
@@ -536,7 +533,6 @@ class Electronics(Component):
         self.mass = self.calculateElectronicsMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
         self.referenceLength = 0
@@ -554,7 +550,6 @@ class AirConIce(Component):
         self.mass = self.calculateAirConIceMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
         self.referenceLength = 0
@@ -574,7 +569,6 @@ class Furnishings(Component):
         self.mass = self.calculateFurnishingsMass(airplane)
         
         # FIXME: all of these are hard-coded to nothing because it doesn't contribute to drag right?
-        self.formFactor = 0
         self.interferenceFactor = 1
         self.wettedArea = 0
         self.referenceLength = 0

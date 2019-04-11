@@ -190,11 +190,11 @@ class Engine(Component): # the engines/motors that drive the propeller
         self.diameter = diameter
         self.length = length
         self.mass = self.installedEngineMass(uninstalledMass, numberOfEngines)
-    
+
     def installedEngineMass(self, uninstalledMass, numberOfEngines):
-        WengImperial = 2.575 * convert(uninstalledMass, "N", "lb")**0.922 * numberOfEngines
+        WengImperial = 2.575 * convert(uninstalledMass*g, "N", "lb")**0.922
         WengMetric = convert(WengImperial, "lb", "N")
-        
+
         return WengMetric/g
     
     @property
@@ -522,8 +522,9 @@ class Avionics(Component):
     def calculateAvionicsMass(self, Wuav):
         WuninAvi = Wuav # number [N] - weight of uninstalled avionics (typically 800-1400 lb or 3558 - 6227 N)
 
-        WaviImperial = 2.117 * convert(Wuav, "N", "lb")**0.933
-        WaviMetric = convert(WaviImperial, "lb", "N")
+        # WaviImperial = 2.117 * convert(Wuav, "N", "lb")**0.933
+        # WaviMetric = convert(WaviImperial, "lb", "N")
+        WaviMetric = Wuav # Turns out Raymer's estimation does some wackness
         return WaviMetric / g
 
 

@@ -14,7 +14,7 @@ import copy
 
 airplane = Airplane()
 airplane.name = "testcraft"
-airplane.InitialGrossWeight = convert(4500, "lb", "N") # [N]
+airplane.InitialGrossWeight = convert(2712, "lb", "N") # [N]
 
 airplane.altitude = 0
 airplane.position = 0
@@ -31,7 +31,7 @@ airplane.LoadFactor = 3.5 # FIXME what load factor do we size with for a twin en
 gas = Gas()
 gas.energyDensity = avgasEnergyDensity
 gas.density = avgasDensity
-gas.mass = convert(50, "gal", "m^3")*gas.density
+gas.mass = 144 #convert(50, "gal", "m^3")*gas.density ##
 
 powerplant = Powerplant()
 powerplant.gas = gas
@@ -46,7 +46,7 @@ airplane.powerplant = powerplant
 ################################################################################
 
 airfoil = Airfoil(os.path.join(root, "data", "SF1.csv"))
-wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"), 0, 1, airplane)
+wing = Wing(1, 14.78, 0.02, 11.4, 0, 1, airplane) #interferenceFactor, planformArea, thicknessToChord, span, sweep, taper, airplane
 wing.maximumLiftCoefficient = 2
 wing.airfoil = airfoil
 airplane.wing = wing
@@ -55,15 +55,15 @@ airplane.wing = wing
 # FUSELAGE DEFINITION
 ################################################################################
 
-fuselage = Fuselage(1, convert(7, "ft", "m"), convert(30, "ft", "m"), airplane)
+fuselage = Fuselage(1, 1.4, 8.7, airplane) #interferenceFactor, diameter, length, airplane
 airplane.fuselage = fuselage
 
 ################################################################################
 # TAIL DEFINITION
 ################################################################################
 
-horizontalStabilizer = HorizontalStabilizer(1.2, convert(10*3, "ft^2", "m^2"), 0.12, convert(10, "ft", "m"), 0, 1, airplane)
-verticalStabilizer = VerticalStabilizer(1.1, convert(6*3, "ft^2", "m^2"), 0.12, convert(6, "ft", "m"), 0, 1, airplane)
+horizontalStabilizer = HorizontalStabilizer(1.2, 0.28, 0.12, convert(10, "ft", "m"), 0 , 1, airplane) #interferenceFactor, planformArea, thicknessToChord, span, sweep, taper, airplane
+verticalStabilizer = VerticalStabilizer(1.1, 2.86, 0.12, convert(6, "ft", "m"), deg2rad(20), 1, airplane)
 airplane.horizontalStabilizer = horizontalStabilizer
 airplane.verticalStabilizer = verticalStabilizer
 
@@ -72,7 +72,7 @@ airplane.verticalStabilizer = verticalStabilizer
 ################################################################################
 
 propeller = Propeller()
-propeller.diameter = convert(6, "ft", "m")
+propeller.diameter = 1.65
 propeller.angularVelocity = 0
 propeller.efficiency = 0.9
 
@@ -80,8 +80,8 @@ propeller.efficiency = 0.9
 # ENGINE DEFINITION
 ################################################################################
 
-engine = Engine(1, convert(1.5, "ft", "m"), convert(4, "ft", "m"), 98, 2)
-engine.maxPower = convert(130, "hp", "W")
+engine = Engine(1, 0.65, 1.8, 65.7, 2) #interferenceFactor, diameter, length, uninstalledMass, numberOfEngines
+engine.maxPower = convert(98.6, "hp", "W")
 engine.propeller = propeller
 engineL = engine
 engineR = copy.deepcopy(engine)
@@ -105,7 +105,7 @@ flightControls = FlightControls(airplane)
 airplane.flightControls = flightControls
 hydraulics = Hydraulics(airplane)
 airplane.hydraulics = hydraulics
-avionics = Avionics(4000) # INPUT = uninstalled avioncs weight [N] (typically 800-1400 lb or 3558 - 6227 N)
+avionics = Avionics(78.51*9.8) # INPUT = uninstalled avioncs weight [N] (typically 800-1400 lb or 3558 - 6227 N) WHAT THE SHIT
 airplane.avionics = avionics
 electronics = Electronics(airplane)
 airplane.electronics = electronics
@@ -121,6 +121,10 @@ airplane.furnishings = furnishings
 ################################################################################
 
 airplane.components = [wing, engineL, engineR, fuselage, horizontalStabilizer, verticalStabilizer, mainGear, frontGear, fuelSystem, hydraulics, flightControls, avionics, electronics, airconIce, furnishings] # [component objects] # list of components making up airplane (including parts used elsewhere)
+emptymass = sum([thing.mass for thing in airplane.components])
+
+print([thing.mass for thing in airplane.components])
+print('We = ',emptymass,' kg')
 
 airplane.oswaldEfficiencyFactor = 0.8
 airplane.compressibilityDragCoefficient = 0

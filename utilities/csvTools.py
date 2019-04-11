@@ -28,14 +28,14 @@ def CSVToDict(filename):
 
 def writeCSVLine(filename, row):
     """writes a single line to a file, delimited by commas"""
-    with open(filename, "a") as file:
+    with open(filename, "a", newline="") as file: # ensure newline is \n character, not windows default of \r
         print(1)
         writer = csv.writer(file)
         writer.writerows(row)
 
 def matrixToCSV(filename, matrix):
     """writes a csv file given a list of lists corresponding to rows of the file"""
-    with open(filename, "w") as newfile:
+    with open(filename, "w", newline="") as newfile:
         writer = csv.writer(newfile)
         writer.writerows(matrix)
 

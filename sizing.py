@@ -13,6 +13,10 @@ sys.path.append(simulationPath)
 # PERFORMANCE
 ################################################################################
 
+# TODO: only make the caching directory when it finishes & will write.
+# TODO: put a note in the directory if the simulation failed (but still put the initial airplane configuration, maybe write that part it in the airplane definition)
+# TODO: test each piece, initialAirplane, simulation, finalAirplane separately (maybe simulation & final together?)
+
 def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     # get from cache if the simulation has already been done
     dirName = defaultAirplane.name + "-" + compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane))
@@ -65,7 +69,6 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     
     # CALCULATE PERFORMANCE
     # initialAirplane, finalAirplane, & simulation are defined by now
-    
     ts = simulation["time"]
     ss = simulation["segment"]
     ps = simulation["position"]

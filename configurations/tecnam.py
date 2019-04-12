@@ -62,7 +62,7 @@ airplane.fuselage = fuselage
 # TAIL DEFINITION
 ################################################################################
 
-horizontalStabilizer = HorizontalStabilizer(1.2, 0.28, 0.12, convert(10, "ft", "m"), 0 , 1, airplane) #interferenceFactor, planformArea, thicknessToChord, span, sweep, taper, airplane
+horizontalStabilizer = HorizontalStabilizer(1.2, 2.64, 0.12, convert(10, "ft", "m"), 0 , 1, airplane) #interferenceFactor, planformArea, thicknessToChord, span, sweep, taper, airplane
 verticalStabilizer = VerticalStabilizer(1.1, 2.86, 0.12, convert(6, "ft", "m"), deg2rad(20), 1, airplane)
 airplane.horizontalStabilizer = horizontalStabilizer
 airplane.verticalStabilizer = verticalStabilizer
@@ -91,9 +91,9 @@ airplane.engines = [engineL, engineR] # [engine object] # list of engines on air
 # LANDING GEAR DEFINITION
 ################################################################################
 
-NLand = airplane.LoadFactor * 1.5 # Ultimate Load Factor
-mainGear = MainGear(NLand, 1, airplane) # First input = LandingLoadFactor, Second input = lengthMainGear (m)
-frontGear = FrontGear(NLand, 1, airplane) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
+NLand = 2.67 * 1.5 # Ultimate Landing Load Factor = gear load factor (14 CFR 23) * 1.5
+mainGear = MainGear(NLand, .5, airplane) # First input = LandingLoadFactor, Second input = lengthMainGear (m)
+frontGear = FrontGear(NLand, .5, airplane) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
 
 ################################################################################
 # MISCELLANEOUS COMPONENT DEFINITIONS
@@ -105,7 +105,7 @@ flightControls = FlightControls(airplane)
 airplane.flightControls = flightControls
 hydraulics = Hydraulics(airplane)
 airplane.hydraulics = hydraulics
-avionics = Avionics(78.51*9.8) # INPUT = uninstalled avioncs weight [N] (typically 800-1400 lb or 3558 - 6227 N) WHAT THE SHIT
+avionics = Avionics(4*9.8) # INPUT = uninstalled avioncs weight [N] (typically 800-1400 lb or 3558 - 6227 N) WHAT THE SHIT # 78 kg?
 airplane.avionics = avionics
 electronics = Electronics(airplane)
 airplane.electronics = electronics
@@ -123,7 +123,22 @@ airplane.furnishings = furnishings
 airplane.components = [wing, engineL, engineR, fuselage, horizontalStabilizer, verticalStabilizer, mainGear, frontGear, fuelSystem, hydraulics, flightControls, avionics, electronics, airconIce, furnishings] # [component objects] # list of components making up airplane (including parts used elsewhere)
 emptymass = sum([thing.mass for thing in airplane.components])
 
-print([thing.mass for thing in airplane.components])
+print('wing = ', wing.mass, ' kg')
+print('engineL = ', engineL.mass, ' kg')
+print('engineR = ', engineR.mass, ' kg')
+print('fuselage = ', fuselage.mass, ' kg')
+print('horizontalstabilizer = ', horizontalStabilizer.mass, ' kg')
+print('verticalStabilizer = ', verticalStabilizer.mass, ' kg')
+print('mainGear = ', mainGear.mass, ' kg')
+print('frontGear = ', frontGear.mass, ' kg')
+print('fuelSystem = ', fuelSystem.mass, ' kg')
+print('hydraulics = ', hydraulics.mass, ' kg')
+print('flightControls = ', flightControls.mass, ' kg')
+print('avionics = ', avionics.mass, ' kg')
+print('electronics = ', electronics.mass, ' kg')
+print('airconIce = ', airconIce.mass, ' kg')
+print('furnishings = ', furnishings.mass, ' kg')
+
 print('We = ',emptymass,' kg')
 
 airplane.oswaldEfficiencyFactor = 0.8

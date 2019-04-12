@@ -355,10 +355,10 @@ class HorizontalStabilizer(Surface):
         sweepHT = self.sweep # number [deg] - sweep of horizontal tail
         lambd = airplane.wing.taper # number - wing taper ratio
         ch = 0.80 # horizontal tail volume coefficient RAYMER/NOTES
-        S = airplane.wing.span
+        S = airplane.wing.planformArea
         c = airplane.wing.chord
-        dt = 0.5 * airplane.fuselage.length # FIXME just an estimation based on tecnam sizes, TODO: revisit when static margin stuff is done
-        q = .5 * densityAtAltitude(convert(cruiseAltitude, "ft", "m")) * convert(180, "kts", "m/s") ** 2 #Dynamic prressure at cruise
+        dt = 0.45 * airplane.fuselage.length # FIXME just an estimation based on tecnam sizes, TODO: revisit when static margin stuff is done
+        q = .5 * densityAtAltitude(cruiseAltitude) * convert(180, "kts", "m/s") ** 2 #Dynamic prressure at cruise
         Sht = ch * (S * c / dt)
         tc = airplane.wing.thicknessToChord
         AR = airplane.wing.span / airplane.wing.chord
@@ -372,6 +372,7 @@ class VerticalStabilizer(Surface):
     def __init__(self, interferenceFactor, planformArea, thicknessToChord, span, sweep, taper, airplane):
         Surface.__init__(self, interferenceFactor, planformArea, thicknessToChord, span, sweep, taper)
         self.mass = self.calculateVerticalTailMass(airplane)
+        
 
     def calculateVerticalTailMass(self, airplane):
         lambdVT = self.taper # number - vertical tail taper ratio
@@ -379,7 +380,7 @@ class VerticalStabilizer(Surface):
         Nz = airplane.LoadFactor #FIXME do we use a different load factor? 3 or something?
         HtHv = 0 # FOR CONVENTIONAL TAIL = 0.0, FOR T-TAIL = 1.0
         Wdg = airplane.InitialGrossWeight
-        q = .5 * densityAtAltitude(convert(cruiseAltitude, "ft", "m")) * convert(180, "kts", "m/s") ** 2 #Dynamic prressure at cruise
+        q = .5 * densityAtAltitude(cruiseAltitude) * convert(180, "kts", "m/s") ** 2 #Dynamic prressure at cruise
         cv = 0.07 # vertical tail volume coefficient for twin engine GA - RAYMER table 6.4
         dv = 0.5 * airplane.fuselage.length # FIXME just an estimation based on Tecnam sizes
         bw = airplane.wing.span # wingspan
@@ -388,7 +389,7 @@ class VerticalStabilizer(Surface):
         tc = airplane.wing.thicknessToChord
         AR = airplane.wing.span / airplane.wing.chord
 
-        WvtImperial = 0.073 * (1 + 0.2*HtHv) * (Nz * convert(Wdg, "N", "lb"))**0.376 * convert(q, "N/m^2", "lb/ft^2")**0.122 * convert(Svt, "m^2", "ft^2")**0.873 * (100 * tc / cos(sweepVT))**-0.49 * (AR / cos(sweepVT)**2) * lambdVT**0.039
+        WvtImperial = 0.073 * (1 + 0.2*HtHv) * (Nz * convert(Wdg, "N", "lb"))**0.376 * convert(q, "N/m^2", "lb/ft^2")**0.122 * convert(Svt, "m^2", "ft^2")**0.873 * (100 * tc / cos(sweepVT))**-0.49 * (AR / cos(sweepVT)**2)**0.357 * lambdVT**0.039
         WvtMetric = convert(WvtImperial, "lb", "N")
         return WvtMetric / g
 
@@ -410,7 +411,7 @@ class MainGear(Component):
         Nz = self.landloadfactor # FIXME: do we use a different load factor? 3 or something?
         Lm = self.gearLength
         
-        WmgImperial = 0.095 * (Nz * convert(Wland, "N", "lb"))**0.768 * (convert(Lm, "m", "in")/12)**0.409
+        WmgImperial = 0.5 * 0.095 * (Nz * convert(Wland, "N", "lb"))**0.768 * (convert(Lm, "m", "in")/12)**0.409
         WmgMetric = convert(WmgImperial, "lb", "N")
         return WmgMetric / g
     
@@ -439,7 +440,7 @@ class FrontGear(Component):
         Nland = self.landloadfactor
         Ln = self.gearLength
         
-        WngImperial = 0.125 * (Nland * convert(Wland, "N", "lb"))**0.566 * (convert(Ln, "m", "in") / 12)**0.845
+        WngImperial = 0.5 * 0.125 * (Nland * convert(Wland, "N", "lb"))**0.566 * (convert(Ln, "m", "in") / 12)**0.845
         WngMetric = convert(WngImperial, "lb", "N")
         return WngMetric / g
     
@@ -462,12 +463,13 @@ class FuelSystem(Component):
         
     def calculateFuelSystemMass(self, airplane):
         if airplane.powerplant.gas: # make sure gas system exists
-            Vt = airplane.powerplant.gas.mass / airplane.powerplant.gas.density # number [L] - total fuel volume
+            Vt = airplane.powerplant.gas.mass / airplane.powerplant.gas.density # number [m^3] - total fuel volume
+            print(convert(Vt, "m^3", "gal"))
             Vi = Vt # number [L] - total integral tanks volume (should be same as Vt as we have no drop tanks...or DO we??? O_o)
-            Nt = 2 # number of fuel tanks # FIXME: HARD NUM
+            Nt = 1 # number of fuel tanks # FIXME: HARD NUM
             Neng = len(airplane.engines) # number of engines
             
-            Wfs = 2.49 * convert(Vt, "L", "gal")**0.726 * (1 / (Vi/Vt))**0.363 * Nt**0.242 * Neng**0.157
+            Wfs = 0.05 * 2.49 * convert(Vt, "m^3", "gal")**0.726 * (1 / (Vi/Vt))**0.363 * Nt**0.242 * Neng**0.157
             
             return convert(Wfs, "lb", "N")
         else:
@@ -522,9 +524,9 @@ class Avionics(Component):
     def calculateAvionicsMass(self, Wuav):
         WuninAvi = Wuav # number [N] - weight of uninstalled avionics (typically 800-1400 lb or 3558 - 6227 N)
 
-        # WaviImperial = 2.117 * convert(Wuav, "N", "lb")**0.933
-        # WaviMetric = convert(WaviImperial, "lb", "N")
-        WaviMetric = Wuav # Turns out Raymer's estimation does some wackness
+        WaviImperial = 2.117 * convert(Wuav, "N", "lb")**0.933
+        WaviMetric = convert(WaviImperial, "lb", "N")
+        # WaviMetric = Wuav # Turns out Raymer's estimation does some wackness
         return WaviMetric / g
 
 
@@ -578,9 +580,9 @@ class Furnishings(Component):
 
     def calculateFurnishingsMass(self, airplane):
         Wdg = airplane.InitialGrossWeight
-        Wfurn = 0.0582 * convert(Wdg, "N", "lb") - 65
-
-        return convert(Wfurn, "lb", "N")
+        Wfurn =  0.0582 * convert(Wdg, "N", "lb") - 65
+        
+        return convert(Wfurn, "lb", "N") / g
 
 class Airfoil:
     data = None # the dictionary containing aerodynamic information

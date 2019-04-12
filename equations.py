@@ -225,73 +225,6 @@ def StallSpeed(airplane):
     
     return sqrt(2*W / (rho * S * CLmax))
 
-def AirplaneSpecificFuelConsumption(airplane):
-    pass # TODO: implement, then use in UseFuel function
-
-################################################################################
-# COST FUNCTIONS
-################################################################################
-
-# This is based on the DAPCA IV model in Raymer v6 Ch. 18.4.2
-# DAPCA assumes all aluminum framing, but provides fudge factors to adjust hour calculations
-
-def engineeringHours(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    Q = Aiplane.productionQuantityNeeded
-    
-    return 5.18 * (We**0.777) * (V**0.894) * (Q**0.163)
-
-def toolingHours(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    Q = Aiplane.productionQuantityNeeded
-    
-    return 7.22 * (We**0.777) * (V**0.696) * (Q**0.263)
-
-def manufacturingHours(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    Q = Aiplane.productionQuantityNeeded
-    
-    return 10.5 * (We**0.82) * (V**0.484) * (Q**0.641)
-
-def qualityControlHours(airplane):
-    mfgHours = manufacturingHours(airplane)
-    
-    return 0.133 * mfgHours
-
-def developmentSupportCost(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    iR = inflation2012to2019
-    
-    return iR * 67.4 * (We**0.630) * (V**1.3)
-
-def flightTestCost(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    FTA = airplane.numberFlightTestAircraft
-    iR = inflation2012to2019
-    
-    return iR * 1947 * (We**0.325) * (V**0.822) * (FTA**1.21)
-
-def manufacturingMaterialsCost(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    Q = Aiplane.productionQuantityNeeded
-    iR = inflation2012to2019
-    
-    return iR * 31.2 * (We**0.921) * (V**0.621) * (Q**0.799)
-
-def passengerAdditionalCost(airplane):
-    N = airplane.passengers
-    P = airplane.pilot
-    Cp = generalAviationPassengerCostFactor
-    iR = inflation2012to2019
-    
-    return Cp * iR * (N + P)
-
 def MinimumPowerSpeed(airplane):
     W = AirplaneWeight(airplane)
     S = airplane.wing.planformArea
@@ -311,6 +244,76 @@ def BestRateOfClimbSpeed(airplane):
     e = airplane.oswaldEfficiencyFactor
     
     return sqrt(2/rho * W/S * sqrt(1 / (CD0 * pi * AR * e)))
+
+################################################################################
+# COST FUNCTIONS
+################################################################################
+
+# This is based on the DAPCA IV model in Raymer v6 Ch. 18.4.2
+# DAPCA assumes all aluminum framing, but provides fudge factors to adjust hour calculations
+
+def EngineeringHours(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    Q = Aiplane.productionQuantityNeeded
+    
+    return 5.18 * (We**0.777) * (V**0.894) * (Q**0.163)
+
+def ToolingHours(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    Q = Aiplane.productionQuantityNeeded
+    
+    return 7.22 * (We**0.777) * (V**0.696) * (Q**0.263)
+
+def ManufacturingHours(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    Q = Aiplane.productionQuantityNeeded
+    
+    return 10.5 * (We**0.82) * (V**0.484) * (Q**0.641)
+
+def QualityControlHours(airplane):
+    mfgHours = ManufacturingHours(airplane)
+    
+    return 0.133 * mfgHours
+
+def DevelopmentSupportCost(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    iR = inflation2012to2019
+    
+    return iR * 67.4 * (We**0.630) * (V**1.3)
+
+def FlightTestCost(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    FTA = airplane.numberFlightTestAircraft
+    iR = inflation2012to2019
+    
+    return iR * 1947 * (We**0.325) * (V**0.822) * (FTA**1.21)
+
+def ManufacturingMaterialsCost(airplane):
+    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    V = None  # Maximum velocity [km/h]
+    Q = Aiplane.productionQuantityNeeded
+    iR = inflation2012to2019
+    
+    return iR * 31.2 * (We**0.921) * (V**0.621) * (Q**0.799)
+
+def PassengerAdditionalCost(airplane):
+    N = airplane.passengers
+    P = airplane.pilot
+    Cp = generalAviationPassengerCostFactor
+    iR = inflation2012to2019
+    
+    return Cp * iR * (N + P)
+
+################################################################################
+# SIZING FUNCTIONS
+################################################################################
+
+
 
 ################################################################################
 # UPDATING FUNCTIONS

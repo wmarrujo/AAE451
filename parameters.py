@@ -541,8 +541,8 @@ class Electronics(Component):
         self.referenceLength = 0
 
     def calculateElectronicsMass(self, airplane):
-        Wfs = airplane.fuelSystem.mass * g # Fuel system weight [N] (FIXME: IS THIS THE RIGHT CALL FORMAT?)
-        Wavi = airplane.avionics.mass * g # Installed avionics weight [N] (FIXME: IS THIS THE RIGHT CALL FORMAT?)
+        Wfs = airplane.fuelSystem.mass * g # Fuel system weight [N]
+        Wavi = airplane.avionics.mass * g # Installed avionics weight [N]
 
         WelecImperial = 12.57 * (convert(Wfs, "N", "lb") + convert(Wavi, "N", "lb"))**0.51
         WelecMetric = convert(WelecImperial, "lb", "N")

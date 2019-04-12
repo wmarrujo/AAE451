@@ -9,6 +9,7 @@ R = 287.058 # J/kg*K s# ideal gas constant for earth air
 r = 6356766 # m # radius of the earth
 g = 9.80665 # m/s² # gravitational acceleration at sea level
 γ = 1.4 #  # air's ratio of specific heats
+gamma = γ 
 
 # ATMOSPHERE VALUES
 

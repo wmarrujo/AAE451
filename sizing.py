@@ -13,18 +13,25 @@ sys.path.append(simulationPath)
 # PERFORMANCE
 ################################################################################
 
+# TODO: only make the caching directory when it finishes & will write.
+# TODO: put a note in the directory if the simulation failed (but still put the initial airplane configuration, maybe write that part it in the airplane definition)
+# TODO: test each piece, initialAirplane, simulation, finalAirplane separately (maybe simulation & final together?)
+
 def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     # get from cache if the simulation has already been done
     dirName = defaultAirplane.name + "-" + compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane))
     dir = os.path.join(simulationPath, dirName)
-    cached = os.path.isdir(dir)
+    cached = os.path.exists(dir)
     if cache and not cached: # only if you want to cache
-        os.mkdir(dir) # make dir so that it can be read from and written to later
+        os.makedirs(dir) # make dir so that it can be read from and written to later
     initialObjectFilePath = os.path.join(dir, "initial.pyobj")
     finalObjectFilePath = os.path.join(dir, "final.pyobj")
     simulationFilePath = os.path.join(dir, "simulation.csv")
     
+    print("Getting Aircraft Parameters for {}".format(dirName), end="", flush=True)
+    
     if not cache or not cached: # if it shouldn't cache or was not cached, continue to simulate
+        print(" - No Cache, Simulating")
         
         # DEFINE AIRPLANE
         
@@ -35,11 +42,10 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
         
         # RUN SIMULATION
         
-        simulation = {"time":[], "segment":[]}
+        simulation = {"time":[], "segment":[], "position":[], "altitude":[], "weight":[], "thrust":[]}
         def recordingFunction(time, segmentName, airplane):
             W = AirplaneWeight(airplane)
             T = AirplaneThrust(airplane)
-            
             
             simulation["time"].append(time)
             simulation["segment"].append(segmentName)
@@ -56,13 +62,13 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
             saveObject(airplane, finalObjectFilePath) # save final state
         
     else: # was cached
+        print(" - Cache exists, Loading From Cache")
         initialAirplane = loadObject(initialObjectFilePath)
         finalAirplane = loadObject(finalObjectFilePath)
         simulation = CSVToDict(simulationFilePath)
     
     # CALCULATE PERFORMANCE
     # initialAirplane, finalAirplane, & simulation are defined by now
-    
     ts = simulation["time"]
     ss = simulation["segment"]
     ps = simulation["position"]
@@ -80,20 +86,6 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     avgGroundSpeedInCruise = cruiseRange / cruiseFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
     fuelWeightUsed = Ws[0] - Ws[-1]
     
-    # dTO  = simulation["position"][simulation.index(first(simulation["altitude"], condition = lambda altitude: altitude >= 50))]
-    # range = simulation["position"][-1]
-    # 
-    # cruiseStartPosition  = simulation["position"][simulation.index(first(simulation["segment"], condition = lambda segment: segment == "cruise"))]
-    # cruiseStartTime  = simulation["time"][simulation.index(first(simulation["segment"], condition = lambda segment: segment == "cruise"))]
-    # cruiseEndPosition  = simulation["position"][simulation.index(first(reversed(simulation["segment"]), condition = lambda segment: segment == "cruise"))]
-    # cruiseEndTime  = simulation["time"][simulation.index(first(reversed(simulation["segment"]), condition = lambda segment: segment == "cruise"))]
-    # groundSpeed = (cruiseEndPosition - cruiseStartPosition) / (cruiseEndTime - cruiseStartTime)
-    # flightTime = cruiseEndTime - cruiseStartTime
-    # 
-    # fuelUsed  = simulation["fuelWeight"][0] - simulation["fuelWeight"][-1]
-    # 
-    # [emptyWeight, dTO, range, groundSpeed, flightTime, fuelUsed]
-    
     return {
         "empty weight": emptyWeight,
         "takeoff distance": dTO,
@@ -107,6 +99,8 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
 ################################################################################
 
 def defineAirplane(drivingParameters, defaultAirplane):
+    print("Closing Aircraft Weight")
+    
     WS = drivingParameters[0]
     PW = drivingParameters[1]
     

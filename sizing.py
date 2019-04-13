@@ -89,7 +89,7 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     return {
         "empty weight": emptyWeight,
         "takeoff distance": dTO,
-        "range": range,
+        "range": cruiseRange,
         "average ground speed": avgGroundSpeedInCruise,
         "flight time": cruiseFlightTime,
         "fuel used": fuelWeightUsed}

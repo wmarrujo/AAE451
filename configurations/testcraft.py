@@ -48,7 +48,6 @@ def defineAirplane(definingParameters):
     
     airplane = Airplane()
     
-    airplane.name = "testcraft"
     airplane.initialGrossWeight = W0
     airplane.pilots = 1
     airplane.passengers = 3

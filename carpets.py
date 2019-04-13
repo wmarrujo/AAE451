@@ -24,6 +24,9 @@ def fit_func(xs, a, b):
 
 def exponentialForm(x, a, b):
     return a * exp(b * x)
+    
+def invExponentialForm(y, a, b):
+    return log(y / a) / b
 
 ###### Create sizing matrix
 # Obtain center cell W/S and T/W from guess or previous best carpet plot result
@@ -53,15 +56,21 @@ ylabel("Wing Loading [N/m^2]")
 xlabel("Gross Weight [N]")
 
 ###### CROSS PLOTS
+
+fit_WS = linspace(WS*0.5, WS*1.5, 1000)
+dT0s = []
+ranges = []
+flightTimes = []
+
 # Plot dTO as function of W/S for each P/W
 figure()
-plot(WSs, [i["takeoff distance"] for i in p[0]], ".")
-plot(WSs, [i["takeoff distance"] for i in p[1]], ".")
-plot(WSs, [i["takeoff distance"] for i in p[2]], ".")
-
-params, pconv = curve_fit(fit_func, WSs, [i["takeoff distance"] for i in p[0]], p0=(1, 0))
-print("params", params)
-plot(WSs, [exponentialForm(WS, params[0], params[1]) for WS in WSs], "C0")
+for PWlist in p:
+    plot(WSs, [i["takeoff distance"] for i in PWlist], "k.")
+    params, pconv = curve_fit(fit_func, WSs, [i["takeoff distance"] for i in PWlist], p0=(1, 0))
+    plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
+    dT0Intersection = invExponentialForm(minimumTakeoffFieldLength, params[0], params[1])
+    dT0s.append(dT0Intersection)
+hlines(minimumTakeoffFieldLength, fit_WS[0], fit_WS[-1])
 
 title("Takeoff Distance")
 xlabel("Wing Loading [N/m^2]")
@@ -70,22 +79,13 @@ ylabel("Takeoff Distance [m]")
 
 # Plot range as function of W/S for each P/W
 figure()
-plot(WSs, [i["range"] for i in p[0]], ".")
-plot(WSs, [i["range"] for i in p[1]], ".")
-plot(WSs, [i["range"] for i in p[2]], ".")
-
-f = poly1d(polyfit(WSs, [i["range"] for i in p[0]], 3))
-x_new = linspace(WSs[0], WSs[-1], 50)
-y_new = f(x_new)
-plot(x_new, y_new, "C0")
-f = poly1d(polyfit(WSs, [i["range"] for i in p[1]], 3))
-x_new = linspace(WSs[0], WSs[-1], 50)
-y_new = f(x_new)
-plot(x_new, y_new, "C1")
-f = poly1d(polyfit(WSs, [i["range"] for i in p[2]], 3))
-x_new = linspace(WSs[0], WSs[-1], 50)
-y_new = f(x_new)
-plot(x_new, y_new, "C2")
+for PWlist in p:
+    plot(WSs, [i["range"] for i in PWlist], "k.")
+    params, pconv = curve_fit(fit_func, WSs, [i["range"] for i in PWlist], p0=(1, 0))
+    plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
+    rangeIntersection = invExponentialForm(minimumRange, params[0], params[1])
+    ranges.append(rangeIntersection)
+hlines(minimumRange, fit_WS[0], fit_WS[-1])
 
 title("Range")
 xlabel("Wing Loading [N/m^2]")
@@ -94,22 +94,13 @@ ylabel("Range [m]")
 
 # Plot flight time as function of W/S for each P/W
 figure()
-plot(WSs, [i["flight time"] for i in p[0]], ".")
-plot(WSs, [i["flight time"] for i in p[1]], ".")
-plot(WSs, [i["flight time"] for i in p[2]], ".")
-
-f = poly1d(polyfit(WSs, [i["flight time"] for i in p[0]], 3))
-x_new = linspace(WSs[0], WSs[-1], 50)
-y_new = f(x_new)
-plot(x_new, y_new, "C0")
-f = poly1d(polyfit(WSs, [i["flight time"] for i in p[1]], 3))
-x_new = linspace(WSs[0], WSs[-1], 50)
-y_new = f(x_new)
-plot(x_new, y_new, "C1")
-f = poly1d(polyfit(WSs, [i["flight time"] for i in p[2]], 3))
-x_new = linspace(WSs[0], WSs[-1], 50)
-y_new = f(x_new)
-plot(x_new, y_new, "C2")
+for PWlist in p:
+    plot(WSs, [i["flight time"] for i in PWlist], "k.")
+    params, pconv = curve_fit(fit_func, WSs, [i["flight time"] for i in PWlist], p0=(1, 0))
+    plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
+    flightTimeIntersection = invExponentialForm(maximumFlightTime, params[0], params[1])
+    flightTimes.append(flightTimeIntersection)
+hlines(maximumFlightTime, fit_WS[0], fit_WS[-1])
 
 title("Flight Time")
 xlabel("Wing Loading [N/m^2]")

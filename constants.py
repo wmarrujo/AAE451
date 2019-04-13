@@ -51,3 +51,11 @@ toolingWrapRate = 118 # [2012 USD]
 qualityControlWrapRate = 108 # [2012 USD]
 manufacturingWrapRate = 98 # [2012 USD]
 generalAviationPassengerCostFactor = 850 # [2012 USD]
+
+################################################################################
+# RFP Constraints
+################################################################################
+
+minimumTakeoffFieldLength = convert(2500, "ft", "m")
+minimumRange = convert(300, "nmi", "m")
+maximumFlightTime = convert(1.5, "hr", "s")

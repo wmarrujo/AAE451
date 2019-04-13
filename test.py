@@ -31,5 +31,5 @@ DPS = {
     "wing loading": convert(50, "lb/ft^2", "N/m^2"),
     "power to weight ratio": convert(0.072, "hp/lb", "W/N")}
 
-PPs = getPerformanceParameters("tecnam", DPS, designMission)
+PPs = getPerformanceParameters("tecnam", DPS, designMission, silent=True)
 print(PPs)

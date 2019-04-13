@@ -85,19 +85,19 @@ def simulationRecordingFunction(time, segmentName, airplane):
 # PERFORMANCE
 ################################################################################
 
-def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=True):
+def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=True, silent=False):
     global simulation
     
     # GET AIRPLANE AND SIMULATION DATA
     
     id = airplaneDefinitionID(airplaneName, drivingParameters)
-    print("Getting Performance Parameters for Airplane", id)
-    initialAirplane = loadInitialAirplane(id) if cache and initialAirplaneCached(id) else defineAirplane(airplaneName, drivingParameters, mission)
+    print("Getting Performance Parameters for Airplane", id) if not silent else None
+    initialAirplane = loadInitialAirplane(id, silent=silent) if cache and initialAirplaneCached(id) else defineAirplane(airplaneName, drivingParameters, mission, silent=silent)
     if cache and simulationCached(id):
-        simulation = loadSimulation(id)
-        finalAirplane = loadFinalAirplane(id) if finalAirplaneCached(id) else None
+        simulation = loadSimulation(id, silent=silent)
+        finalAirplane = loadFinalAirplane(id, silent=silent) if finalAirplaneCached(id) else None
     else:
-        finalAirplane = simulateAirplane(initialAirplane, mission, cache=cache, airplaneID=id)
+        finalAirplane = simulateAirplane(initialAirplane, mission, cache=cache, airplaneID=id, silent=silent)
     
     # CALCULATE PERFORMANCE VALUES
     
@@ -132,9 +132,9 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
 # AIRCRAFT HANDLING
 ################################################################################
 
-def defineAirplane(airplaneName, drivingParameters, mission, cache=True):
+def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=False):
     id = airplaneDefinitionID(airplaneName, drivingParameters)
-    print("Defining Airplane", id)
+    print("Defining Airplane", id) if not silent else None
     defineAirplaneSpecifically = airplaneDefinitionFunction(airplaneName)
     
     def setDefiningParameters(drivingParameters, X):
@@ -151,7 +151,7 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True):
         definingParameters = setDefiningParameters(drivingParameters, X)
         
         initialAirplane = defineAirplaneSpecifically(definingParameters)
-        finalAirplane = simulateAirplane(initialAirplane, mission, cache=False)
+        finalAirplane = simulateAirplane(initialAirplane, mission, cache=False, silent=silent)
         if finalAirplane is None: # the simulation has failed
             return 1e10 # huge penalty for optimizer
         
@@ -168,21 +168,21 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True):
     airplane = defineAirplaneSpecifically(definingParameters)
     
     if cache:
-        saveInitialAirplane(airplane, id)
+        saveInitialAirplane(airplane, id, silent=silent)
     
-    print("Airplane Definition Closed", id)
+    print("Airplane Definition Closed", id) if not silent else None
     return airplane
 
-def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None):
+def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None, silent=False):
     """returns the airplane at its final state, or None if the simulation failed"""
     airplane = copy.deepcopy(initialAirplane)
     
     initializeSimulation()
-    finalAirplane = mission.simulate(timestep, airplane, simulationRecordingFunction)
+    finalAirplane = mission.simulate(timestep, airplane, simulationRecordingFunction, silent=silent)
     
     if cache and airplaneID is not None:
-        saveSimulation(airplaneID) # save the simulation
-        saveFinalAirplane(finalAirplane, airplaneID) # save the final airplane
+        saveSimulation(airplaneID, silent=silent) # save the simulation
+        saveFinalAirplane(finalAirplane, airplaneID, silent=silent) # save the final airplane
     
     return finalAirplane
 
@@ -217,30 +217,30 @@ def finalAirplaneCached(airplaneID):
     """checks if the final airplane configuration has been cached"""
     return os.path.exists(os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
 
-def loadInitialAirplane(airplaneID):
-    print("Loading Initial Airplane Configuration from Cache", airplaneID)
+def loadInitialAirplane(airplaneID, silent=False):
+    print("Loading Initial Airplane Configuration from Cache", airplaneID) if not silent else None
     return loadObject(os.path.join(simulationDirectory, airplaneID, "initial.pyobj")) if initialAirplaneCached(airplaneID) else None
 
-def loadSimulation(airplaneID):
-    print("Loading Simulation from Cache", airplaneID)
+def loadSimulation(airplaneID, silent=False):
+    print("Loading Simulation from Cache", airplaneID) if not silent else None
     return CSVToDict(os.path.join(simulationDirectory, airplaneID, "simulation.csv")) if simulationCached(airplaneID) else {}
 
-def loadFinalAirplane(airplaneID):
+def loadFinalAirplane(airplaneID, silent=False):
     print("Loading Final Airplane Configuration from Cache", airplaneID)
     return loadObject(os.path.join(simulationDirectory, airplaneID, "final.pyobj")) if finalAirplaneCached(airplaneID) else None
 
-def saveInitialAirplane(airplaneObject, airplaneID):
-    print("Saving Initial Airplane Configuration to Cache", airplaneID)
+def saveInitialAirplane(airplaneObject, airplaneID, silent=False):
+    print("Saving Initial Airplane Configuration to Cache", airplaneID) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
 
-def saveSimulation(airplaneID):
+def saveSimulation(airplaneID, silent=False):
     global simulation
-    print("Saving Simulation to Cache", airplaneID)
+    print("Saving Simulation to Cache", airplaneID) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     dictToCSV(os.path.join(simulationDirectory, airplaneID, "simulation.csv"), simulation)
 
-def saveFinalAirplane(airplaneObject, airplaneID):
-    print("Saving Final Airplane Configuration to Cache", airplaneID)
+def saveFinalAirplane(airplaneObject, airplaneID, silent=False):
+    print("Saving Final Airplane Configuration to Cache", airplaneID) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "final.pyobj"))

@@ -1,8 +1,7 @@
 from utilities import *
-from stdatmo import *
-from convert import convert
-from parameters import *
+
 from constants import *
+from parameters import *
 
 from scipy import *
 from scipy.optimize import minimize
@@ -30,10 +29,12 @@ def PayloadWeight(airplane):
 def FuelWeight(airplane):
     mf = airplane.powerplant.fuelMass
     
-    return mf/g
+    return mf*g
 
 def EmptyWeight(airplane):
-    return airplane.emptyWeight # TODO: temporary, replace with component weight buildup later
+    W0 = airplane.initialGrossWeight
+    
+    return convert(2000, "lb", "N") # TODO: temporary, replace with component weight buildup later
 
 def AirplaneReynoldsNumber(airplane):
     rho = densityAtAltitude(airplane.altitude)
@@ -49,12 +50,23 @@ def AirplaneDynamicPressure(airplane):
     
     return 0.5 * rho * V**2
 
-def AccelerationOnGround(airplane):
+def AccelerationOnTakeoff(airplane):
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
     D = AirplaneDrag(airplane)
     L = AirplaneLift(airplane)
     mu = runwayFrictionCoefficientNoBrakes
+    
+    F = T - D - mu*(W-L)
+    m = W/g
+    return F/m
+
+def AccelerationOnLanding(airplane):
+    W = AirplaneWeight(airplane)
+    T = AirplaneThrust(airplane)
+    D = AirplaneDrag(airplane)
+    L = AirplaneLift(airplane)
+    mu = runwayFrictionCoefficientWithBrakes
     
     F = T - D - mu*(W-L)
     m = W/g
@@ -95,10 +107,6 @@ def AirplaneDrag(airplane):
     return q * S * CD
 
 def ParasiteDragCoefficient(airplane):
-    altitude = airplane.altitude
-    rho = densityAtAltitude(altitude)
-    V = airplane.speed
-    mu = dynamicViscosityAtAltitude(altitude)
     Sref = airplane.wing.planformArea
     CD0miscFactor = airplane.miscellaneousParasiteDragFactor
     
@@ -156,18 +164,12 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
     amin = airplane.wing.airfoil.minimumDefinedAngleOfAttack
     amax = airplane.wing.airfoil.maximumDefinedAngleOfAttack
     
-    # alphas = linspace(amin, amax, num=50)
-    # CLs = [airplane.wing.airfoil.liftCoefficientAtAngleOfAttack(a) for a in alphas]
-    # CDs = [airplane.wing.airfoil.dragCoefficientAtAngleOfAttack(a) for a in alphas]
-    # LDs = [CL/CD for CL, CD in zip(CLs, CDs)]
-    # a = alphas[LDs.index(max(LDs))]
-    
     aguess = airplane.angleOfAttack
     
-    def functionToMinimize(a):
+    def functionToMinimize(X):
         A = copy.deepcopy(airplane)
         A.flightPathAngle = 0
-        A.pitch = a[0]
+        A.pitch = X[0]
         
         L = AirplaneLift(A)
         D = AirplaneDrag(A)
@@ -178,6 +180,31 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
     a = result["x"][0]
     
     return a
+
+def MaximumLiftOverDragVelocity(airplane):
+    # Vguess = airplane.speed
+    #
+    # def functionToMinimize(X):
+    #     A = copy.deepcopy(airplane)
+    #     A.speed = X[0]
+    #
+    #     L = AirplaneLift(A)
+    #     D = AirplaneDrag(A)
+    #
+    #     return -L/D
+    #
+    # result = minimize(functionToMinimize, [Vguess], bounds=[(0, None)])
+    # V = result["x"][0]
+    #
+    # return V
+    
+    # TODO: verify that this equation works (Raymer 2018 equation 17.10)
+    rho = densityAtAltitude(airplane.altitude)
+    CL = LiftCoefficient(airplane)
+    W = AirplaneWeight(airplane)
+    S = airplane.wing.planformArea
+    
+    return sqrt(2 / (rho * CL) * (W/S))
 
 def ClimbVelocity(airplane):
     flightPathAngle = airplane.flightPathAngle
@@ -198,159 +225,220 @@ def StallSpeed(airplane):
     
     return sqrt(2*W / (rho * S * CLmax))
 
+def AirplaneSpecificFuelConsumption(airplane):
+    pass # TODO: implement, then use in UseFuel function
+    
+def MinimumPowerSpeed(airplane):
+    W = AirplaneWeight(airplane)
+    S = airplane.wing.planformArea
+    rho = densityAtAltitude(airplane.altitude)
+    CD0 = ParasiteDragCoefficient(airplane)
+    AR = airplane.wing.aspectRatio
+    e = airplane.oswaldEfficiencyFactor
+    
+    return sqrt(2/rho * W/S * sqrt(1 / (3 * CD0 * pi * AR * e)))
+
+def BestRateOfClimbSpeed(airplane):
+    W = AirplaneWeight(airplane)
+    S = airplane.wing.planformArea
+    rho = densityAtAltitude(airplane.altitude)
+    CD0 = ParasiteDragCoefficient(airplane)
+    AR = airplane.wing.aspectRatio
+    e = airplane.oswaldEfficiencyFactor
+    
+    return sqrt(2/rho * W/S * sqrt(1 / (CD0 * pi * AR * e)))
+    
+def MaximumSteadyLevelFlightSpeed(airplane):
+    Tavail = AirplaneThrust(airplane)
+    CD0 = ParasiteDragCoefficient(airplane)
+    
+    def KValue(airplane):
+        AR = airplane.aspectRatio
+        e = airplane.oswaldEfficiencyFactor
+        
+        return 1 / (pi * AR * e)
+    
+    K = KValue(airplane)
+    W = AirplaneWeight(airplane)
+    rho = densityAtAltitude(airplane.altitude)
+    S = airplane.wing.planformArea
+    CDmin = 9
+    
+    
+    pass
+    
+
 ################################################################################
 # PRODUCTION COST FUNCTIONS
 ################################################################################
 
-def engineeringHours(airplane):
-    Waf = 0.065* convert(airplane.emptyWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
-    Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+def EngineeringHours(airplane, plannedAircraft):
+    Waf =  0.065* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
+    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+    Vh = 185
     N = plannedAircraft
     Fcert = certFudge
     Fcf = flapFudge
-    Fcomp = 1 + compFraction
+    Fcomp = 1 + airplane.compositeFraction
     Fpress = pressFudge
+    
+    #print("empty weight = {}".format(convert(airplane.initialGrossWeight, "N", "lb")))
     
     return 0.0396 * (Waf**0.791) * (Vh**1.526) * (N**0.183) * Fcert * Fcf * Fcomp * Fpress
 
-def toolingHours(airplane):
-    Waf = 0.065* convert(airplane.emptyWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
-    Vh = convert(airplane.speed, "m/s", "kts") #needs to be max level airspeed, change later
+def ToolingHours(airplane, plannedAircraft):
+    Waf =  0.065* convert(airplane.initialGrossWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
+    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+    Vh = 185
     N = plannedAircraft
     Qm = plannedAircraft/60
     Ftaper = taperFudge
     Fcf = flapFudge
-    Fcomp = 1 + compFraction
+    Fcomp = 1 + airplane.compositeFraction
     Fpress = pressFudge
     
     return 1.0032 * (Waf**0.764) * (Vh**0.899) * (N**0.178) * (Qm**0.066) * Ftaper * Fcf * Fcomp * Fpress
     
-def manufacturingHours(airplane):
-    Waf = 0.065* convert(airplane.emptyWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
-    Vh = convert(airplane.speed, "m/s", "kts") #needs to be max level airspeed, change later
+def ManufacturingHours(airplane, plannedAircraft):
+    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")
+    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+    Vh = 185
     N = plannedAircraft
     Fcert = certFudge
     Fcf = flapFudge
-    Fcomp = 1 + 0.25*compFractionq
+    Fcomp = 1 + 0.25*airplane.compositeFraction
     
     return 9.6613 * (Waf**0.74) * (Vh**0.543) * (N**0.524) * Fcert * Fcf * Fcomp
 
-def engineeringCost(airplane):
-    Heng = engineeringHours(airplane)
+def EngineeringCost(airplane, plannedAircraft):
+    Heng = EngineeringHours(airplane, plannedAircraft)
     Reng = engineeringLaborRate
     CPI = inflation2012to2019
     
     return 2.0969 * Heng * Reng * CPI
     
-def developmentalSupportCost(airplane):
-    Waf = 0.065* convert(airplane.emptyWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
-    Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+def DevelopmentalSupportCost(airplane):
+    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
+    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+    Vh = 185
     Np = numberFlightTestAircraft
     Fcert = certFudge
     Fcf = flapFudge
-    Fcomp = 1 + 0.5*compFraction
+    Fcomp = 1 + 0.5*airplane.compositeFraction
     Fpress = pressFudge
+    CPI = inflation2012to2019
     
-    return 0.06458 * (Waf**0.873) * (Vh**1.89) * (Np**0.346) * Fcert * Fcf * Fcomp * Fpress
+    return 0.06458 * (Waf**0.873) * (Vh**1.89) * (Np**0.346) * Fcert * Fcf * Fcomp * Fpress * CPI
     
-def flightTestCost(airplane):
-    Waf = 0.065* convert(airplane.emptyWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
-    Vh = convert(airplane.speed, "m/s", "kts") #needs to be max level airspeed, change later
+def FlightTestCost(airplane):
+    Waf = 0.065* convert(EmptyWeight(airplane), "N", "lb")   # need to change once compnenet weight build-up is complete
+    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+    Vh = 185
     Np = numberFlightTestAircraft
     CPI = inflation2012to2019
     Fcert = certFudge
-
+    
     return 0.009646 * (Waf**1.16) * (Vh**1.3718) * (Np**1.281) * CPI * Fcert
     
-def toolingCost(airplane):
-    Htool = toolingHours(airplane)
+def ToolingCost(airplane, plannedAircraft):
+    Htool = ToolingHours(airplane, plannedAircraft)
     Rtool = toolingLaborRate
     CPI = inflation2012to2019
-    
+
     return 2.0969 * Htool * Rtool * CPI
     
-def manufacturingCost(airplane):
-    Hmfg = manufacturingHours(airplane)
+def ManufacturingCost(airplane, plannedAircraft):
+    Hmfg = ManufacturingHours(airplane, plannedAircraft)
     Rmfg = manufacturingLaborRate
     CPI = inflation2012to2019
-        
-    return 2.0969 * Hmfg * Rmfg * CPI
+    N = plannedAircraft
     
-def qualityControlCost(airplane):
-    Cmfg = manufacturingCost(airplane)
+    return (2.0969 * Hmfg * Rmfg * CPI) / N
+    
+def QualityControlCost(airplane, plannedAircraft):
+    Cmfg = ManufacturingCost(airplane, plannedAircraft)
     Fcert = certFudge
-    Fcomp = compFudge
+    Fcomp = 1 + 0.5*airplane.compositeFraction
     
     return 0.13 * Cmfg * Fcert * Fcomp
 
-def materialCost(airplane):
-    Waf = 0.065* convert(airplane.emptyWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
-    Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+def MaterialCost(airplane, plannedAircraft):
+    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")
+    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
+    Vh = 185
     N = plannedAircraft
     CPI = inflation2012to2019
     Fcert = certFudge
     Fcf = flapFudge
     Fpress = pressFudge
 
-    return 24.896 * (Waf**0.689) * (Vh**0.624) * (N**0.762) * CPI * Fcert * Fcf * Fpress
+    return (24.896 * (Waf**0.689) * (Vh**0.624) * (N**0.762) * CPI * Fcert * Fcf * Fpress) / N
     
-def engineCost(airplane):
+def EngineCost(engines):
     Npp = numberICEngines
     CPI = inflation2012to2019
-    Pbhp = convert(airplane.engine.maxPower, "W", "hp")
+    
+    PSI = [engine.maxPower for engine in engines]
+    Pbhp = convert(PSI[0], "W", "hp")
     
     return 174 * Npp * Pbhp * CPI
     
-def propellerCost(airplane):
+def PropellerCost(airplane):
     Npp = numberICEngines
     CPI = inflation2012to2019
-        
-    return 3145 * Npp * CPI     # For fixed pitch propeller
     
-def powerplantCost(airplane):
-    Cengine = engineCost(airplane)
-    Cpropeller = propellerCost(airplane)
+    return 3145 * Npp * CPI  # For fixed pitch propeller
+    
+def PowerplantCost(airplane, engines):
+    Cengine = EngineCost(engines)
+    Cpropeller = PropellerCost(airplane)
     
     return Cengine + Cpropeller
-    
-def avionicsCost(airplane):
-    unit = avionicPrice
-    CPI = inflation2012to2019
-    
-    return unit * CPI
-    
-def landingGearCost(airplane):
-    dC = -7500 if retractableGear is False else 0
+
+def LandingGearCost(airplane):
+    dC = -7500 if airplane.retractableGear is False else 0
     CPI = inflation2012to2019
     
     return dC * CPI
     
-def fixedCost(airplane):
-    Ceng = engineeringCost(airplane)
-    Cdev = developmentalSupportCost(airplane)
-    Cft = flightTestCost(airplane)
-    Ctool = toolingCost(airplane)
+def SeatingCost(airplane):
+    num = airplane.pilots + airplane.passengers
+    P = seatPrice
+    
+    return num * P
+    
+    
+def FixedCost(airplane, plannedAircraft):
+    #this is a total cost (not per aircraft)
+    Ceng = EngineeringCost(airplane, plannedAircraft)
+    Cdev = DevelopmentalSupportCost(airplane)
+    Cft = FlightTestCost(airplane)
+    Ctool = ToolingCost(airplane, plannedAircraft)
     
     return Ceng + Cdev + Cft + Ctool
 
-def variableCost(airplane):
-    Cmfg = manufacturingCost(airplane)
-    Cqc = qualityControlCost(airplane)
-    Cmat = materialCost(airplane)
-    Clg = landingGearCost(airplane)
-    Cav = avionicsCost(airplane)
-    Cpp = powerplantCost(airplane)
+def VariableCost(airplane, engines, plannedAircraft):
+    #this is a per aircraft cost
+    Cmfg = ManufacturingCost(airplane, plannedAircraft)
+    Cqc = QualityControlCost(airplane, plannedAircraft)
+    Cmat = MaterialCost(airplane, plannedAircraft)
+    Clg = LandingGearCost(airplane)
+    Cav = avionicPrice
+    Cheat = cabinHeaterPrice
+    Cseat = SeatingCost(airplane)
+    Cmfgins = manufacturerLiabilityInsurance
+    Cpp = PowerplantCost(airplane, engines)
     
-    return Cmfg + Cqc + Cmat + Clg + Cav + Cpp
+    return Cmfg + Cqc + Cmat + Clg + Cav + Cheat + Cseat + Cmfgins + Cpp
 
 ################################################################################
 # OPERATING COST FUNCTIONS
 ################################################################################
 
-def maintenanceToFlightHoursRatio(airplane):
+def MaintenanceToFlightHoursRatio(airplane):
     F1 = maintF
     F2 = engineF
-    F3 = 0 if retractableGear is False else 0.02
+    F3 = 0 if airplane.retractableGear is False else 0.02
     F4 = VFRF
     F5 = 0 if IFRflight is False else 0.04
     F6 = fuelF
@@ -359,28 +447,28 @@ def maintenanceToFlightHoursRatio(airplane):
     
     return 0.30 + F1 + F2 + F3 + F4 + F5 + F6 + F7 + F8
     
-def maintenanceCost(airplane):
-    Fmf = maintenanceToFlightHoursRatio(airplane)
+def MaintenanceCost(airplane):
+    Fmf = MaintenanceToFlightHoursRatio(airplane)
     Rap = APmechRate
     Qflgt = flightHoursYear
     CPI = inflation2012to2019
     
     return Fmf * Rap * Qflgt * CPI
     
-def storageCost(airplane):
+def StorageCost(airplane):
     Rstor = monthlyStorageRate
     CPI = inflation2012to2019
     
     return 12 * Rstor * CPI
     
-def annualFuelCost(airplane):
-    FFcruise = fuelFlowCruise  # need this 
+def AnnualFuelCost(airplane):
+    FFcruise = fuelFlowCruise  # need this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     Qflgt = flightHoursYear
     Rfuel = fuelRate
     
     return FFcruise * Qflgt * Rfuel
     
-def crewCost(airplane):
+def CrewCost(airplane):
     Ncrew = airplane.pilots
     Rcrew = pilotRate
     Qflgt = flightHoursYear
@@ -388,20 +476,20 @@ def crewCost(airplane):
     
     return Ncrew * Rcrew * Qflgt * CPI
     
-def annualInsuranceCost(airplane): #not a super accurate estimation
+def AnnualInsuranceCost(airplane): #not a super accurate estimation
     Cac = purchasePrice
     CPI = inflation2012to2019
     
     return (500 * CPI) + (0.015 * Cac)
     
-def annualEngineOverhaul(airplane):
+def AnnualEngineOverhaul(airplane):
     Npp = numberICEngines
     Qflgt = flightHoursYear
     CPI = inflation2012to2019
     
     return 5 * Npp * Qflgt * CPI
     
-def annualLoanPayment(airplane):
+def AnnualLoanPayment(airplane):
     # P = principalLoan
     # i = interestRate
     # n = payPeriods
@@ -409,23 +497,22 @@ def annualLoanPayment(airplane):
     # return (12 * P * i) / (1 - (1/(1+i)**n))
     return 0
     
-def totalAnnualCost(airplane):
-    Cap = maintenanceCost(airplane)
-    Cstor = storageCost(airplane)
-    Cfuel = annualFuelCost(airplane)
-    Cins = annualInsuranceCost(airplane)
+def TotalAnnualCost(airplane):
+    Cap = MaintenanceCost(airplane)
+    Cstor = StorageCost(airplane)
+    Cfuel = AnnualFuelCost(airplane)
+    Cins = AnnualInsuranceCost(airplane)
     Cinsp = inspectionCost
-    Cover = annualEngineOverhaul(airplane)
-    Cloan = annualLoanPayment(airplane)
+    Cover = AnnualEngineOverhaul(airplane)
+    Cloan = AnnualLoanPayment(airplane)
     
     return Cap + Cstor + Cfuel + Cins + Cinsp + Cover + Cloan
     
-def costPerFlightHour(airplane):
-    Cyear = totalAnnualCost(airplane)
+def CostPerFlightHour(airplane):
+    Cyear = TotalAnnualCost(airplane)
     Qflgt = flightHoursYear
     
-    return = Cyear / Qflgt
-
+    return Cyear / Qflgt
 
 ################################################################################
 # UPDATING FUNCTIONS
@@ -449,3 +536,53 @@ def UpdateFuel(airplane, tstep):
         battery.energy -= Eb
     if gas is not None:
         gas.mass -= Eg/gas.energyDensity
+
+def UpdateWaiting(airplane, t, tstep):
+    UpdateFuel(airplane, tstep)
+
+def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
+    acceleration = AccelerationOnTakeoff(airplane) # find acceleration from thrust, drag and ground friction
+    airplane.speed += acceleration * tstep # update speed with acceleration
+    airplane.position += airplane.speed * tstep # update position with speed
+    UpdateFuel(airplane, tstep) # update the fuel
+
+def UpdateClimb(airplane, t, tstep):
+    T = AirplaneThrust(airplane)
+    D = AirplaneDrag(airplane)
+    W = AirplaneWeight(airplane)
+    gamma = arcsin((T-D)/W)
+    VminP = MinimumPowerSpeed(airplane)
+    # TODO: determine throttle to keep this condition (that way fuel usage will be correct)
+    
+    airplane.flightPathAngle = gamma
+    airplane.pitch = gamma
+    airplane.speed = VminP
+    airplane.altitude += VminP * sin(gamma) * tstep
+    airplane.position += VminP * cos(gamma) * tstep
+    UpdateFuel(airplane, tstep)
+
+def UpdateCruise(airplane, t, tstep):
+    VbestR = BestRateOfClimbSpeed(airplane)
+    
+    airplane.speed = VbestR
+    airplane.position += VbestR * tstep
+    UpdateFuel(airplane, tstep)
+
+def UpdateDescent(airplane, t, tstep):
+    gamma = arctan2(convert(-1000, "ft", "m"), convert(3, "nmi", "m")) # using "rule of threes" (for passenger comfort) - glide ratio of 3nmi per 1000ft of descent
+    VminP = MinimumPowerSpeed(airplane)
+    # TODO: update throttle setting
+    
+    airplane.flightPathAngle = gamma
+    airplane.pitch = gamma
+    airplane.speed = VminP
+    airplane.altitude += VminP * sin(gamma) * tstep
+    airplane.position += VminP * cos(gamma) * tstep
+    UpdateFuel(airplane, tstep)
+
+def UpdateLanding(airplane, t, tstep):
+    acceleration = AccelerationOnLanding(airplane) # find acceleration from thrust, drag and ground friction
+    airplane.speed += acceleration * tstep # update speed with acceleration
+    airplane.position += airplane.speed * tstep # update position with speed
+    
+    UpdateFuel(airplane, tstep) # update the fuel

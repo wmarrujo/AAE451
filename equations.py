@@ -187,6 +187,67 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
     
     return a
 
+def GetCoefficientOfLiftForSteadyLevelFlight(airplane):
+    W = AirplaneWeight(airplane)
+    q = AirplaneDynamicPressure(airplane)
+    S = airplane.wing.planformArea
+    return W / ( q * S )
+
+def GetAngleOfAttackForSteadyLevelFlight(airplane):
+    cl = GetCoefficientOfLiftForSteadyLevelFlight(airplane)
+    f = functionFromPairs(pairsFromColumns(airplane.wing.airfoil.data, "CL", "alpha"))
+
+    return convert( f(cl), "deg", "rad" )
+
+def ThrustRequiredAtSeaLevelForSteadyLevelFlight(airplane):
+    CL = LiftCoefficient(airplane)
+    CD = DragCoefficient(airplane)
+    W = AirplaneWeight(airplane)
+
+    return W / (CL/CD)
+
+def PowerRequiredAtSeaLevelForSteadyLevelFlight(airplane):
+    TRsl = ThrustRequiredAtSeaLevelForSteadyLevelFlight(airplane)
+    V = airplane.speed
+
+    return TRsl * V
+
+def PowerRequiredAtAltitudeForSteadyLevelFlight(airplane):
+    PRsl = PowerRequiredAtSeaLevelForSteadyLevelFlight(airplane)
+    rhoAlt = densityAtAltitude(airplane.altitude)
+    rhoSL = densityAtAltitude(0)
+
+    return PRsl * (rhoAlt / rhoSL)
+
+def PowerAvailableAtAlittudeForSteadyLevelFlight(airplane):
+    TAalt = AirplaneThrust(airplane)
+    V = airplane.speed
+
+    return TAalt * V
+
+def ExcessPowerAtAltitudeForSteadyLevelFlight(airplane):
+    PAalt = PowerAvailableAtAlittudeForSteadyLevelFlight(airplane)
+    PRalt = PowerRequiredAtAltitudeForSteadyLevelFlight(airplane)
+
+    return PAalt - PRalt
+
+def VelocityForMaximumExcessPower(airplane):
+    Vguess = airplane.speed
+
+    def functionToMinimize(X):
+        A = copy.deepcopy(airplane)
+        A.speed = X[0]
+        A.flightPathAngle = 0
+        A.pitch = GetAngleOfAttackForSteadyLevelFlight(A)
+        EP = ExcessPowerAtAltitudeForSteadyLevelFlight(A)
+
+        return -EP
+
+    result = minimize(functionToMinimize, [Vguess], bounds = [(convert(120, "kts", "m/s"), None)])
+    V = result["x"]
+
+    return V
+
 def MaximumLiftOverDragVelocity(airplane):
     # Vguess = airplane.speed
     #
@@ -494,20 +555,21 @@ def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     UpdateFuel(airplane, tstep) # update the fuel
 
 def UpdateClimb(airplane, t, tstep):
-    T = AirplaneThrust(airplane)
-    D = AirplaneDrag(airplane)
+    airplane.flightPathAngle = 0
+    airplane.pitch = 0
     W = AirplaneWeight(airplane)
-    gamma = arcsin((T-D)/W)
-    VminP = MinimumPowerSpeed(airplane)
-    #throttle =  (MaxEnginePower / lapseRate )
-    # TODO: determine throttle to keep this condition (that way fuel usage will be correct)
+    V = VelocityForMaximumExcessPower(airplane)
     
-    airplane.flightPathAngle = gamma
-    airplane.pitch = gamma
-    airplane.speed = VminP
-    airplane.altitude += VminP * sin(gamma) * tstep
-    airplane.position += VminP * cos(gamma) * tstep
+    airplane.speed = V
+    airplane.pitch = GetAngleOfAttackForSteadyLevelFlight(airplane)
     
+    ExcessPower = ExcessPowerAtAltitudeForSteadyLevelFlight(airplane)
+    climbRate = ExcessPower / W
+    
+    airplane.flightPathAngle = arcsin(climbRate / V)
+    airplane.altitude += V * sin(airplane.flightPathAngle) * tstep
+    airplane.position += V * cos(airplane.flightPathAngle) * tstep
+
     UpdateFuel(airplane, tstep)
 
 def UpdateCruise(airplane, t, tstep):

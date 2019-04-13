@@ -39,8 +39,7 @@ class Mission:
                 iteration += 1
                 
                 verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
-                if iteration%100 == 0: # for efficiency
-                    printSimulationProgressBar(iteration)
+                printSimulationProgressBar(iteration)
         
         printSimulationProgressBar(iteration, ended=True, message="succeeded" if verified else "failed")
         if verified:
@@ -59,9 +58,11 @@ def verifySimulation(iteration, t, segmentName, airplane):
 
 def printSimulationProgressBar(iteration, ended=False, message=""):
     if not ended:
-        barLength = int(ceil(iteration / 1000))
-        bar = "╶"*(barLength-8) + "────━━ ✈︎"[-barLength-2:]
-        print("\rSimulating ({:6d}): {} ".format(iteration, bar), end="", flush=True)
+        print("\rSimulating ({:6d}): ", end="", flush=True)
+        if iteration%1000=0: # do expensive update only every 1000 iterations
+            barLength = int(ceil(iteration / 1000))
+            bar = "╶"*(barLength-8) + "────━━ ✈︎"[-barLength-2:]
+            print(bar, end="", flush=True)
     else: # ended
         print("║ DONE! {}".format(message))
 

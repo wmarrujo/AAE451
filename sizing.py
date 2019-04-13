@@ -24,23 +24,6 @@ from importlib import import_module
 from scipy.optimize import root
 
 ################################################################################
-# DEBUG: organization
-
-# DEFINE AIRCRAFT
-# CLOSE AIRCRAFT
-# SIMULATE AIRCRAFT
-# CALCULATE PERFORMANCE PARAMETERS
-# CACHE AIRCRAFT
-# CACHE AIRCRAFT SIMULATION
-# LOAD AIRCRAFT FROM CACHE
-# LOAD AIRCRAFT SIMULATION FROM CACHE
-
-# DRIVING PARAMETERS
-# DEFINING PARAMETERS
-# PERFORMANCE PARAMETERS
-# SIMULATION PARAMETERS
-
-################################################################################
 # PARAMETERS
 ################################################################################
 
@@ -84,7 +67,7 @@ simulation = {} # define as global to write to during simulation
 
 def initializeSimulation():
     global simulation
-    simulation = dict(zip(simulationParametersKeys, [[]]*len(simulationParametersKeys))) # put in headers as keys
+    simulation = dict(zip(simulationParametersKeys, [[] for n in range(len(simulationParametersKeys))])) # put in headers as keys
 
 def simulationRecordingFunction(time, segmentName, airplane):
     global simulation
@@ -108,6 +91,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     # GET AIRPLANE AND SIMULATION DATA
     
     id = airplaneDefinitionID(airplaneName, drivingParameters)
+    print("Getting Performance Parameters for Airplane", id)
     initialAirplane = loadInitialAirplane(id) if cache and initialAirplaneCached(id) else defineAirplane(airplaneName, drivingParameters, mission)
     if cache and simulationCached(id):
         simulation = loadSimulation(id)
@@ -150,15 +134,21 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
 
 def defineAirplane(airplaneName, drivingParameters, mission, cache=True):
     id = airplaneDefinitionID(airplaneName, drivingParameters)
+    print("Defining Airplane", id)
     defineAirplaneSpecifically = airplaneDefinitionFunction(airplaneName)
+    
+    def setDefiningParameters(drivingParameters, X):
+        definingParameters = drivingParameters
+        definingParameters["initial gross weight"] = X[0]
+        definingParameters["initial fuel weight"] = X[1]
+        
+        return definingParameters
     
     def functionToFindRootOf(X):
         W0guess = X[0]
         WFguess = X[1]
         
-        definingParameters = drivingParameters
-        definingParameters["initial gross weight"] = W0guess
-        definingParameters["initial fuel weight"] = WFguess
+        definingParameters = setDefiningParameters(drivingParameters, X)
         
         initialAirplane = defineAirplaneSpecifically(definingParameters)
         finalAirplane = simulateAirplane(initialAirplane, mission, cache=False)
@@ -174,11 +164,13 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True):
     X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
     result = root(functionToFindRootOf, X0)
     Xf = result["x"]
+    definingParameters = setDefiningParameters(drivingParameters, Xf)
     airplane = defineAirplaneSpecifically(definingParameters)
     
     if cache:
         saveInitialAirplane(airplane, id)
     
+    print("Airplane Definition Closed", id)
     return airplane
 
 def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None):
@@ -208,6 +200,11 @@ def airplaneDefinitionFunction(airplaneName):
     module = import_module(airplaneName)
     return module.defineAirplane
 
+def createAirplaneIDDirectoryIfNotMade(airplaneID):
+    airplaneDirectory = os.path.join(simulationDirectory, airplaneID)
+    if not os.path.exists(airplaneDirectory):
+        os.makedirs(airplaneDirectory)
+
 def initialAirplaneCached(airplaneID):
     """checks if the initial airplane for a certain simulation has been cached"""
     return os.path.exists(os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
@@ -221,20 +218,29 @@ def finalAirplaneCached(airplaneID):
     return os.path.exists(os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
 
 def loadInitialAirplane(airplaneID):
-    return loadObject(os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
+    print("Loading Initial Airplane Configuration from Cache", airplaneID)
+    return loadObject(os.path.join(simulationDirectory, airplaneID, "initial.pyobj")) if initialAirplaneCached(airplaneID) else None
 
 def loadSimulation(airplaneID):
-    return CSVToDict(os.path.join(simulationDirectory, airplaneID, "simulation.csv"))
+    print("Loading Simulation from Cache", airplaneID)
+    return CSVToDict(os.path.join(simulationDirectory, airplaneID, "simulation.csv")) if simulationCached(airplaneID) else {}
 
 def loadFinalAirplane(airplaneID):
-    return loadObject(os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
+    print("Loading Final Airplane Configuration from Cache", airplaneID)
+    return loadObject(os.path.join(simulationDirectory, airplaneID, "final.pyobj")) if finalAirplaneCached(airplaneID) else None
 
 def saveInitialAirplane(airplaneObject, airplaneID):
+    print("Saving Initial Airplane Configuration to Cache", airplaneID)
+    createAirplaneIDDirectoryIfNotMade(airplaneID)
     saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
 
 def saveSimulation(airplaneID):
     global simulation
+    print("Saving Simulation to Cache", airplaneID)
+    createAirplaneIDDirectoryIfNotMade(airplaneID)
     dictToCSV(os.path.join(simulationDirectory, airplaneID, "simulation.csv"), simulation)
 
 def saveFinalAirplane(airplaneObject, airplaneID):
+    print("Saving Final Airplane Configuration to Cache", airplaneID)
+    createAirplaneIDDirectoryIfNotMade(airplaneID)
     saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "final.pyobj"))

@@ -39,7 +39,8 @@ class Mission:
                 iteration += 1
                 
                 verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
-                printSimulationProgressBar(iteration)
+                if iteration%100 == 0: # for efficiency
+                    printSimulationProgressBar(iteration)
         
         printSimulationProgressBar(iteration, ended=True, message="succeeded" if verified else "failed")
         if verified:

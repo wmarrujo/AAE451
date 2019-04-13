@@ -63,6 +63,7 @@ def AccelerationOnTakeoff(airplane):
     
     F = T - D - mu*(W-L)
     m = W/g
+    
     return F/m
 
 def AccelerationOnLanding(airplane):
@@ -133,7 +134,8 @@ def ComponentSkinFrictionCoefficient(airplane, component):
     L = component.referenceLength
     
     Re = rho * V * L / mu
-    Re = 10 if Re == 0 else Re # make sure log10 has a value
+    Re = 10 if Re <= 10 else Re # make sure log10 has a value
+    
     return 0.455 / (log10(Re)**2.58) # TODO: better approximation?
 
 def InducedDragCoefficient(airplane):
@@ -488,6 +490,7 @@ def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     acceleration = AccelerationOnTakeoff(airplane) # find acceleration from thrust, drag and ground friction
     airplane.speed += acceleration * tstep # update speed with acceleration
     airplane.position += airplane.speed * tstep # update position with speed
+    
     UpdateFuel(airplane, tstep) # update the fuel
 
 def UpdateClimb(airplane, t, tstep):
@@ -504,6 +507,7 @@ def UpdateClimb(airplane, t, tstep):
     airplane.speed = VminP
     airplane.altitude += VminP * sin(gamma) * tstep
     airplane.position += VminP * cos(gamma) * tstep
+    
     UpdateFuel(airplane, tstep)
 
 def UpdateCruise(airplane, t, tstep):

@@ -24,7 +24,7 @@ class Mission:
         iteration = 0
         verified = verifySimulation(iteration, t, "Start", airplane)
         recordingFunction(t, "Start", airplane)
-        print("Simulating {} ".format(airplane.name), end="", flush="True")
+        printSimulationProgressBar(iteration)
         
         for segment in self.segments:
             t0 = t
@@ -38,12 +38,13 @@ class Mission:
                 iteration += 1
                 
                 verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
-                
-                if iteration % 100 == 0:
-                    print(".", end="", flush="True")
+                printSimulationProgressBar(iteration)
         
-        print(" DONE - {}".format("succeeded" if verified else "failed"))
-        return verified
+        printSimulationProgressBar(iteration, ended=True, message="succeeded" if verified else "failed")
+        if verified:
+            return airplane
+        else:
+            return None
 
 def verifySimulation(iteration, t, segmentName, airplane):
     if iterationCap <= iteration:
@@ -53,6 +54,14 @@ def verifySimulation(iteration, t, segmentName, airplane):
         print("WARNING: simulation time cap reached")
         return False
     return True
+
+def printSimulationProgressBar(iteration, ended=False, message=""):
+    if not ended:
+        barLength = int(ceil(iteration / 1000))
+        bar = "╶"*(barLength-8) + "────━━ ✈︎"[-barLength-2:]
+        print("\rSimulating ({:6d}): {} ".format(iteration, bar), end="", flush=True)
+    else: # ended
+        print("║ DONE! {}".format(message))
 
 class Segments:
     segments = None
@@ -377,6 +386,6 @@ class Airfoil:
     
     @property
     def maximumLiftCoefficient(self):
-        CLs = float(self.data["CL"])
+        CLs = [float(cl) for cl in self.data["CL"]]
         
         return max(CLs)

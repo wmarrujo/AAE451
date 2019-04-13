@@ -5,8 +5,10 @@ import os
 hereDirectory = os.path.dirname(os.path.abspath(__file__))
 rootDirectory = hereDirectory
 
-simulationPath = os.path.join(rootDirectory, "simulations")
-sys.path.append(simulationPath)
+simulationDirectory = os.path.join(rootDirectory, "simulations")
+sys.path.append(simulationDirectory)
+configurationsDirectory = os.path.join(rootDirectory, "configurations")
+sys.path.append(configurationsDirectory)
 
 # LOCAL DEPENDENCIES
 
@@ -18,6 +20,7 @@ from missions import *
 # EXTERNAL DEPENDENCIES
 
 import copy
+from importlib import import_module
 from scipy.optimize import root
 
 ################################################################################
@@ -50,7 +53,8 @@ drivingParametersKeys = [
 # DEFINING PARAMETERS
 
 definingParametersKeys = drivingParametersKeys + [
-    "initial gross weight"]
+    "initial gross weight",
+    "initial fuel weight"]
 
 # PERFORMANCE PARAMETERS
 
@@ -72,166 +76,65 @@ simulationParametersKeys = [
     "thrust"]
 
 ################################################################################
+# SIMULATION LIFECYCLE
+################################################################################
+
+simulation = {} # define as global to write to during simulation
+
+def initializeSimulation():
+    simulation = dict(zip(simulationParametersKeys, [[]]*len(simulationParametersKeys))) # put in headers as keys
+
+def simulationRecordingFunction(time, segmentName, airplane):
+    W = AirplaneWeight(airplane)
+    T = AirplaneThrust(airplane)
+    
+    simulation["time"].append(time)
+    simulation["segment"].append(segmentName)
+    simulation["position"].append(airplane.position)
+    simulation["altitude"].append(airplane.altitude)
+    simulation["weight"].append(W)
+    simulation["thrust"].append(T)
+
+################################################################################
 # PERFORMANCE
 ################################################################################
 
-
+def getPerformanceParameters(airplaneName, drivingParameters, cache=True):
+    initialAirplane = defineAirplane(airplaneName, drivingParameters)
+    finalAirplane = simulateAirplane(initialAirplane)
+    pass # return performanceParameters dict
 
 ################################################################################
 # AIRCRAFT HANDLING
 ################################################################################
 
+def defineAirplane(airplaneName, drivingParameters, cache=True):
+    pass # return an airplane object
+    # also, save it to memory
 
-
-################################################################################
-# CACHING
-################################################################################
-
-if not os.path.exists(simulationPath): # simulation path does not exist
-    os.makedirs(simulationPath) # create it
-
-
-
-
-
-
-################################################################################
-# PERFORMANCE
-################################################################################
-
-# TODO: only make the caching directory when it finishes & will write.
-# TODO: put a note in the directory if the simulation failed (but still put the initial airplane configuration, maybe write that part it in the airplane definition)
-# TODO: test each piece, initialAirplane, simulation, finalAirplane separately (maybe simulation & final together?)
-
-def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
-    # get from cache if the simulation has already been done
-    dirName = defaultAirplane.name + "-" + compareValue(compareValue(drivingParameters) + compareValue(defaultAirplane))
-    dir = os.path.join(simulationPath, dirName)
-    cached = os.path.exists(dir)
-    if cache and not cached: # only if you want to cache
-        os.makedirs(dir) # make dir so that it can be read from and written to later
-    initialObjectFilePath = os.path.join(dir, "initial.pyobj")
-    finalObjectFilePath = os.path.join(dir, "final.pyobj")
-    simulationFilePath = os.path.join(dir, "simulation.csv")
-
-    print("Getting Aircraft Parameters for {}".format(dirName), end="", flush=True)
-
-    if not cache or not cached: # if it shouldn't cache or was not cached, continue to simulate
-        print(" - No Cache, Simulating")
-
-        # DEFINE AIRPLANE
-
-        airplane = defineAirplane(drivingParameters, defaultAirplane)
-        initialAirplane = copy.deepcopy(airplane)
-        if cache: # only if you want to cache
-            saveObject(airplane, initialObjectFilePath) # save initial state
-
-        # RUN SIMULATION
-
-        simulation = {"time":[], "segment":[], "position":[], "altitude":[], "weight":[], "thrust":[]}
-        def recordingFunction(time, segmentName, airplane):
-            W = AirplaneWeight(airplane)
-            T = AirplaneThrust(airplane)
-
-            simulation["time"].append(time)
-            simulation["segment"].append(segmentName)
-            simulation["position"].append(airplane.position)
-            simulation["altitude"].append(airplane.altitude)
-            simulation["weight"].append(W)
-            simulation["thrust"].append(T)
-
-        success = designMission.simulate(timestep, airplane, recordingFunction)
-
-        finalAirplane = airplane
-        if cache: # only if you want to cache
-            dictToCSV(simulationFilePath, simulation) # save simulation
-            saveObject(airplane, finalObjectFilePath) # save final state
-
-    else: # was cached
-        print(" - Cache exists, Loading From Cache")
-        initialAirplane = loadObject(initialObjectFilePath)
-        finalAirplane = loadObject(finalObjectFilePath)
-        simulation = CSVToDict(simulationFilePath)
-
-    # CALCULATE PERFORMANCE
-    # initialAirplane, finalAirplane, & simulation are defined by now
-    ts = simulation["time"]
-    ss = simulation["segment"]
-    ps = simulation["position"]
-    hs = simulation["altitude"]
-    Ws = simulation["weight"]
-    Ts = simulation["thrust"]
-
-    emptyWeight = EmptyWeight(initialAirplane)
-    dTO = ps[firstIndex(hs, lambda h: h >= 50)]
-    range = ps[-1]
-    cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")
-    cruiseEndIndex = lastIndex(ss, lambda s: s == "cruise")
-    cruiseFlightTime = ts[cruiseEndIndex] - ts[cruiseStartIndex]
-    cruiseRange = ps[cruiseEndIndex] - ps[cruiseStartIndex]
-    avgGroundSpeedInCruise = cruiseRange / cruiseFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
-    fuelWeightUsed = Ws[0] - Ws[-1]
-
-    return {
-        "empty weight": emptyWeight,
-        "takeoff distance": dTO,
-        "range": range,
-        "average ground speed": avgGroundSpeedInCruise,
-        "flight time": cruiseFlightTime,
-        "fuel used": fuelWeightUsed}
+def simulateAirplane(initialAirplane, mission, cache=True):
+    """returns the airplane at its final state, or None if the simulation failed"""
+    airplane = copy.deepcopy(initialAirplane)
+    
+    success = mission.simulate(timestep, airplane, simulationRecordingFunction)
+    
+    if cache:
+        # save the simulation
+        if success:
+            pass # save the final aircraft state
+    
+    # run simulation, save to global simulation object, return true on success, return final airplane, or none if failure
 
 ################################################################################
-# AIRPLANE
+# FILE HANDLING
 ################################################################################
 
-def defineAirplane(drivingParameters, defaultAirplane):
-    print("Closing Aircraft Weight")
+if not os.path.exists(simulationDirectory): # simulation path does not exist
+    os.makedirs(simulationDirectory) # create it
 
-    WS = drivingParameters[0]
-    PW = drivingParameters[1]
+def airplaneDefinitionID(airplaneName, drivingParameters):
+    return compareValue(airplaneName, drivingParameters)
 
-    airplane = copy.deepcopy(defaultAirplane)
-
-    # MODIFY AIRPLANE OBJECT TO DRIVING PARAMETERS
-
-    def defineAirplaneWithX(A, X):
-        B = copy.deepcopy(A)
-        S = B.wing.planformArea
-        Engines = B.engines
-        W0 = X[0] # initial gross weight
-        We = EmptyWeight(A)
-        Wpay = PayloadWeight(A)
-
-        S = W0 / WS
-        Wf = W0 - We - Wpay
-        B.initialGrossWeight = W0
-        B.powerplant.fuelMass = Wf/g # put on just enough fuel to get through mission
-        B.wing.setPlanformAreaHoldingAspectRatio(S)
-        for engine in Engines:
-            engine.maxPower = PW/len(Engines) * W0 # TODO: assuming all engines are the same size, change to each proportionally if needed
-
-        return B
-
-    # CLOSE WEIGHT
-
-    def functionToMinimize(X):
-        A = defineAirplaneWithX(airplane, X)
-
-        WFe = A.powerplant.emptyFuelMass
-
-        success = designMission.simulate(timestep, A)
-        penalty = 0 if success else 1e10 # make sure it actually finishes
-
-        WFf = FuelWeight(A)
-
-        return WFf - WFe + penalty # fuel weight at end of mission should be 0
-
-    X0 = [convert(3500, "lb", "N")] # [W0]
-    #CS = [(0, None)] # contraints
-    result = root(functionToMinimize, X0)
-    XE = result["x"]
-    airplane = defineAirplaneWithX(defaultAirplane, XE)
-
-    # RETURN CLOSED AIRPLANE
-
-    return airplane
+def airplaneDefinitionFunction(airplaneName):
+    module = import_module(airplaneName)
+    return module.defineAirplane

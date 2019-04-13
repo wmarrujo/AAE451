@@ -32,6 +32,8 @@ designMission.segments = Segments([
 # STARTUP
 
 def _designMissionInitializeStartup(airplane, t, t0):
+    airplane.altitude = 0
+    airplane.speed = 0
     airplane.throttle = 0.3
     airplane.position = 0
     airplane.pitch = 0

@@ -115,8 +115,8 @@ def defineAirplane(definingParameters):
     fuselage = Fuselage()
     
     fuselage.interferenceFactor = 1
-    fuselage.diameter = convert(30, "ft", "m")
-    fuselage.length = convert(7, "ft", "m")
+    fuselage.diameter = convert(7, "ft", "m")
+    fuselage.length = convert(30, "ft", "m")
     fuselage.mass = PredictFuselageMass(fuselage.wettedArea, airplane.initialGrossWeight, 0.45*fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, 3.5)
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION

@@ -153,20 +153,23 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True):
     defineAirplaneSpecifically = airplaneDefinitionFunction(airplaneName)
     
     def functionToFindRootOf(X):
+        W0guess = X[0]
+        WFguess = X[1]
+        
         definingParameters = drivingParameters
-        definingParameters["initial gross weight"] = X[0]
-        definingParameters["initial fuel weight"] = X[1]
+        definingParameters["initial gross weight"] = W0guess
+        definingParameters["initial fuel weight"] = WFguess
         
         initialAirplane = defineAirplaneSpecifically(definingParameters)
         finalAirplane = simulateAirplane(initialAirplane, mission, cache=False)
         if finalAirplane is None: # the simulation has failed
             return 1e10 # huge penalty for optimizer
         
-        WF0 = FuelWeight(initialAirplane)
+        W0 = AirplaneWeight(initialAirplane)
         WFf = FuelWeight(finalAirplane)
+        WFe = finalAirplane.powerplant.emptyFuelMass
         
-        # FIXME: might have to change this to a minimizer since there are now 2 variables
-        return WFf - WF0 # there should be no fuel at the end of the mission
+        return [W0 - W0guess, WFf - WFe] # the gross weight should match the guess and the mission should use all the fuel
     
     X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
     result = root(functionToFindRootOf, X0)

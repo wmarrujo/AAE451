@@ -1,13 +1,27 @@
+# PATHS
+
+import sys
+import os
+hereDirectory = os.path.dirname(os.path.abspath(__file__))
+rootDirectory = hereDirectory
+
+simulationPath = os.path.join(rootDirectory, "simulations")
+sys.path.append(simulationPath)
+
+# LOCAL DEPENDENCIES
+
 from utilities import *
+
 from parameters import *
 from missions import *
 
+# EXTERNAL DEPENDENCIES
+
 import copy
 from scipy.optimize import root
-import sys
-import os
-simulationPath = os.path.join(sys.path[0], "simulations")
-sys.path.append(simulationPath)
+
+################################################################################
+# DEBUG: organization
 
 # DEFINE AIRCRAFT
 # CLOSE AIRCRAFT
@@ -35,10 +49,8 @@ drivingParametersKeys = [
 
 # DEFINING PARAMETERS
 
-definingParametersKeys = [
-    "initial gross weight",
-    "wing loading",
-    "power to weight ratio"]
+definingParametersKeys = drivingParametersKeys + [
+    "initial gross weight"]
 
 # PERFORMANCE PARAMETERS
 
@@ -194,7 +206,7 @@ def defineAirplane(drivingParameters, defaultAirplane):
         Wf = W0 - We - Wpay
         B.initialGrossWeight = W0
         B.powerplant.fuelMass = Wf/g # put on just enough fuel to get through mission
-        B.wing.setPlanformAreaWhileMaintainingAspectRatio(S)
+        B.wing.setPlanformAreaHoldingAspectRatio(S)
         for engine in Engines:
             engine.maxPower = PW/len(Engines) * W0 # TODO: assuming all engines are the same size, change to each proportionally if needed
 

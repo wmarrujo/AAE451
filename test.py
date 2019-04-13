@@ -1,21 +1,40 @@
+# PATHS
+
 import sys
 import os
-sys.path.append(os.path.join(sys.path[0], "configurations"))
-from testcraft import airplane as testcraft
+hereDirectory = os.path.dirname(os.path.abspath(__file__))
+rootDirectory = hereDirectory
+sys.path.append(rootDirectory)
+
+# LOCAL DEPENDENCIES
+
 from utilities import *
+
 from constants import *
 from parameters import *
 from missions import *
 from equations import *
 from sizing import *
+
+sys.path.append(os.path.join(rootDirectory, "configurations"))
+from testcraft import defineAirplane as defineTestcraft
+
+# EXTERNAL DEPENDENCIES
+
 from matplotlib.pyplot import *
 
+################################################################################
+# DEFINING AN AIRPLANE
+################################################################################
 
 # DEBUG: testing that defineAirplane works
 
-DPS = [convert(50, "lb/ft^2", "N/m^2"), convert(0.072, "hp/lb", "W/N")]
+DPS = {
+    "initial gross weight": convert(3000, "lb", "N"),
+    "wing loading": convert(50, "lb/ft^2", "N/m^2"),
+    "power to weight ratio": convert(0.072, "hp/lb", "W/N")}
 
-PPs = getPerformanceParameters(DPS, testcraft)
+airplane = defineTestcraft(DPS)
 
 # airplane = defineAirplane(DPS, testcraft)
 #
@@ -32,7 +51,9 @@ PPs = getPerformanceParameters(DPS, testcraft)
 #     convert(Wpay, "N", "lb"),
 #     convert(WF, "N", "lb")))
 
-# DEBUG: Testing that airplane runs
+################################################################################
+# AIRPLANE CAN BE BUILT WITH defineAirplaneWithX
+################################################################################
 
 # WS = convert(17, "lb/ft^2", "N/m^2")
 # PW = convert(0.072, "hp/lb", "W/N")
@@ -73,60 +94,62 @@ PPs = getPerformanceParameters(DPS, testcraft)
 #
 # show()
 
-# DEBUG: simulation
+################################################################################
+# SIMULATION WORKING
+################################################################################
 
-simulation = {"time":[], "segment":[], "x":[], "h":[], "g":[], "p":[], "v":[]}
-def recordSimulation(t, s, a):
-    simulation["time"].append(t)
-    simulation["segment"].append(s)
-    simulation["x"].append(a.position)
-    simulation["h"].append(a.altitude)
-    simulation["g"].append(a.flightPathAngle)
-    simulation["p"].append(a.pitch)
-    simulation["v"].append(a.speed)
-
-W0 = AirplaneWeight(airplane)
-Wf = FuelWeight(airplane)
-We = EmptyWeight(airplane)
-Wpay = PayloadWeight(airplane)
-
-
-success = designMission.simulate(1, airplane, recordSimulation)
-
-
-print("Mission Finished" if success else "Mission Failed")
-print("W0i: {:.0f} lb - W0: {:.0f} lb - Wf: {:.0f} lb - WFi: {:.0f} lb - WFf: {:.0f} lb - We: {:.0f} lb - Wpay: {:.0f} lb".format(
-    convert(airplane.initialGrossWeight, "N", "lb"),
-    convert(W0, "N", "lb"),
-    convert(AirplaneWeight(airplane), "N", "lb"),
-    convert(Wf, "N", "lb"),
-    convert(FuelWeight(airplane), "N", "lb"),
-    convert(We, "N", "lb"),
-    convert(Wpay, "N", "lb")))
-
-ts_hr = [convert(t, "s", "hr") for t in simulation["time"]]
-xs_nmi = [convert(x, "m", "nmi") for x in simulation["x"]]
-hs_ft = [convert(h, "m", "ft") for h in simulation["h"]]
-vs_kts = [convert(v, "m/s", "kts") for v in simulation["v"]]
-ps_deg = [convert(p, "rad", "deg") for p in simulation["p"]]
-gs_deg = [convert(g, "rad", "deg") for g in simulation["g"]]
-
-figure()
-plot(xs_nmi, hs_ft, "k-")
-title("Track")
-
-figure()
-plot(ts_hr, hs_ft, "k-")
-title("Altitude History")
-
-figure()
-plot(ts_hr, ps_deg, "r-", label="pitch")
-plot(ts_hr, gs_deg, "k-", label="gamma")
-title("Angle History")
-legend()
-
-figure()
-plot(ts_hr, vs_kts, "k-")
-title("Velocity History")
-
-show()
+# simulation = {"time":[], "segment":[], "x":[], "h":[], "g":[], "p":[], "v":[]}
+# def recordSimulation(t, s, a):
+#     simulation["time"].append(t)
+#     simulation["segment"].append(s)
+#     simulation["x"].append(a.position)
+#     simulation["h"].append(a.altitude)
+#     simulation["g"].append(a.flightPathAngle)
+#     simulation["p"].append(a.pitch)
+#     simulation["v"].append(a.speed)
+# 
+# W0 = AirplaneWeight(airplane)
+# Wf = FuelWeight(airplane)
+# We = EmptyWeight(airplane)
+# Wpay = PayloadWeight(airplane)
+# 
+# 
+# success = designMission.simulate(1, airplane, recordSimulation)
+# 
+# 
+# print("Mission Finished" if success else "Mission Failed")
+# print("W0i: {:.0f} lb - W0: {:.0f} lb - Wf: {:.0f} lb - WFi: {:.0f} lb - WFf: {:.0f} lb - We: {:.0f} lb - Wpay: {:.0f} lb".format(
+#     convert(airplane.initialGrossWeight, "N", "lb"),
+#     convert(W0, "N", "lb"),
+#     convert(AirplaneWeight(airplane), "N", "lb"),
+#     convert(Wf, "N", "lb"),
+#     convert(FuelWeight(airplane), "N", "lb"),
+#     convert(We, "N", "lb"),
+#     convert(Wpay, "N", "lb")))
+# 
+# ts_hr = [convert(t, "s", "hr") for t in simulation["time"]]
+# xs_nmi = [convert(x, "m", "nmi") for x in simulation["x"]]
+# hs_ft = [convert(h, "m", "ft") for h in simulation["h"]]
+# vs_kts = [convert(v, "m/s", "kts") for v in simulation["v"]]
+# ps_deg = [convert(p, "rad", "deg") for p in simulation["p"]]
+# gs_deg = [convert(g, "rad", "deg") for g in simulation["g"]]
+# 
+# figure()
+# plot(xs_nmi, hs_ft, "k-")
+# title("Track")
+# 
+# figure()
+# plot(ts_hr, hs_ft, "k-")
+# title("Altitude History")
+# 
+# figure()
+# plot(ts_hr, ps_deg, "r-", label="pitch")
+# plot(ts_hr, gs_deg, "k-", label="gamma")
+# title("Angle History")
+# legend()
+# 
+# figure()
+# plot(ts_hr, vs_kts, "k-")
+# title("Velocity History")
+# 
+# show()

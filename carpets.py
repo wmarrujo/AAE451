@@ -1,12 +1,21 @@
+# PATHS
+
+import sys
+import os
+hereDirectory = os.path.dirname(os.path.abspath(__file__))
+rootDirectory = hereDirectory
+
+# LOCAL DEPENDENCIES
+
 from utilities import *
 
 from sizing import *
+sys.path.append(os.path.join(rootDirectory, "configurations"))
+from testcraft import airplane as testcraft # FIXME: changed this
+
+# EXTERNAL DEPENDENCIES
 
 from matplotlib.pyplot import *
-import sys
-import os
-sys.path.append(os.path.join(sys.path[0], "configurations"))
-from testcraft import airplane as testcraft
 
 ################################################################################
 # CARPET PLOTS

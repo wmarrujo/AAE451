@@ -31,10 +31,12 @@ from matplotlib.pyplot import *
 
 DPS = {
     "initial gross weight": convert(3000, "lb", "N"),
+    "initial fuel weight": convert(300, "lb", "N"),
     "wing loading": convert(50, "lb/ft^2", "N/m^2"),
     "power to weight ratio": convert(0.072, "hp/lb", "W/N")}
 
 airplane = defineTestcraft(DPS)
+print(convert(EmptyWeight(airplane), "N", "lb"), "lb")
 
 # airplane = defineAirplane(DPS, testcraft)
 #

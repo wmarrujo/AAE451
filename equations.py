@@ -344,7 +344,7 @@ def PredictFuselageMass(wettedArea, airplaneGrossWeight, length, diameter, cruis
     Nz = loadFactor
     
     LD = Lt/d
-    Wf = 0.052 * Sf**1.086 * (Nz*W0)**0.177 * Lt**(-0.051) * LD**(-0.072) * q**0.241 + Wpress # RAYMER eqn 15.48
+    Wf = 0.052 * Sf**1.086 * (Nz*W0)**0.177 * Lt**(-0.051) * LD**(-0.072) * q**0.241 + Wp # RAYMER eqn 15.48
     return convert(Wf, "lb", "N")/g
 
 def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio, sweep, wingTaperRatio, horizontalTailVolumeCoefficient, wingSpan, wingChord, dt, cruiseDynamicPressure, wingThicknessToChordRatio):
@@ -358,14 +358,14 @@ def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio,
     c = wingChord
     dt = dt # FIXME: what is dt? replace with complete name for right side of equals, and in function definition above
     q = convert(cruiseDynamicPressure, "N/m^2", "lb/ft^2")
-    tc = thicknessToChord
+    tc = wingThicknessToChordRatio
     
     AR = b/c
     Sht = convert(ch * (b * c / dt), "m^2", "ft^2") # FIXME: move to airplane definition
-    WHT = 0.016 * (Nz*W0)**0.414 * q**0.168 * Sht**0.896 * (100 * tc / cos(lambd))**-0.12 * (AR / cos(LHT)**2)**0.043 * lambdHT**-0.02
+    WHT = 0.016 * (Nz*W0)**0.414 * q**0.168 * Sht**0.896 * (100 * tc / cos(lambd))**-0.12 * (AR / cos(LHT)**2)**0.043 * lambdaHT**-0.02
     return convert(WHT, "lb", "N")/g
 
-def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, verticalTailPosition, airplaneGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, dv, wingSpan, wingPlanformArea, wingThicknessToChord):
+def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, verticalTailPosition, airplaneGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, dv, wingSpan, wingChord, wingPlanformArea, wingThicknessToChordRatio):
     lambdaVT = taperRatio
     LVT = sweep
     Nz = loadFactor
@@ -380,7 +380,7 @@ def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, verticalTailPos
     
     S = convert(cv * (Sw * bw / dv), "m^2", "ft^2") # FIXME: move to airplane definition
     AR = wingSpan / wingChord
-    WVT = 0.073 * (1 + 0.2*HtHv) * (Nz * W0)**0.376 * q**0.122 * S**0.873 * (100 * tc / cos(LVT))**-0.49 * (AR / cos(LVT)**2) * lambdVT**0.039
+    WVT = 0.073 * (1 + 0.2*HtHv) * (Nz * W0)**0.376 * q**0.122 * S**0.873 * (100 * tc / cos(LVT))**-0.49 * (AR / cos(LVT)**2) * lambdaVT**0.039
     return convert(WVT, "lb", "N")/g
 
 def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines):
@@ -403,7 +403,7 @@ def PredictFrontGearMass(airplaneGrossWeight, landingLoadFactor, length):
     Nz = landingLoadFactor
     Ln = convert(length, "m", "in") # FIXME: you sure this isn't ft?
     
-    Wng = 0.125 * (Nland * Wl)**0.566 * (Ln/12)**0.845
+    Wng = 0.125 * (Nz * Wl)**0.566 * (Ln/12)**0.845
     return convert(Wng, "lb", "N")/g
 
 def PredictFuelSystemMass(totalFuelVolume, dropTanksVolume, numberOfFuelTanks, numberOfEngines):
@@ -434,7 +434,7 @@ def PredictAvionicsMass(uninstalledAvionicsWeight):
     WU = convert(uninstalledAvionicsWeight, "N", "lb")
     
     W = 2.117 * WU**0.933
-    return convert(W, "lb", "N")/gs
+    return convert(W, "lb", "N")/g
 
 def PredictElectronicsMass(fuelSystemMass, installedAvionicsMass):
     Wfs = convert(fuelSystemMass * g, "N", "lb")

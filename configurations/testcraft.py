@@ -26,6 +26,7 @@ def defineAirplane(definingParameters):
     ################################################################################
     
     W0 = definingParameters["initial gross weight"]
+    Wf = definingParameters["initial fuel weight"]
     WS = definingParameters["wing loading"]
     PW = definingParameters["power to weight ratio"]
     
@@ -73,7 +74,7 @@ def defineAirplane(definingParameters):
     
     powerplant.gas = gas
     powerplant.percentElectric = 0
-    # FIXME: powerplant needs fuelMass (mass) to be set here
+    powerplant.fuelMass = Wf/g
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -147,7 +148,7 @@ def defineAirplane(definingParameters):
     verticalStabilizer.span = convert(6, "ft", "m")
     verticalStabilizer.sweep = 0
     verticalStabilizer.taperRatio = 1
-    verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 1, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.5 * fuselage.length, wing.span, wing.planformArea, wing.thicknessToChord, wing.span)
+    verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 1, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.5 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord)
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -173,7 +174,7 @@ def defineAirplane(definingParameters):
     engine.interferenceFactor = 1
     engine.diameter = convert(1.5, "ft", "m")
     engine.length = convert(4, "ft", "m")
-    engine.mass = PredictInstalledEngineMass()
+    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines)
     engine.propeller = propeller
     engine.maxPower = convert(130, "hp", "W")
     

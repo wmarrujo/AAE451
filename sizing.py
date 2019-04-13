@@ -83,9 +83,11 @@ performanceParametersKeys = [
 simulation = {} # define as global to write to during simulation
 
 def initializeSimulation():
+    global simulation
     simulation = dict(zip(simulationParametersKeys, [[]]*len(simulationParametersKeys))) # put in headers as keys
 
 def simulationRecordingFunction(time, segmentName, airplane):
+    global simulation
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
     
@@ -101,6 +103,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
 ################################################################################
 
 def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=True):
+    global simulation
     
     # GET AIRPLANE AND SIMULATION DATA
     
@@ -163,7 +166,7 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True):
         WFf = FuelWeight(finalAirplane)
         
         # FIXME: might have to change this to a minimizer since there are now 2 variables
-        return WFf - WFi # there should be no fuel at the end of the mission
+        return WFf - WF0 # there should be no fuel at the end of the mission
     
     X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
     result = root(functionToFindRootOf, X0)
@@ -179,6 +182,7 @@ def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None):
     """returns the airplane at its final state, or None if the simulation failed"""
     airplane = copy.deepcopy(initialAirplane)
     
+    initializeSimulation()
     finalAirplane = mission.simulate(timestep, airplane, simulationRecordingFunction)
     
     if cache and airplaneID is not None:
@@ -203,30 +207,31 @@ def airplaneDefinitionFunction(airplaneName):
 
 def initialAirplaneCached(airplaneID):
     """checks if the initial airplane for a certain simulation has been cached"""
-    pass
+    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
 
 def simulationCached(airplaneID):
     """checks if the simulation of the airplane is cached"""
-    pass
+    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "simulation.csv"))
 
 def finalAirplaneCached(airplaneID):
     """checks if the final airplane configuration has been cached"""
-    pass
+    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
 
 def loadInitialAirplane(airplaneID):
-    pass
+    return loadObject(os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
 
 def loadSimulation(airplaneID):
-    pass
+    return CSVToDict(os.path.join(simulationDirectory, airplaneID, "simulation.csv"))
 
 def loadFinalAirplane(airplaneID):
-    pass
+    return loadObject(os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
 
 def saveInitialAirplane(airplaneObject, airplaneID):
-    pass
+    saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
 
 def saveSimulation(airplaneID):
-    pass
+    global simulation
+    dictToCSV(os.path.join(simulationDirectory, airplaneID, "simulation.csv"), simulation)
 
 def saveFinalAirplane(airplaneObject, airplaneID):
-    pass
+    saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "final.pyobj"))

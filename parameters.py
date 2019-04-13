@@ -23,6 +23,7 @@ class Mission:
         t = 0 # s
         iteration = 0
         verified = verifySimulation(iteration, t, "Start", airplane)
+        self.segments[0].initialize(airplane, t, t) # make airplane valid before the recording function
         recordingFunction(t, "Start", airplane)
         printSimulationProgressBar(iteration)
         

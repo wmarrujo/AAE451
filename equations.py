@@ -244,7 +244,7 @@ def VelocityForMaximumExcessPower(airplane):
         return -EP
 
     result = minimize(functionToMinimize, [Vguess], bounds = [(convert(120, "kts", "m/s"), None)])
-    V = result["x"]
+    V = result["x"][0]
 
     return V
 
@@ -555,6 +555,7 @@ def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     UpdateFuel(airplane, tstep) # update the fuel
 
 def UpdateClimb(airplane, t, tstep):
+    # unset to calculate for steady level flight
     airplane.flightPathAngle = 0
     airplane.pitch = 0
     W = AirplaneWeight(airplane)

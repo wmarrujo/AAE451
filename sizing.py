@@ -56,15 +56,6 @@ definingParametersKeys = drivingParametersKeys + [
     "initial gross weight",
     "initial fuel weight"]
 
-# PERFORMANCE PARAMETERS
-
-performanceParametersKeys = [
-    "empty weight",
-    "takeoff feild length",
-    "range",
-    "average ground speed",
-    "flight time"]
-
 # SIMULATION PARAMETERS
 
 simulationParametersKeys = [
@@ -74,6 +65,16 @@ simulationParametersKeys = [
     "altitude",
     "weight",
     "thrust"]
+
+# PERFORMANCE PARAMETERS
+
+performanceParametersKeys = [
+    "empty weight",
+    "takeoff feild length",
+    "range",
+    "average ground speed",
+    "flight time",
+    "fuel used"]
 
 ################################################################################
 # SIMULATION LIFECYCLE
@@ -99,31 +100,92 @@ def simulationRecordingFunction(time, segmentName, airplane):
 # PERFORMANCE
 ################################################################################
 
-def getPerformanceParameters(airplaneName, drivingParameters, cache=True):
-    initialAirplane = defineAirplane(airplaneName, drivingParameters)
-    finalAirplane = simulateAirplane(initialAirplane)
-    pass # return performanceParameters dict
+def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=True):
+    
+    # GET AIRPLANE AND SIMULATION DATA
+    
+    id = airplaneDefinitionID(airplaneName, drivingParameters)
+    initialAirplane = loadInitialAirplane(id) if cache and initialAirplaneCached(id) else defineAirplane(airplaneName, drivingParameters, mission)
+    if cache and simulationCached(id):
+        simulation = loadSimulation(id)
+        finalAirplane = loadFinalAirplane(id) if finalAirplaneCached(id) else None
+    else:
+        finalAirplane = simulateAirplane(initialAirplane, mission, cache=cache, airplaneID=id)
+    
+    # CALCULATE PERFORMANCE VALUES
+    
+    ts = simulation["time"]
+    ss = simulation["segment"]
+    ps = simulation["position"]
+    hs = simulation["altitude"]
+    Ws = simulation["weight"]
+    Ts = simulation["thrust"]
+    
+    emptyWeight = EmptyWeight(initialAirplane)
+    dTO = ps[firstIndex(hs, lambda h: h >= 50)]
+    range = ps[-1]
+    cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")
+    cruiseEndIndex = lastIndex(ss, lambda s: s == "cruise")
+    cruiseFlightTime = ts[cruiseEndIndex] - ts[cruiseStartIndex]
+    cruiseRange = ps[cruiseEndIndex] - ps[cruiseStartIndex]
+    avgGroundSpeedInCruise = cruiseRange / cruiseFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
+    fuelWeightUsed = Ws[0] - Ws[-1]
+    
+    # RETURN PERFORMANCE PARAMETERS DICTIONARY
+    
+    return {
+        "empty weight": emptyWeight,
+        "takeoff distance": dTO,
+        "range": range,
+        "average ground speed": avgGroundSpeedInCruise,
+        "flight time": cruiseFlightTime,
+        "fuel used": fuelWeightUsed}
 
 ################################################################################
 # AIRCRAFT HANDLING
 ################################################################################
 
-def defineAirplane(airplaneName, drivingParameters, cache=True):
-    pass # return an airplane object
-    # also, save it to memory
+def defineAirplane(airplaneName, drivingParameters, mission, cache=True):
+    id = airplaneDefinitionID(airplaneName, drivingParameters)
+    defineAirplaneSpecifically = airplaneDefinitionFunction(airplaneName)
+    
+    def functionToFindRootOf(X):
+        definingParameters = drivingParameters
+        definingParameters["initial gross weight"] = X[0]
+        definingParameters["initial fuel weight"] = X[1]
+        
+        initialAirplane = defineAirplaneSpecifically(definingParameters)
+        finalAirplane = simulateAirplane(initialAirplane, mission, cache=False)
+        if finalAirplane is None: # the simulation has failed
+            return 1e10 # huge penalty for optimizer
+        
+        WF0 = FuelWeight(initialAirplane)
+        WFf = FuelWeight(finalAirplane)
+        
+        # FIXME: might have to change this to a minimizer since there are now 2 variables
+        return WFf - WFi # there should be no fuel at the end of the mission
+    
+    X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
+    result = root(functionToFindRootOf, X0)
+    Xf = result["x"]
+    airplane = defineAirplaneSpecifically(definingParameters)
+    
+    if cache:
+        saveInitialAirplane(airplane, id)
+    
+    return airplane
 
-def simulateAirplane(initialAirplane, mission, cache=True):
+def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None):
     """returns the airplane at its final state, or None if the simulation failed"""
     airplane = copy.deepcopy(initialAirplane)
     
-    success = mission.simulate(timestep, airplane, simulationRecordingFunction)
+    finalAirplane = mission.simulate(timestep, airplane, simulationRecordingFunction)
     
-    if cache:
-        # save the simulation
-        if success:
-            pass # save the final aircraft state
+    if cache and airplaneID is not None:
+        saveSimulation(airplaneID) # save the simulation
+        saveFinalAirplane(finalAirplane, airplaneID) # save the final airplane
     
-    # run simulation, save to global simulation object, return true on success, return final airplane, or none if failure
+    return finalAirplane
 
 ################################################################################
 # FILE HANDLING
@@ -138,3 +200,33 @@ def airplaneDefinitionID(airplaneName, drivingParameters):
 def airplaneDefinitionFunction(airplaneName):
     module = import_module(airplaneName)
     return module.defineAirplane
+
+def initialAirplaneCached(airplaneID):
+    """checks if the initial airplane for a certain simulation has been cached"""
+    pass
+
+def simulationCached(airplaneID):
+    """checks if the simulation of the airplane is cached"""
+    pass
+
+def finalAirplaneCached(airplaneID):
+    """checks if the final airplane configuration has been cached"""
+    pass
+
+def loadInitialAirplane(airplaneID):
+    pass
+
+def loadSimulation(airplaneID):
+    pass
+
+def loadFinalAirplane(airplaneID):
+    pass
+
+def saveInitialAirplane(airplaneObject, airplaneID):
+    pass
+
+def saveSimulation(airplaneID):
+    pass
+
+def saveFinalAirplane(airplaneObject, airplaneID):
+    pass

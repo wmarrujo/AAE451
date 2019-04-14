@@ -105,7 +105,7 @@ flightControls = FlightControls(airplane)
 airplane.flightControls = flightControls
 hydraulics = Hydraulics(airplane)
 airplane.hydraulics = hydraulics
-avionics = Avionics(4*9.8) # INPUT = uninstalled avioncs weight [N] (typically 800-1400 lb or 3558 - 6227 N) WHAT THE SHIT # 78 kg?
+avionics = Avionics(78*9.8) # INPUT = uninstalled avioncs weight [N] (typically 800-1400 lb or 3558 - 6227 N) WHAT THE SHIT # 78 kg?
 airplane.avionics = avionics
 electronics = Electronics(airplane)
 airplane.electronics = electronics

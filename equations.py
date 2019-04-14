@@ -243,7 +243,7 @@ def VelocityForMaximumExcessPower(airplane):
 
         return -EP
 
-    result = minimize(functionToMinimize, [Vguess], bounds = [(convert(120, "kts", "m/s"), None)])
+    result = minimize(functionToMinimize, [Vguess], bounds = [(convert(120, "kts", "m/s"), None)], tol = 1e0)
     V = result["x"][0]
 
     return V

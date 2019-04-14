@@ -93,9 +93,11 @@ def defineAirplane(definingParameters):
     
     wing.airfoil = airfoil
     wing.interferenceFactor = 1
-    wing.span = 14.78 # m^2
+    # wing.span = 14.78 # m^2
+    # wing.planformArea = 11.4 # m
+    wing.planformArea = W0/WS
+    wing.setAspectRatioHoldingPlanformArea(7)
     wing.thicknessToChord = 0.02
-    wing.planformArea = 11.4 # m
     wing.sweep = 0
     wing.taperRatio = 1
     wing.mass = PredictWingMass(wing.span, wing.aspectRatio, wing.chord, 3.5, wing.sweep, wing.taperRatio, wing.planformArea, airplane.initialGrossWeight, powerplant.fuelMass*g, cruiseDynamicPressure, wing.thicknessToChord)
@@ -175,7 +177,8 @@ def defineAirplane(definingParameters):
     engine.length = 1.8 # m
     engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines)
     engine.propeller = propeller
-    engine.maxPower = convert(98.6, "hp", "W")
+    engine.maxPower = (PW*W0) / numberOfEngines
+    # engine.maxPower = convert(98.6, "hp", "W")
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     

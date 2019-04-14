@@ -270,6 +270,14 @@ class Surface(Component):
         self.planformArea = S
         self.span = sqrt(AR * S) # set the span
     
+    def setAspectRatioHoldingSpan(self, AR):
+        b = self.span
+        self.planformArea = b**2/AR
+    
+    def setAspectRatioHoldingPlanformArea(self, AR):
+        S = self.planformArea
+        self.span = sqrt(AR*S)
+    
     def formFactor(self, airplane):
         Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
         tc = self.thicknessToChord

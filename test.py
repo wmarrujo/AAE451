@@ -24,16 +24,24 @@ from testcraft import defineAirplane as defineTestcraft
 from matplotlib.pyplot import *
 
 ################################################################################
-# DEFINING AN AIRPLANE
+# TESTS
 ################################################################################
 
-DPS = {
-    "wing loading": convert(50, "lb/ft^2", "N/m^2"),
-    "power to weight ratio": convert(0.072, "hp/lb", "W/N")}
-
+WS = convert(50, "lb/ft^2", "N/m^2")
+PW = convert(0.072, "hp/lb", "W/N")
+DPS = {"wing loading": WS, "power to weight ratio": PW}
 PPs = getPerformanceParameters("tecnam", DPS, designMission)
 print(PPs)
 
 ID = airplaneDefinitionID(airplaneName, drivingParameters)
 plane = loadFinalAirplane(ID)
 sim = loadSimulation(ID)
+xloc = sim["position"]
+yloc = sim["altitude"]
+time = sim["time"]
+
+figure()
+plot(xloc, yloc)
+ylabel("meters")
+xlabel("meters")
+show()

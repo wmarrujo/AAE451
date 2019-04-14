@@ -33,15 +33,22 @@ DPS = {"wing loading": WS, "power to weight ratio": PW}
 PPs = getPerformanceParameters("tecnam", DPS, designMission)
 print(PPs)
 
-ID = airplaneDefinitionID(airplaneName, drivingParameters)
+ID = airplaneDefinitionID("tecnam", DPS)
 plane = loadFinalAirplane(ID)
 sim = loadSimulation(ID)
 xloc = sim["position"]
 yloc = sim["altitude"]
 time = sim["time"]
+speed = sim["speed"]
+
 
 figure()
 plot(xloc, yloc)
-ylabel("meters")
-xlabel("meters")
+ylabel("Range (m)")
+xlabel("Altitude (m)")
+
+figure()
+plot(time, [convert(s, "m/s", "kts") for s in speed])
+ylabel("Aircraft Speed (kts)")
+xlabel("Time (s)")
 show()

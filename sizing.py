@@ -47,7 +47,8 @@ simulationParametersKeys = [
     "position",
     "altitude",
     "weight",
-    "thrust"]
+    "thrust",
+    "speed"]
 
 # PERFORMANCE PARAMETERS
 
@@ -73,6 +74,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     global simulation
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
+    V = airplane.speed
     
     simulation["time"].append(time)
     simulation["segment"].append(segmentName)
@@ -80,6 +82,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     simulation["altitude"].append(airplane.altitude)
     simulation["weight"].append(W)
     simulation["thrust"].append(T)
+    simulation["speed"].append(V)
 
 ################################################################################
 # PERFORMANCE

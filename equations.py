@@ -247,7 +247,7 @@ def VelocityForMaximumExcessPower(airplane):
         A.flightPathAngle = 0
         A.pitch = GetAngleOfAttackForSteadyLevelFlight(A)
         if A.pitch is None: # CL is too high for steady level flight
-            EP = float("inf") # pseudo bound to minimizer
+            EP = 0 # pseudo bound to minimizer
         else:
             EP = ExcessPowerAtAltitudeForSteadyLevelFlight(A)
         

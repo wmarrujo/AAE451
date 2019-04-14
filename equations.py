@@ -191,80 +191,74 @@ def GetCoefficientOfLiftForSteadyLevelFlight(airplane):
     W = AirplaneWeight(airplane)
     q = AirplaneDynamicPressure(airplane)
     S = airplane.wing.planformArea
-    return W / ( q * S )
+    
+    return W / (q * S)
 
 def GetAngleOfAttackForSteadyLevelFlight(airplane):
     cl = GetCoefficientOfLiftForSteadyLevelFlight(airplane)
-    f = functionFromPairs(pairsFromColumns(airplane.wing.airfoil.data, "CL", "alpha"))
-
-    return convert( f(cl), "deg", "rad" )
+    f = functionFromPairs(pairsFromColumns(airplane.wing.airfoil.data, "CL", "alpha")) # FIXME: dangerous, because it's not a function in this direction
+    
+    a = f(cl)
+    
+    if a is not None:
+        return convert(a, "deg", "rad")
+    else:
+        return None
 
 def ThrustRequiredAtSeaLevelForSteadyLevelFlight(airplane):
     CL = LiftCoefficient(airplane)
     CD = DragCoefficient(airplane)
     W = AirplaneWeight(airplane)
-
+    
     return W / (CL/CD)
 
 def PowerRequiredAtSeaLevelForSteadyLevelFlight(airplane):
     TRsl = ThrustRequiredAtSeaLevelForSteadyLevelFlight(airplane)
     V = airplane.speed
-
+    
     return TRsl * V
 
 def PowerRequiredAtAltitudeForSteadyLevelFlight(airplane):
     PRsl = PowerRequiredAtSeaLevelForSteadyLevelFlight(airplane)
     rhoAlt = densityAtAltitude(airplane.altitude)
     rhoSL = densityAtAltitude(0)
-
+    
     return PRsl * (rhoAlt / rhoSL)
 
 def PowerAvailableAtAlittudeForSteadyLevelFlight(airplane):
     TAalt = AirplaneThrust(airplane)
     V = airplane.speed
-
+    
     return TAalt * V
 
 def ExcessPowerAtAltitudeForSteadyLevelFlight(airplane):
     PAalt = PowerAvailableAtAlittudeForSteadyLevelFlight(airplane)
     PRalt = PowerRequiredAtAltitudeForSteadyLevelFlight(airplane)
-
+    
     return PAalt - PRalt
 
 def VelocityForMaximumExcessPower(airplane):
     Vguess = airplane.speed
-
+    Vstall = StallSpeed(airplane)
+    
     def functionToMinimize(X):
         A = copy.deepcopy(airplane)
         A.speed = X[0]
         A.flightPathAngle = 0
         A.pitch = GetAngleOfAttackForSteadyLevelFlight(A)
-        EP = ExcessPowerAtAltitudeForSteadyLevelFlight(A)
-
+        if A.pitch is None: # CL is too high for steady level flight
+            EP = float("inf") # pseudo bound to minimizer
+        else:
+            EP = ExcessPowerAtAltitudeForSteadyLevelFlight(A)
+        
         return -EP
-
-    result = minimize(functionToMinimize, [Vguess], bounds = [(convert(120, "kts", "m/s"), None)], tol = 1e0)
+    
+    result = minimize(functionToMinimize, [Vguess], bounds = [(Vstall, None)], tol=1e0) # tolerance set pretty high because it doesn't need to be that accurate
     V = result["x"][0]
-
+    
     return V
 
 def MaximumLiftOverDragVelocity(airplane):
-    # Vguess = airplane.speed
-    #
-    # def functionToMinimize(X):
-    #     A = copy.deepcopy(airplane)
-    #     A.speed = X[0]
-    #
-    #     L = AirplaneLift(A)
-    #     D = AirplaneDrag(A)
-    #
-    #     return -L/D
-    #
-    # result = minimize(functionToMinimize, [Vguess], bounds=[(0, None)])
-    # V = result["x"][0]
-    #
-    # return V
-    
     # TODO: verify that this equation works (Raymer 2018 equation 17.10)
     rho = densityAtAltitude(airplane.altitude)
     CL = LiftCoefficient(airplane)
@@ -568,6 +562,7 @@ def UpdateClimb(airplane, t, tstep):
     climbRate = ExcessPower / W
     
     airplane.flightPathAngle = arcsin(climbRate / V)
+    airplane.pitch = airplane.flightPathAngle + airplane.pitch # make it the angle of attack we're talking about
     airplane.altitude += V * sin(airplane.flightPathAngle) * tstep
     airplane.position += V * cos(airplane.flightPathAngle) * tstep
 

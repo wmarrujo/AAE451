@@ -123,7 +123,7 @@ for PWlist in p:
     emptyWeightList = [i["empty weight"] for i in PWlist]
     plot(WSs, emptyWeightList, "k.")
     offset_WS = linspace((WS*0.5)+offset*inc, (WS*1.5)+offset*inc, 1000)
-    params, pconv = optimize.curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
+    params, pconv = curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
     fit_emptyWeight = [exponentialForm(WS, params[0], params[1]) for WS in fit_WS]
     plot(offset_WS, fit_emptyWeight, "k")
     

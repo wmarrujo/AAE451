@@ -41,7 +41,6 @@ yloc = sim["altitude"]
 time = sim["time"]
 speed = sim["speed"]
 
-
 figure()
 plot(xloc, yloc)
 ylabel("Range (m)")

@@ -286,7 +286,13 @@ class Surface(Component):
         self.span = sqrt(AR*S)
 
     def formFactor(self, airplane):
-        Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
+        #Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
+        V = Airplane.speed
+        if V is None:
+            V = 0
+        a = machAtAltitude(0)
+        M = V / a
+        Zfactor = (2-M**2)/(sqrt(1-M**2))
         tc = self.thicknessToChord
 
         return 1 + Zfactor * tc + 100 * tc**4

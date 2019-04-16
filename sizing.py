@@ -111,7 +111,8 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     Ws = simulation["weight"]
     Ts = simulation["thrust"]
     
-    emptyWeight = EmptyWeight(initialAirplane)
+    #emptyWeight = EmptyWeight(initialAirplane)
+    emptyWeight = Ws[0] #TODO fix this
     dTO = ps[firstIndex(hs, lambda h: h >= 50)]
     range = ps[-1]
     cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")
@@ -126,7 +127,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     return {
         "empty weight": emptyWeight,
         "takeoff distance": dTO,
-        "range": range,
+        "range": cruiseRange,
         "average ground speed": avgGroundSpeedInCruise,
         "flight time": cruiseFlightTime,
         "fuel used": fuelWeightUsed}

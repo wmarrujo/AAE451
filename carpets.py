@@ -4,6 +4,7 @@ from sizing import *
 from constants import *
 
 from matplotlib.pyplot import *
+from copy import copy
 import sys
 import os
 sys.path.append(os.path.join(sys.path[0], "configurations"))
@@ -104,27 +105,22 @@ ylabel("Flight Time [s]")
 
 ###### SIZING PLOT
 # Plot fit curve intersections on sizing plot
-offset = convert(4, "lb/ft^2", "N/m^2")
-inc = 0;
-temp_emptyWeight = []
-temp_offset_WS = []
+
+emptyWeights = [[a["empty weight"] for a in row] for row in p]
+wingLoadings = [copy(WSs) for row in p]
+wingLoadings = map
 
 figure()
-for PWlist in p:
-    emptyWeightList = [i["empty weight"] for i in PWlist]
-    plot(WSs, emptyWeightList, "k.")
-    offset_WS = linspace((WS*0.5)+offset*inc, (WS*1.5)+offset*inc, 1000)
-    params, pconv = optimize.curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
-    fit_emptyWeight = [exponentialForm(WS, params[0], params[1]) for WS in fit_WS]
-    plot(offset_WS, fit_emptyWeight, "k")
-    
-    temp_emptyWeight.append(offset_WS[0])
-    temp_offset_WS.append(emptyWeightList)
-    
-    inc = inc+1
 
-print(temp_emptyWeight)
-print(temp_offset_WS)
+for (ews, wss) in zip(emptyWeights, wingLoadings):
+    plot(ews, wss)
+
+for (ews, wss) in zip(transpose(emptyWeights), transpose(wingLoadings)):
+    plot(ews, wss)
+
+
+
+offset = convert(4, "lb/ft^2", "N/m^2")
 
 title("Carpet Plot")
 ylabel("Empty Weight")

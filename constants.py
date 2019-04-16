@@ -52,18 +52,19 @@ inflation2012to2019 = 1.1 # 1USD in 2012 equals 1.1USD in 2019
 
 # Acquisition Cost
 
-plannedAircraft = None  # number of aircraft planned for the next 5 years
-numberFlightTestAircraft = None  # number [planes] : (2 <= x <= 6)  # Raymer v6 18.4.2
+numberFlightTestAircraft = 4  # number [planes] : (2 <= x <= 6)  # Raymer v6 18.4.2
 certFudge = 1 # for FAR Part 23
 flapFudge = 1 # for simple flap system
-compFraction = None # fraction of airframe that is composite
 pressFudge = 1 # for unpressurized aircraft
 taperFudge = 0.95 # for no taper
 engineeringLaborRate = 92 # [2012 USD/hr]
 toolingLaborRate = 61 # [2012 USD/hr]
 manufacturingLaborRate = 53 # [2012 USD/hr]
 numberICEngines = 2 # This is only for all IC engine configuration
-avionicPrice = 15000 # [2012 USD] Assumption from Gudmundson, will change later
+avionicPrice = 20000 # [2019 USD] Based on value from Blue Skies Aviation
+cabinHeaterPrice = 5800 # [2019 USD] Based on average values for Cessna and Beechcraft aircraft of our size
+seatPrice = 400 # [2019 USD] OregonAero pricing average for fixed wing GA aircraft seats
+manufacturerLiabilityInsurance = 55000 # [2019 USD]  From Gudmundson's suggestion
 
 # Operating Cost
 

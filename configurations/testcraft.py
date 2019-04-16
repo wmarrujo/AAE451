@@ -47,6 +47,7 @@ airplane.powerplant = powerplant
 airfoil = Airfoil(os.path.join(sys.path[0], "data", "SF1.csv"))
 wing = Wing(1, convert(40*5, "ft^2", "m^2"), 0.02, convert(40, "ft", "m"), 0, 1, airplane)
 wing.maximumLiftCoefficient = 2
+# wing.minimumDragCoefficient = 0.024
 wing.airfoil = airfoil
 airplane.wing = wing
 
@@ -73,14 +74,14 @@ airplane.verticalStabilizer = verticalStabilizer
 propeller = Propeller()
 propeller.diameter = convert(6, "ft", "m")
 propeller.angularVelocity = 0
-propeller.efficiency = 0.9
+propeller.efficiency = 0.8
 
 ################################################################################
 # ENGINE DEFINITION
 ################################################################################
 
 engine = Engine(1, convert(1.5, "ft", "m"), convert(4, "ft", "m"), 98, 2)
-engine.maxPower = convert(130, "hp", "W")
+engine.maxPower = convert(165, "hp", "W")
 engine.propeller = propeller
 engineL = engine
 engineR = copy.deepcopy(engine)
@@ -93,6 +94,7 @@ airplane.engines = [engineL, engineR] # [engine object] # list of engines on air
 NLand = airplane.LoadFactor * 1.5 # Ultimate Load Factor
 mainGear = MainGear(NLand, 1, airplane) # First input = LandingLoadFactor, Second input = lengthMainGear (m)
 frontGear = FrontGear(NLand, 1, airplane) # First input = LandingLoadFactor, Second input = lengthFrontGear (m)
+airplane.retractableGear = True  ##### Sarah's change
 
 ################################################################################
 # MISCELLANEOUS COMPONENT DEFINITIONS
@@ -109,11 +111,12 @@ airplane.avionics = avionics
 electronics = Electronics(airplane)
 airplane.electronics = electronics
 airplane.pilots = 1
-airplane.passengers = 3
+airplane.passengers = 5
 airconIce = AirConIce(airplane) # Airconditioning and Anti Ice
 airplane.airconIce = airconIce
 furnishings = Furnishings(airplane)
 airplane.furnishings = furnishings
+airplane.compositeFraction = 1 ##### Sarah's change
 
 ################################################################################
 # AIRPLANE FINALIZATION

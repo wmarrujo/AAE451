@@ -440,7 +440,7 @@ def MaintenanceToFlightHoursRatio(airplane):
     F2 = engineF
     F3 = 0 if airplane.retractableGear is False else 0.02
     F4 = VFRF
-    F5 = 0 if IFRflight is False else 0.04
+    F5 = 0 #if IFRflight is False
     F6 = fuelF
     F7 = flapF
     F8 = certF

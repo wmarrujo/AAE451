@@ -28,38 +28,38 @@ aircraftProduced = linspace(1, 1000)
 ################# write functions for these instead of copy paste
 
 plannedAircraft = 500
-developmentCost = FixedCost(airplane, plannedAircraft)
-print("\nFixedCost500 = {:0.2f} USD".format(developmentCost))
-productionCost = VariableCost(airplane, engines, plannedAircraft)
-print("VariableCost500 = {:0.2f} USD/aircraft".format(productionCost))
+fixedCost = FixedCost(airplane, plannedAircraft)
+print("\nFixedCost500 = {:0.2f} USD".format(fixedCost))
+variableCost = VariableCost(airplane, engines, plannedAircraft)
+print("VariableCost500 = {:0.2f} USD/aircraft".format(variableCost))
 
-productionCost500 = (developmentCost / 500) + productionCost # cost per unit
-totalProductionCost500plot = [developmentCost + (productionCost * a) for a in aircraftProduced]
-print("TotalProducationCost500 = {:0.2f} USD/aircraft\n".format(productionCost500))
+productionCost500 = (fixedCost / 500) + variableCost # cost per unit
+totalProductionCost500plot = [fixedCost + (variableCost * a) for a in aircraftProduced]
+print("ProducationCostPerAC500 = {:0.2f} USD/aircraft\n".format(productionCost500))
 
 # Total Production Cost for 1000 Aircraft
 
 plannedAircraft = 1000
-developmentCost = FixedCost(airplane, plannedAircraft)
-print("\nFixedCost1000 = {:0.2f} USD".format(developmentCost))
-productionCost = VariableCost(airplane, engines, plannedAircraft)
-print("VariableCost1000 = {:0.2f} USD/aircraft".format(productionCost))
+fixedCost = FixedCost(airplane, plannedAircraft)
+print("\nFixedCost1000 = {:0.2f} USD".format(fixedCost))
+variableCost = VariableCost(airplane, engines, plannedAircraft)
+print("VariableCost1000 = {:0.2f} USD/aircraft".format(variableCost))
 
-productionCost1000 = (developmentCost / 1000) + productionCost  # cost per unit
-totalProductionCost1000plot = [developmentCost + (productionCost * a) for a in aircraftProduced]
-print("TotalProductionCost1000 = {:0.2f} USD/aircraft\n".format(productionCost1000))
+productionCost1000 = (fixedCost / 1000) + variableCost # cost per unit
+totalProductionCost1000plot = [fixedCost + (variableCost * a) for a in aircraftProduced]
+print("ProducationCostPerAC1000 = {:0.2f} USD/aircraft\n".format(productionCost1000))
 
 # Total Production Cost for 2000 Aircraft
 
 plannedAircraft = 2000
-developmentCost = FixedCost(airplane, plannedAircraft)
-print("\nFixedCost2000 = {:0.2f} USD".format(developmentCost))
-productionCost = VariableCost(airplane, engines, plannedAircraft)
-print("VariableCost2000 = {:0.2f} USD/aircraft".format(productionCost))
+fixedCost = FixedCost(airplane, plannedAircraft)
+print("\nFixedCost2000 = {:0.2f} USD".format(fixedCost))
+variableCost = VariableCost(airplane, engines, plannedAircraft)
+print("VariableCost2000 = {:0.2f} USD/aircraft".format(variableCost))
 
-productionCost2000 = (developmentCost / 2000) + productionCost # cost per unit
-totalProductionCost2000plot = [developmentCost + (productionCost * a) for a in aircraftProduced]
-print("TotalProductionCost2000 = {:0.2f} USD/aircraft\n".format(productionCost2000))
+productionCost2000 = (fixedCost / 2000) + variableCost # cost per unit
+totalProductionCost2000plot = [fixedCost + (variableCost * a) for a in aircraftProduced]
+print("ProducationCostPerAC2000 = {:0.2f} USD/aircraft\n".format(productionCost1000))
 
 # Revenue Calculations
 #
@@ -104,11 +104,10 @@ print("TotalProductionCost2000 = {:0.2f} USD/aircraft\n".format(productionCost20
 # legend()
 
 # Operating Cost
-#
-# purchasePrice = 450000 # [2019 USD] # We set this based on breakevens above
-# IFRflight = True
-#
-# totalAnnualOperatingCost = TotalAnnualCost(airplane)
-# operatingCostPerHour = CostPerFlightHour(airplane)
-# print("totalAnnualOperatingCost {0.00} USD".format(totalAnnualOperatingCost))
-# print("operatingCostPerHour {0.00} USD".format(operatingCostPerHour))
+
+purchasePrice = 350000 # [2019 USD] # We set this based on breakevens above
+
+totalAnnualOperatingCost = TotalAnnualCost(airplane)
+operatingCostPerHour = CostPerFlightHour(airplane)
+print("totalAnnualOperatingCost {:0.2f} USD".format(totalAnnualOperatingCost))
+print("operatingCostPerHour {:0.2f} USD".format(operatingCostPerHour))

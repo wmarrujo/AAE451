@@ -151,15 +151,16 @@ class Powerplant: # the powerplant system configuration
         edg = self.gas.energyDensity if self.gas else 0
         edb = self.battery.energyDensity if self.battery else 0
         p = self.percentElectric
-        
+
         if 0 < p and p < 1: # hybrid
             self.gas.mass = m*edb*(1-p) / (edg*p + edb*(1-p))
             self.battery.mass = m*edg*p / (edb*(1-p) + edg*p)
+            self.battery.capacity = self.battery.mass / edb
         if p == 0: # fully gas
             self.gas.mass = m
         if p == 1: # fully battery
             self.battery.mass = m
-    
+
     @property
     def emptyFuelMass(self):
         mb = self.battery.mass if self.battery is not None else 0 # TODO: approximation that battery mass is constant with charge & stuff
@@ -183,7 +184,11 @@ class Battery:
         C = self.charge
         
         return E*C
-
+        
+    @energy.setter
+    def energy(self, E):
+        self.charge = E / self.capacity
+        
 class Generator:
     efficiency = None # number : (0 <= x <= 1)
     power = None # number : (0 <= x) # most efficient power setting, the only one we'll run it at

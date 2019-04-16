@@ -249,6 +249,7 @@ def defineAirplane(definingParameters):
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
     airplane.avionics = avionics
+    print('AVIONICS ', avionics.mass)
     airplane.components += [avionics]
     
     ################################################################################
@@ -263,6 +264,8 @@ def defineAirplane(definingParameters):
     flightControls.wettedArea = 0
     flightControls.referenceLength = 0
     flightControls.mass = PredictFlightControlsMass(fuselage.length, wing.span, sizingLoadFactor, airplane.initialGrossWeight)
+    print('FLIGHT CONTROLS ', flightcontrols.mass)
+
     
     # HYDRAULICS OBJECT
     
@@ -281,6 +284,8 @@ def defineAirplane(definingParameters):
     electronics.wettedArea = 0
     electronics.referenceLength = 0
     electronics.mass = PredictElectronicsMass(fuelSystem.mass, avionics.mass)
+    print('ELECTRONICS ', electronics.mass)
+
     
     # AIRCONICE OBJECT
     

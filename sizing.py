@@ -76,7 +76,8 @@ def getPerformanceParameters(drivingParameters, defaultAirplane, cache=True):
     Ws = simulation["weight"]
     Ts = simulation["thrust"]
     
-    emptyWeight = EmptyWeight(initialAirplane)
+    #emptyWeight = EmptyWeight(initialAirplane)
+    emptyWeight = Ws[0] #TODO fix this
     dTO = ps[firstIndex(hs, lambda h: h >= 50)]
     range = ps[-1]
     cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")

@@ -1,28 +1,33 @@
-from utilities import *
-from scipy import optimize
-from sizing import *
-from constants import *
+# PATHS
 
-from matplotlib.pyplot import *
-from copy import copy
 import sys
 import os
-sys.path.append(os.path.join(sys.path[0], "configurations"))
-from testcraft import airplane as testcraft
+hereDirectory = os.path.dirname(os.path.abspath(__file__))
+rootDirectory = hereDirectory
+
+# LOCAL DEPENDENCIES
+
+from utilities import *
+from sizing import *
+
+# EXTERNAL DEPENDENCIES
+
+from matplotlib.pyplot import *
+from scipy.optimize import curve_fit
+from copy import copy
+
+################################################################################
+# CARPET PLOTS
+################################################################################
 
 def fit_func(xs, a, b):
-    out = array([exponentialForm(x, a, b) for x in xs])
-    return out
+    return [exponentialForm(x, a, b) for x in xs]
 
 def exponentialForm(x, a, b):
     return a * exp(b * x)
     
 def invExponentialForm(y, a, b):
     return log(y / a) / b
-
-################################################################################
-# CARPET PLOTS
-################################################################################
 
 ###### Create sizing matrix
 # Obtain center cell W/S and T/W from guess or previous best carpet plot result
@@ -34,7 +39,11 @@ WSs = [WS * 0.8, WS, WS * 1.2]
 PWs = [PW * 0.8, PW, PW * 1.2]
 
 # FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
-p = [[getPerformanceParameters([WS, PW], testcraft) for WS in WSs] for PW in PWs]
+
+p = [[getPerformanceParameters("testcraft", {
+    "wing loading": WS,
+    "power to weight ratio": PW
+    }, designMission) for WS in WSs] for PW in PWs]
 
 ###### W0 TRENDS
 
@@ -59,7 +68,7 @@ flightTimes = []
 figure()
 for PWlist in p:
     plot(WSs, [i["takeoff distance"] for i in PWlist], "k.")
-    params, pconv = optimize.curve_fit(fit_func, WSs, [i["takeoff distance"] for i in PWlist], p0=(1, 0))
+    params, pconv = curve_fit(fit_func, WSs, [i["takeoff distance"] for i in PWlist], p0=(1, 0))
     plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
     
     # Find intersection of curve with dT0 limit
@@ -75,7 +84,7 @@ ylabel("Takeoff Distance [m]")
 figure()
 for PWlist in p:
     plot(WSs, [i["range"] for i in PWlist], "k.")
-    params, pconv = optimize.curve_fit(fit_func, WSs, [i["range"] for i in PWlist], p0=(1, 0))
+    params, pconv = curve_fit(fit_func, WSs, [i["range"] for i in PWlist], p0=(1, 0))
     plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
     
     # Find intersection of curve with range limit
@@ -91,7 +100,7 @@ ylabel("Range [m]")
 figure()
 for PWlist in p:
     plot(WSs, [i["flight time"] for i in PWlist], "k.")
-    params, pconv = optimize.curve_fit(fit_func, WSs, [i["flight time"] for i in PWlist], p0=(1, 0))
+    params, pconv = curve_fit(fit_func, WSs, [i["flight time"] for i in PWlist], p0=(1, 0))
     plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
     
     # Find intersection of curve with flight time limit

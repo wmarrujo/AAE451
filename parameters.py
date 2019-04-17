@@ -184,11 +184,11 @@ class Battery:
         C = self.charge
         
         return E*C
-        
+    
     @energy.setter
     def energy(self, E):
         self.charge = E / self.capacity
-        
+
 class Generator:
     efficiency = None # number : (0 <= x <= 1)
     power = None # number : (0 <= x) # most efficient power setting, the only one we'll run it at
@@ -198,6 +198,7 @@ class Component:
     interferenceFactor = None # number : (1 <= x)
     wettedArea = None # number [m^2] : (0 <= x)
     referenceLength = None # number [m] : (0 <= x)
+    x = None # number [m] : -- location from reference datum for CG calcs
     
     def formFactor(self, airplane):
         return 0 # default, to be overwritten if defined # TODO: put this independently in each component class definition, not a default value
@@ -284,7 +285,13 @@ class Surface(Component):
         self.span = sqrt(AR*S)
     
     def formFactor(self, airplane):
-        Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
+        #Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
+        V = Airplane.speed
+        if V is None:
+            V = 0
+        a = machAtAltitude(0)
+        M = V / a
+        Zfactor = (2-M**2)/(sqrt(1-M**2))
         tc = self.thicknessToChord
         
         return 1 + Zfactor * tc + 100 * tc**4

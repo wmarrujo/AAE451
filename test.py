@@ -50,11 +50,12 @@ Vs = simulation["speed"]
 
 figure()
 plot([convert(p, "m", "nmi") for p in ps], [convert(h, "m", "ft") for h in hs])
-ylabel("Range [nmi]")
-xlabel("Altitude [ft]")
+xlabel("Range [nmi]")
+ylabel("Altitude [ft]")
 
 figure()
 plot([convert(t, "s", "hr") for t in ts], [convert(V, "m/s", "kts") for V in Vs])
-ylabel("Aircraft Speed [kts]")
 xlabel("Time [s]")
+ylabel("Speed [kts]")
+
 show()

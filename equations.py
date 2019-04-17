@@ -404,20 +404,20 @@ def PredictWingMass(span, aspectRatio, chord, loadFactor, sweep, taperRatio, pla
     tc = thicknessToChordRatio
 
     Wfw = Wf/2 # fuel weight per wing
-    Ww = 0.036*S**0.758 * Wfw**0.0035 * (AR / cos(L)**2)**0.6 * q**0.006 * lambd**0.04 * (100 * tc / cos(L))**-0.3 * (Nz * W0)**0.49
+    Ww = 1.35*0.036*S**0.758 * Wfw**0.0035 * (AR / cos(L)**2)**0.6 * q**0.006 * lambd**0.04 * (100 * tc / cos(L))**-0.3 * (Nz * W0)**0.49
     return convert(Ww, "lb", "N") / g
 
 def PredictFuselageMass(wettedArea, airplaneGrossWeight, length, diameter, cruiseDynamicPressure, pressurizationWeightPenalty, loadFactor):
     Sf = convert(wettedArea, "m^2", "ft^2")
     W0 = convert(airplaneGrossWeight, "N", "lb")
-    Lt = convert(length, "m^2", "ft^2")
+    L = convert(length, "m", "ft")
+    Lt = 0.45*convert(length, "m", "ft")
     d = convert(diameter, "m", "ft")
     q = convert(cruiseDynamicPressure, "N/m^2","lb/ft^2")
     Wp = convert(pressurizationWeightPenalty, "N", "lb")
     Nz = loadFactor
-
-    LD = Lt/d
-    Wf = 0.052 * Sf**1.086 * (Nz*W0)**0.177 * Lt**(-0.051) * LD**(-0.072) * q**0.241 + Wp # RAYMER eqn 15.48
+    LD = L/d
+    Wf = 2.39*0.052 * Sf**1.086 * (Nz*W0)**0.177 * Lt**(-0.051) * LD**(-0.072) * q**0.241 + Wp # RAYMER eqn 15.48
     return convert(Wf, "lb", "N")/g
 
 def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio, sweep, wingTaperRatio, horizontalTailVolumeCoefficient, wingSpan, wingChord, dt, cruiseDynamicPressure, wingThicknessToChordRatio):
@@ -435,7 +435,8 @@ def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio,
 
     AR = b/c
     Sht = convert(ch * (b * c / dt), "m^2", "ft^2") # FIXME: move to airplane definition
-    WHT = 0.016 * (Nz*W0)**0.414 * q**0.168 * Sht**0.896 * (100 * tc / cos(lambd))**-0.12 * (AR / cos(LHT)**2)**0.043 * lambdaHT**-0.02
+    print(Sht)
+    WHT = 5.34*0.016 * (Nz*W0)**0.414 * q**0.168 * Sht**0.896 * (100 * tc / cos(lambd))**-0.12 * (AR / cos(LHT)**2)**0.043 * lambdaHT**-0.02
     return convert(WHT, "lb", "N")/g
 
 def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, verticalTailPosition, airplaneGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, dv, wingSpan, wingChord, wingPlanformArea, wingThicknessToChordRatio):
@@ -452,15 +453,16 @@ def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, verticalTailPos
     tc = wingThicknessToChordRatio
 
     S = convert(cv * (Sw * bw / dv), "m^2", "ft^2") # FIXME: move to airplane definition
+    print(S)
     AR = wingSpan / wingChord
-    WVT = 0.073 * (1 + 0.2*HtHv) * (Nz * W0)**0.376 * q**0.122 * S**0.873 * (100 * tc / cos(LVT))**-0.49 * (AR / cos(LVT)**2) * lambdaVT**0.039
+    WVT = 0.0597 * 0.073 * (1 + 0.2*HtHv) * (Nz * W0)**0.376 * q**0.122 * S**0.873 * (100 * tc / cos(LVT))**-0.49 * (AR / cos(LVT)**2) * lambdaVT**0.039
     return convert(WVT, "lb", "N")/g
 
 def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines):
     mU = convert(uninstalledEngineMass, "N", "lb")
     N = numberOfEngines
 
-    Weng = 2.575 * mU**0.922 * N
+    Weng = 0.682 * 2.575 * mU**0.922 * N
     return convert(Weng, "lb", "N")
 
 def PredictMainGearMass(airplaneGrossWeight, landingLoadFactor, length):
@@ -468,7 +470,7 @@ def PredictMainGearMass(airplaneGrossWeight, landingLoadFactor, length):
     Nz = landingLoadFactor
     Lm = convert(length, "m", "in") # FIXME: you sure this isn't ft?
 
-    Wmg = 0.095 * (Nz * Wl)**0.768 * (Lm/12)**0.409
+    Wmg = 0.631 * 0.095 * (Nz * Wl)**0.768 * (Lm/12)**0.409
     return convert(Wmg, "lb", "N")/g
 
 def PredictFrontGearMass(airplaneGrossWeight, landingLoadFactor, length):
@@ -571,13 +573,8 @@ def UpdateFuel(airplane, tstep):
     if gas is not None:
         gas.mass -= Eg/gas.energyDensity
 
-def UpdateCG(airplane):
-    cg = CenterGravity(airplane)
-    airplane.xcg = cg
-
 def UpdateWaiting(airplane, t, tstep):
     UpdateFuel(airplane, tstep)
-    UpdateCG(airplane)
 
 def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     acceleration = AccelerationOnTakeoff(airplane) # find acceleration from thrust, drag and ground friction
@@ -585,7 +582,6 @@ def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     airplane.position += airplane.speed * tstep # update position with speed
 
     UpdateFuel(airplane, tstep) # update the fuel
-    UpdateCG(airplane)
 
 def UpdateClimb(airplane, t, tstep):
     # unset to calculate for steady level flight
@@ -606,7 +602,6 @@ def UpdateClimb(airplane, t, tstep):
     airplane.position += V * cos(airplane.flightPathAngle) * tstep
 
     UpdateFuel(airplane, tstep)
-    UpdateCG(airplane)
 
 def UpdateCruise(airplane, t, tstep):
     VbestR = MaximumLiftOverDragVelocity(airplane)
@@ -614,7 +609,6 @@ def UpdateCruise(airplane, t, tstep):
     airplane.speed = VbestR
     airplane.position += VbestR * tstep
     UpdateFuel(airplane, tstep)
-    UpdateCG(airplane)
 
 def UpdateDescent(airplane, t, tstep):
     gamma = arctan2(convert(-1000, "ft", "m"), convert(3, "nmi", "m")) # using "rule of threes" (for passenger comfort) - glide ratio of 3nmi per 1000ft of descent
@@ -627,7 +621,6 @@ def UpdateDescent(airplane, t, tstep):
     airplane.altitude += VminP * sin(gamma) * tstep
     airplane.position += VminP * cos(gamma) * tstep
     UpdateFuel(airplane, tstep)
-    UpdateCG(airplane)
 
 def UpdateLanding(airplane, t, tstep):
     acceleration = AccelerationOnLanding(airplane) # find acceleration from thrust, drag and ground friction
@@ -635,4 +628,3 @@ def UpdateLanding(airplane, t, tstep):
     airplane.position += airplane.speed * tstep # update position with speed
 
     UpdateFuel(airplane, tstep) # update the fuel
-    UpdateCG(airplane)

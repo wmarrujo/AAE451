@@ -76,6 +76,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
     V = airplane.speed
+    cg = CenterGravity(airplane)
 
     simulation["time"].append(time)
     simulation["segment"].append(segmentName)
@@ -84,7 +85,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     simulation["weight"].append(W)
     simulation["thrust"].append(T)
     simulation["speed"].append(V)
-    simulation["cg"].append(airplane.xcg)
+    simulation["cg"].append(cg)
 
 ################################################################################
 # PERFORMANCE
@@ -168,7 +169,7 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
 
         return [W0 - W0guess, WFf - WFe] # the gross weight should match the guess and the mission should use all the fuel
 
-    X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
+    X0 = [convert(2711, "lb", "N"), convert(300, "lb", "N")]
     result = root(functionToFindRootOf, X0, tol=1e-1)
     Xf = result["x"]
     definingParameters = setDefiningParameters(drivingParameters, Xf)

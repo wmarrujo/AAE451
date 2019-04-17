@@ -37,7 +37,7 @@ def defineAirplane(definingParameters):
     horizontalTailVolumeCoefficient = 0.80
     verticalTailVolumeCoefficient = 0.07
     numberOfEngines = 2
-    uninstalledEngineMass = 65.7 # kg
+    uninstalledEngineMass = 117 #kg  65.7 # kg
     totalFuelVolume = convert(50, "gal", "m^3")
     uninstalledAvionicsWeight = 4*9.8 # N # FIXME: you sure?
     cruiseMachNumber = convert(180, "kts", "m/s") / machAtAltitude(cruiseAltitude)
@@ -118,14 +118,13 @@ def defineAirplane(definingParameters):
     fuselage.interferenceFactor = 1
     fuselage.diameter = 1.4 # m
     fuselage.length = 8.7 # m
-    fuselage.mass = PredictFuselageMass(fuselage.wettedArea, airplane.initialGrossWeight, 0.45*fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, 3.5)
+    fuselage.mass = PredictFuselageMass(fuselage.wettedArea, airplane.initialGrossWeight, fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, 3.5)
     fuselage.x = fuselage.length / 2 # [m]
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
 
     airplane.fuselage = fuselage
     airplane.components += [fuselage]
-
     ################################################################################
     # 4: TAIL DEFINITION
     ################################################################################
@@ -160,6 +159,7 @@ def defineAirplane(definingParameters):
 
     airplane.horizontalStabilizer = horizontalStabilizer
     airplane.verticalStabilizer = verticalStabilizer
+
     airplane.components += [horizontalStabilizer, verticalStabilizer]
 
     ################################################################################
@@ -180,7 +180,7 @@ def defineAirplane(definingParameters):
     engine.interferenceFactor = 1
     engine.diameter = 0.65 # m
     engine.length = 1.8 # m
-    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines)
+    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines) / numberOfEngines
     engine.propeller = propeller
     engine.maxPower = (PW*W0) / numberOfEngines
     engine.x = wing.x - wing.chord/2 # [m]
@@ -191,6 +191,7 @@ def defineAirplane(definingParameters):
 
     engineL = engine
     engineR = copy.deepcopy(engine)
+
     airplane.engines = [engineL, engineR]
     airplane.components += [engineL, engineR]
 
@@ -202,7 +203,7 @@ def defineAirplane(definingParameters):
 
     mainGear = MainGear()
 
-    mainGear.length = 0.5 # m
+    mainGear.length = 0.4 # m
     mainGear.interferenceFactor = 1
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, landingLoadFactor, mainGear.length)
@@ -260,7 +261,6 @@ def defineAirplane(definingParameters):
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
 
     airplane.avionics = avionics
-    print('AVIONICS MASS ', avionics.mass)
     airplane.components += [avionics]
 
     ################################################################################
@@ -276,7 +276,6 @@ def defineAirplane(definingParameters):
     flightControls.referenceLength = 0
     flightControls.mass = PredictFlightControlsMass(fuselage.length, wing.span, sizingLoadFactor, airplane.initialGrossWeight)
     flightControls.x = avionics.x + .1 # [m]
-    print('FLIGHT CONTROLS MASS ', flightControls.mass)
 
 
     # HYDRAULICS OBJECT
@@ -298,7 +297,6 @@ def defineAirplane(definingParameters):
     electronics.referenceLength = 0
     electronics.mass = PredictElectronicsMass(fuelSystem.mass, avionics.mass)
     electronics.x = avionics.x - .1 # [m] -- Assume most of the electronics mass (likely the battery for )
-    print('ELECTRONICS MASS ', electronics.mass)
 
 
     # AIRCONICE OBJECT
@@ -344,6 +342,23 @@ def defineAirplane(definingParameters):
     ################################################################################
 
     airplane.emptyMass = sum([component.mass for component in airplane.components])
+    print("WDG: ", W0 / g, " kg")
+    print("EMPTY MASS: ", airplane.emptyMass, " kg")
+    print('WING MASS ', wing.mass, " kg")
+    print('FUESELAGE MASS ', fuselage.mass, " kg")
+    print('HORIZONTALSTABILIZER MASS ', horizontalStabilizer.mass, " kg")
+    print('VERTICALSTABILIZER MASS ', verticalStabilizer.mass, " kg")
+    print('ENGINEL MASS ', engineL.mass, " kg")
+    print('ENGINER MASS ', engineR.mass, " kg")
+    print('MAINGEAR MASS ', mainGear.mass, " kg")
+    print('FRONTGEAR MASS ', frontGear.mass, " kg")
+    print('FUELSYSTEM MASS ', fuelSystem.mass, " kg")
+    print('AVIONICS MASS ', avionics.mass, " kg")
+    print('FLIGHT CONTROLS MASS ', flightControls.mass, " kg")
+    print('HYDRAULICS MASS ', hydraulics.mass, " kg")
+    print('ELECTRONICS MASS ', electronics.mass, " kg")
+    print('AIRCONICE MASS ', airConIce.mass, " kg")
+    print('FURNISHINGS MASS ', furnishings.mass, " kg")
 
     ################################################################################
 

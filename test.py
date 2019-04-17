@@ -27,12 +27,13 @@ from matplotlib.pyplot import *
 # TESTS
 ################################################################################
 
-WS = convert(17.5, "lb/ft^2", "N/m^2")
+airplaneName = "tecnam"
+WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}
-PPs = getPerformanceParameters("tecnamHYBRID", DPS, designMission)
+PPs = getPerformanceParameters(airplaneName, DPS, designMission)
 
-id = airplaneDefinitionID("tecnamHYBRID", DPS)
+id = airplaneDefinitionID(airplaneName, DPS)
 airplane = loadFinalAirplane(id)
 simulation = loadSimulation(id)
 

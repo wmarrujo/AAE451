@@ -275,7 +275,7 @@ def defineAirplane(definingParameters):
     flightControls.referenceLength = 0
     flightControls.mass = PredictFlightControlsMass(fuselage.length, wing.span, sizingLoadFactor, airplane.initialGrossWeight)
     flightControls.x = avionics.x + .1 # [m]
-    print("FLIGHT CONTROLS ", flightcontrols.mass)
+    print("FLIGHT CONTROLS ", flightControls.mass)
     
     # HYDRAULICS OBJECT
     

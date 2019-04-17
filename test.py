@@ -30,10 +30,10 @@ from matplotlib.pyplot import *
 WS = convert(50, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}
-PPs = getPerformanceParameters("tecnamHYBRID", DPS, designMission)
+PPs = getPerformanceParameters("tecnam", DPS, designMission)
 print(PPs)
 
-ID = airplaneDefinitionID("tecnamHYBRID", DPS)
+ID = airplaneDefinitionID("tecnam", DPS)
 plane = loadFinalAirplane(ID)
 sim = loadSimulation(ID)
 xloc = sim["position"]

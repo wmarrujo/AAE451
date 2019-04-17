@@ -105,6 +105,7 @@ class Airplane:
     engines = [] # [engine object] # list of engines on airplane
     powerplant = None # powerplant object
     components = [] # [component objects] # list of components making up airplane (including wing)
+    payloads = [] # [payload objects] # list of payloads making up airplane
     oswaldEfficiencyFactor = None # number : (0.7 < x < 0.85) # TODO: get better estimate
     compressibilityDragCoefficient = 0 # number : (0 = x) # we fly too slow
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
@@ -203,6 +204,10 @@ class Component:
 
     def formFactor(self, airplane):
         return 0 # default, to be overwritten if defined # TODO: put this independently in each component class definition, not a default value
+
+class Payload:
+    mass = None
+    x = None
 
 class Engine(Component): # the engines/motors that drive the propeller
     maxPower = None # number [W] : (0 <= x)
@@ -375,6 +380,15 @@ class AirConIce(Component):
     pass
 
 class Furnishings(Component):
+    pass
+
+class Passengers(Payload):
+    pass
+
+class Baggage(Payload):
+    pass
+
+class Pilot(Payload):
     pass
 
 class Airfoil:

@@ -259,7 +259,7 @@ def defineAirplane(definingParameters):
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
 
     airplane.avionics = avionics
-    print('AVIONICS ', avionics.mass)
+    print('AVIONICS MASS ', avionics.mass)
     airplane.components += [avionics]
 
     ################################################################################
@@ -275,7 +275,7 @@ def defineAirplane(definingParameters):
     flightControls.referenceLength = 0
     flightControls.mass = PredictFlightControlsMass(fuselage.length, wing.span, sizingLoadFactor, airplane.initialGrossWeight)
     flightControls.x = avionics.x + .1 # [m]
-    print('FLIGHT CONTROLS ', flightcontrols.mass)
+    print('FLIGHT CONTROLS MASS ', flightControls.mass)
 
 
     # HYDRAULICS OBJECT
@@ -297,7 +297,7 @@ def defineAirplane(definingParameters):
     electronics.referenceLength = 0
     electronics.mass = PredictElectronicsMass(fuelSystem.mass, avionics.mass)
     electronics.x = avionics.x - .1 # [m] -- Assume most of the electronics mass (likely the battery for )
-    print('ELECTRONICS ', electronics.mass)
+    print('ELECTRONICS MASS ', electronics.mass)
 
 
     # AIRCONICE OBJECT
@@ -318,12 +318,26 @@ def defineAirplane(definingParameters):
     furnishings.wettedArea = 0
     furnishings.referenceLength = 0
     furnishings.mass = PredictFurnishingsMass(airplane.initialGrossWeight)
-    furnishings.x = 3.5 # [m] (SPLIT INTO SEATS??)
+    furnishings.x = 2.3 # [m] (SPLIT INTO SEATS??)
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
 
     airplane.components += [flightControls, hydraulics, electronics, airConIce, furnishings]
-    airplane.xcg = sum([(comp.x * comp.mass) for comp in airplane.components])
+
+    # DEFINE PAYLOAD INFORMATION
+    passengerPayload = Passengers()
+    passengerPayload.x = 2.5
+    passengerPayload.mass = CalculatePassengerPayloadMass(airplane.passengers)
+
+    baggagePayload = Baggage()
+    baggagePayload.x = 3
+    baggagePayload.mass = CalculateBaggageMass(airplane.passengers)
+
+    pilotPayload = Pilot()
+    pilotPayload.x = 2
+    pilotPayload.mass = CalculatePilotPayloadMass(airplane.pilots)
+
+    airplane.payloads = [passengerPayload, baggagePayload, pilotPayload]
     ################################################################################
 
     return airplane

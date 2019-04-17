@@ -1,7 +1,11 @@
+# LOCAL DEPENDENCIES
+
 from utilities import *
 
 from constants import *
 from parameters import *
+
+# EXTERNAL DEPENDENCIES
 
 from scipy import *
 from scipy.optimize import minimize
@@ -59,6 +63,7 @@ def AccelerationOnTakeoff(airplane):
     
     F = T - D - mu*(W-L)
     m = W/g
+    
     return F/m
 
 def AccelerationOnLanding(airplane):
@@ -111,7 +116,7 @@ def ParasiteDragCoefficient(airplane):
     CD0miscFactor = airplane.miscellaneousParasiteDragFactor
     
     def componentDragContribution(component):
-        FFi = component.formFactor
+        FFi = component.formFactor(airplane)
         Qi = component.interferenceFactor
         Cfi = ComponentSkinFrictionCoefficient(airplane, component)
         Sweti = component.wettedArea
@@ -129,7 +134,8 @@ def ComponentSkinFrictionCoefficient(airplane, component):
     L = component.referenceLength
     
     Re = rho * V * L / mu
-    Re = 10 if Re == 0 else Re # make sure log10 has a value
+    Re = 10 if Re <= 10 else Re # make sure log10 has a value
+    
     return 0.455 / (log10(Re)**2.58) # TODO: better approximation?
 
 def InducedDragCoefficient(airplane):
@@ -181,23 +187,78 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
     
     return a
 
-def MaximumLiftOverDragVelocity(airplane):
-    # Vguess = airplane.speed
-    #
-    # def functionToMinimize(X):
-    #     A = copy.deepcopy(airplane)
-    #     A.speed = X[0]
-    #
-    #     L = AirplaneLift(A)
-    #     D = AirplaneDrag(A)
-    #
-    #     return -L/D
-    #
-    # result = minimize(functionToMinimize, [Vguess], bounds=[(0, None)])
-    # V = result["x"][0]
-    #
-    # return V
+def GetCoefficientOfLiftForSteadyLevelFlight(airplane):
+    W = AirplaneWeight(airplane)
+    q = AirplaneDynamicPressure(airplane)
+    S = airplane.wing.planformArea
     
+    return W / (q * S)
+
+def GetAngleOfAttackForSteadyLevelFlight(airplane):
+    cl = GetCoefficientOfLiftForSteadyLevelFlight(airplane)
+    f = functionFromPairs(pairsFromColumns(airplane.wing.airfoil.data, "CL", "alpha")) # FIXME: dangerous, because it's not a function in this direction
+    
+    a = f(cl)
+    
+    if a is not None:
+        return convert(a, "deg", "rad")
+    else:
+        return None
+
+def ThrustRequiredAtSeaLevelForSteadyLevelFlight(airplane):
+    CL = LiftCoefficient(airplane)
+    CD = DragCoefficient(airplane)
+    W = AirplaneWeight(airplane)
+    
+    return W / (CL/CD)
+
+def PowerRequiredAtSeaLevelForSteadyLevelFlight(airplane):
+    TRsl = ThrustRequiredAtSeaLevelForSteadyLevelFlight(airplane)
+    V = airplane.speed
+    
+    return TRsl * V
+
+def PowerRequiredAtAltitudeForSteadyLevelFlight(airplane):
+    PRsl = PowerRequiredAtSeaLevelForSteadyLevelFlight(airplane)
+    rhoAlt = densityAtAltitude(airplane.altitude)
+    rhoSL = densityAtAltitude(0)
+    
+    return PRsl * (rhoAlt / rhoSL)
+
+def PowerAvailableAtAltitudeForSteadyLevelFlight(airplane):
+    TAalt = AirplaneThrust(airplane)
+    V = airplane.speed
+    
+    return TAalt * V
+
+def ExcessPowerAtAltitudeForSteadyLevelFlight(airplane):
+    PAalt = PowerAvailableAtAltitudeForSteadyLevelFlight(airplane)
+    PRalt = PowerRequiredAtAltitudeForSteadyLevelFlight(airplane)
+    
+    return PAalt - PRalt
+
+def VelocityForMaximumExcessPower(airplane):
+    Vguess = airplane.speed
+    Vstall = StallSpeed(airplane)
+    
+    def functionToMinimize(X):
+        A = copy.deepcopy(airplane)
+        A.speed = X[0]
+        A.flightPathAngle = 0
+        A.pitch = GetAngleOfAttackForSteadyLevelFlight(A)
+        if A.pitch is None: # CL is too high for steady level flight
+            EP = 0 # pseudo bound to minimizer
+        else:
+            EP = ExcessPowerAtAltitudeForSteadyLevelFlight(A)
+        
+        return -EP
+    
+    result = minimize(functionToMinimize, [Vguess], bounds = [(Vstall, None)], tol=1e0) # tolerance set pretty high because it doesn't need to be that accurate
+    V = result["x"][0]
+    
+    return V
+
+def MaximumLiftOverDragVelocity(airplane):
     # TODO: verify that this equation works (Raymer 2018 equation 17.10)
     rho = densityAtAltitude(airplane.altitude)
     CL = LiftCoefficient(airplane)
@@ -225,9 +286,6 @@ def StallSpeed(airplane):
     
     return sqrt(2*W / (rho * S * CLmax))
 
-def AirplaneSpecificFuelConsumption(airplane):
-    pass # TODO: implement, then use in UseFuel function
-    
 def MinimumPowerSpeed(airplane):
     W = AirplaneWeight(airplane)
     S = airplane.wing.planformArea
@@ -249,33 +307,34 @@ def BestRateOfClimbSpeed(airplane):
     return sqrt(2/rho * W/S * sqrt(1 / (CD0 * pi * AR * e)))
     
 def MaximumSteadyLevelFlightSpeed(airplane):
-    Tavail = AirplaneThrust(airplane)
-    CD0 = ParasiteDragCoefficient(airplane)
+    A = copy.deepcopy(airplane)
+    A.throttle = 1 # max power = max speedy boi
+    A.altitude = convert(8000, "ft", "m")
+    A.angleOfAttack = 0  # need to change this boi
     
-    def KValue(airplane):
-        AR = airplane.aspectRatio
-        e = airplane.oswaldEfficiencyFactor
+    velocity = convert(linspace(50,300), "kts", "m/s")
+    dif = []
+    
+    for v in velocity:
+        A.speed = v
         
-        return 1 / (pi * AR * e)
+        Pavail = PowerAvailableAtAltitudeForSteadyLevelFlight(A)
+        Preq = PowerRequiredAtAltitudeForSteadyLevelFlight(A)
+        
+        dif.append = abs(Pavail - Preq)
     
-    K = KValue(airplane)
-    W = AirplaneWeight(airplane)
-    rho = densityAtAltitude(airplane.altitude)
-    S = airplane.wing.planformArea
-    CDmin = 9
+    minDifIndex = dif.index(min(dif))
+    Vh = velocity[minDifIndex]
     
-    
-    pass
-    
-
+    return Vh
+        
 ################################################################################
 # PRODUCTION COST FUNCTIONS
 ################################################################################
 
 def EngineeringHours(airplane, plannedAircraft):
     Waf =  0.065* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
-    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
-    Vh = 185
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Fcert = certFudge
     Fcf = flapFudge
@@ -288,8 +347,7 @@ def EngineeringHours(airplane, plannedAircraft):
 
 def ToolingHours(airplane, plannedAircraft):
     Waf =  0.065* convert(airplane.initialGrossWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
-    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
-    Vh = 185
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Qm = plannedAircraft/60
     Ftaper = taperFudge
@@ -301,8 +359,7 @@ def ToolingHours(airplane, plannedAircraft):
     
 def ManufacturingHours(airplane, plannedAircraft):
     Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")
-    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
-    Vh = 185
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Fcert = certFudge
     Fcf = flapFudge
@@ -319,8 +376,7 @@ def EngineeringCost(airplane, plannedAircraft):
     
 def DevelopmentalSupportCost(airplane):
     Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
-    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
-    Vh = 185
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     Np = numberFlightTestAircraft
     Fcert = certFudge
     Fcf = flapFudge
@@ -332,8 +388,7 @@ def DevelopmentalSupportCost(airplane):
     
 def FlightTestCost(airplane):
     Waf = 0.065* convert(EmptyWeight(airplane), "N", "lb")   # need to change once compnenet weight build-up is complete
-    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
-    Vh = 185
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     Np = numberFlightTestAircraft
     CPI = inflation2012to2019
     Fcert = certFudge
@@ -364,8 +419,7 @@ def QualityControlCost(airplane, plannedAircraft):
 
 def MaterialCost(airplane, plannedAircraft):
     Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")
-    # Vh = convert(airplane.speed, "m/s", "kts")  #needs to be max level airspeed, change later
-    Vh = 185
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     CPI = inflation2012to2019
     Fcert = certFudge
@@ -374,11 +428,11 @@ def MaterialCost(airplane, plannedAircraft):
 
     return (24.896 * (Waf**0.689) * (Vh**0.624) * (N**0.762) * CPI * Fcert * Fcf * Fpress) / N
     
-def EngineCost(engines):
+def EngineCost(airplane):
     Npp = numberICEngines
     CPI = inflation2012to2019
     
-    PSI = [engine.maxPower for engine in engines]
+    PSI = airplane.engine.maxPower
     Pbhp = convert(PSI[0], "W", "hp")
     
     return 174 * Npp * Pbhp * CPI
@@ -389,14 +443,14 @@ def PropellerCost(airplane):
     
     return 3145 * Npp * CPI  # For fixed pitch propeller
     
-def PowerplantCost(airplane, engines):
-    Cengine = EngineCost(engines)
+def PowerplantCost(airplane):
+    Cengine = EngineCost(airplane)
     Cpropeller = PropellerCost(airplane)
     
     return Cengine + Cpropeller
 
 def LandingGearCost(airplane):
-    dC = -7500 if airplane.retractableGear is False else 0
+    dC = -7500 if airplane.mainGear.retractable is False else 0
     CPI = inflation2012to2019
     
     return dC * CPI
@@ -417,7 +471,7 @@ def FixedCost(airplane, plannedAircraft):
     
     return Ceng + Cdev + Cft + Ctool
 
-def VariableCost(airplane, engines, plannedAircraft):
+def VariableCost(airplane, plannedAircraft):
     #this is a per aircraft cost
     Cmfg = ManufacturingCost(airplane, plannedAircraft)
     Cqc = QualityControlCost(airplane, plannedAircraft)
@@ -427,7 +481,7 @@ def VariableCost(airplane, engines, plannedAircraft):
     Cheat = cabinHeaterPrice
     Cseat = SeatingCost(airplane)
     Cmfgins = manufacturerLiabilityInsurance
-    Cpp = PowerplantCost(airplane, engines)
+    Cpp = PowerplantCost(airplane)
     
     return Cmfg + Cqc + Cmat + Clg + Cav + Cheat + Cseat + Cmfgins + Cpp
 
@@ -438,9 +492,9 @@ def VariableCost(airplane, engines, plannedAircraft):
 def MaintenanceToFlightHoursRatio(airplane):
     F1 = maintF
     F2 = engineF
-    F3 = 0 if airplane.retractableGear is False else 0.02
+    F3 = 0 if airplane.mainGear.retractable is False else 0.02
     F4 = VFRF
-    F5 = 0 #if IFRflight is False
+    F5 = IFRF
     F6 = fuelF
     F7 = flapF
     F8 = certF
@@ -461,12 +515,30 @@ def StorageCost(airplane):
     
     return 12 * Rstor * CPI
     
-def AnnualFuelCost(airplane):
-    FFcruise = fuelFlowCruise  # need this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def AnnualFuelCost(airplane, simulation):
+    ts = simulation["time"]
+    ss = simulation["segment"]
+    mfs = simulation["fuel mass"]
+    
     Qflgt = flightHoursYear
+    
+    # Gas Operating Cost
+    mfUsedInCruise = mfs[firstIndex(ss, lambda s: s == "cruise")] - mfs[lastIndex(ss, lambda s: s == "cruise")]
+    cruiseDuration = ts[lastIndex(ss, lambda s: s == "cruise")] - ts[firstIndex(ss, lambda s: s == "cruise")]
+    MFR = mfUsedInCruise / cruiseDuration # mass flow rate [kg/s]
+    gd = airplane.powerplant.gas.density if airplane.powerplant.gas else 0
+    VFR = MFR / gd if gd != 0 else 0  # volumetric flow rate [m^3/s]
+    
+    FFcruise = convert(VFR, "m^3/s", "gal/hr")
     Rfuel = fuelRate
     
-    return FFcruise * Qflgt * Rfuel
+    # Battery Operating Cost
+    batteryCapacity = convert(airplane.powerplant.battery.capacity, "J", "kWh") if airplane.powerplant.percentElectric is not 0 else 0
+    missionDuration = ts[lastIndex(ss, lambda s: s == "shutdown")] - ts[firstIndex(ss, lambda s: s == "startup")]
+    batteryPower = batteryCapacity / convert(missionDuration, "s", "hr") # [kW]
+    Rbattery = electricityRate
+    
+    return (FFcruise * Rfuel * Qflgt) + (batteryPower * Rbattery * Qflgt)
     
 def CrewCost(airplane):
     Ncrew = airplane.pilots
@@ -497,10 +569,10 @@ def AnnualLoanPayment(airplane):
     # return (12 * P * i) / (1 - (1/(1+i)**n))
     return 0
     
-def TotalAnnualCost(airplane):
+def TotalAnnualCost(airplane, simulation):
     Cap = MaintenanceCost(airplane)
     Cstor = StorageCost(airplane)
-    Cfuel = AnnualFuelCost(airplane)
+    Cfuel = AnnualFuelCost(airplane, simulation)
     Cins = AnnualInsuranceCost(airplane)
     Cinsp = inspectionCost
     Cover = AnnualEngineOverhaul(airplane)
@@ -513,6 +585,151 @@ def CostPerFlightHour(airplane):
     Qflgt = flightHoursYear
     
     return Cyear / Qflgt
+
+################################################################################
+# PREDICTION FUNCTIONS
+################################################################################
+
+def PredictWingMass(span, aspectRatio, chord, loadFactor, sweep, taperRatio, planformArea, airplaneGrossWeight, airplaneFuelWeight, cruiseDynamicPressure, thicknessToChordRatio):
+    b = span
+    AR = aspectRatio
+    c = chord
+    S = convert(planformArea, "m^2", "ft^2")
+    L = sweep
+    lambd = taperRatio
+    Nz = loadFactor
+    W0 = convert(airplaneGrossWeight, "N", "lb")
+    Wf = convert(airplaneFuelWeight, "N", "lb")
+    q = convert(cruiseDynamicPressure, "N/m^2", "lb/ft^2")
+    tc = thicknessToChordRatio
+    
+    Wfw = Wf/2 # fuel weight per wing
+    Ww = 0.036*S**0.758 * Wfw**0.0035 * (AR / cos(L)**2)**0.6 * q**0.006 * lambd**0.04 * (100 * tc / cos(L))**-0.3 * (Nz * W0)**0.49
+    return convert(Ww, "lb", "N") / g
+
+def PredictFuselageMass(wettedArea, airplaneGrossWeight, length, diameter, cruiseDynamicPressure, pressurizationWeightPenalty, loadFactor):
+    Sf = convert(wettedArea, "m^2", "ft^2")
+    W0 = convert(airplaneGrossWeight, "N", "lb")
+    Lt = convert(length, "m^2", "ft^2")
+    d = convert(diameter, "m", "ft")
+    q = convert(cruiseDynamicPressure, "N/m^2","lb/ft^2")
+    Wp = convert(pressurizationWeightPenalty, "N", "lb")
+    Nz = loadFactor
+    
+    LD = Lt/d
+    Wf = 0.052 * Sf**1.086 * (Nz*W0)**0.177 * Lt**(-0.051) * LD**(-0.072) * q**0.241 + Wp # RAYMER eqn 15.48
+    return convert(Wf, "lb", "N")/g
+
+def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio, sweep, wingTaperRatio, horizontalTailVolumeCoefficient, wingSpan, wingChord, dt, cruiseDynamicPressure, wingThicknessToChordRatio):
+    W0 = convert(airplaneGrossWeight, "N", "lb")
+    Nz = loadFactor
+    lambdaHT = taperRatio
+    LHT = sweep
+    lambd = wingTaperRatio
+    ch = horizontalTailVolumeCoefficient
+    b = wingSpan
+    c = wingChord
+    dt = dt # FIXME: what is dt? replace with complete name for right side of equals, and in function definition above
+    q = convert(cruiseDynamicPressure, "N/m^2", "lb/ft^2")
+    tc = wingThicknessToChordRatio
+    
+    AR = b/c
+    Sht = convert(ch * (b * c / dt), "m^2", "ft^2") # FIXME: move to airplane definition
+    WHT = 0.016 * (Nz*W0)**0.414 * q**0.168 * Sht**0.896 * (100 * tc / cos(lambd))**-0.12 * (AR / cos(LHT)**2)**0.043 * lambdaHT**-0.02
+    return convert(WHT, "lb", "N")/g
+
+def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, verticalTailPosition, airplaneGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, dv, wingSpan, wingChord, wingPlanformArea, wingThicknessToChordRatio):
+    lambdaVT = taperRatio
+    LVT = sweep
+    Nz = loadFactor
+    HtHv = verticalTailPosition # 0 for conventional, 1 for T-tail
+    W0 = convert(airplaneGrossWeight, "N", "lb")
+    q = convert(cruiseDynamicPressure, "N/m^2", "lb/ft^2")
+    cv = verticalTailVolumeCoefficient
+    dv = dv # FIXME: what is dv? replace with complete name for right side of equals, and in function definition above
+    bw = wingSpan
+    Sw = wingPlanformArea
+    tc = wingThicknessToChordRatio
+    
+    S = convert(cv * (Sw * bw / dv), "m^2", "ft^2") # FIXME: move to airplane definition
+    AR = wingSpan / wingChord
+    WVT = 0.073 * (1 + 0.2*HtHv) * (Nz * W0)**0.376 * q**0.122 * S**0.873 * (100 * tc / cos(LVT))**-0.49 * (AR / cos(LVT)**2) * lambdaVT**0.039
+    return convert(WVT, "lb", "N")/g
+
+def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines):
+    mU = convert(uninstalledEngineMass, "N", "lb")
+    N = numberOfEngines
+    
+    Weng = 2.575 * mU**0.922 * N
+    return convert(Weng, "lb", "N")
+
+def PredictMainGearMass(airplaneGrossWeight, landingLoadFactor, length):
+    Wl = convert(airplaneGrossWeight, "N", "lb")
+    Nz = landingLoadFactor
+    Lm = convert(length, "m", "in") # FIXME: you sure this isn't ft?
+    
+    Wmg = 0.095 * (Nz * Wl)**0.768 * (Lm/12)**0.409
+    return convert(Wmg, "lb", "N")/g
+
+def PredictFrontGearMass(airplaneGrossWeight, landingLoadFactor, length):
+    Wl = convert(airplaneGrossWeight, "N", "lb")
+    Nz = landingLoadFactor
+    Ln = convert(length, "m", "in") # FIXME: you sure this isn't ft?
+    
+    Wng = 0.125 * (Nz * Wl)**0.566 * (Ln/12)**0.845
+    return convert(Wng, "lb", "N")/g
+
+def PredictFuelSystemMass(totalFuelVolume, dropTanksVolume, numberOfFuelTanks, numberOfEngines):
+    Vt = convert(totalFuelVolume, "m^3", "gal")
+    Vd = convert(dropTanksVolume, "m^3", "gal")
+    Nt = numberOfFuelTanks
+    Neng = numberOfEngines
+    
+    Vi = Vt - Vd
+    Wfs = 2.49 * Vt**0.726 * (1 / (Vi/Vt))**0.363 * Nt**0.242 * Neng**0.157
+    return convert(Wfs, "lb", "N")/g
+
+def PredictFlightControlsMass(fuselageLength, wingSpan, loadFactor, airplaneGrossWeight):
+    Lf = convert(fuselageLength, "m", "ft")
+    b = convert(wingSpan, "m", "ft")
+    Nz = loadFactor
+    W0 = convert(airplaneGrossWeight, "N", "lb")
+    
+    Wfc = 0.053 * Lf**1.536 * b**0.371 * (Nz * W0 * 10**-4)**0.80
+    return convert(Wfc, "lb", "N")/g
+
+def PredictHydraulicsMass(airplaneGrossWeight):
+    W0 = airplaneGrossWeight
+    
+    return 0.001*W0/g
+
+def PredictAvionicsMass(uninstalledAvionicsWeight):
+    WU = convert(uninstalledAvionicsWeight, "N", "lb")
+    
+    W = 2.117 * WU**0.933
+    return convert(W, "lb", "N")/g
+
+def PredictElectronicsMass(fuelSystemMass, installedAvionicsMass):
+    Wfs = convert(fuelSystemMass * g, "N", "lb")
+    Wavi = convert(installedAvionicsMass * g, "N", "lb")
+    
+    Welec = 12.57 * (Wfs + Wavi)**0.51
+    return convert(Welec, "lb", "N")/g
+
+def PredictAirConIceMass(airplaneGrossWeight, peopleLoaded, installedAvionicsMass, cruiseMachNumber):
+    W0 = convert(airplaneGrossWeight, "N", "lb")
+    Np = peopleLoaded
+    Wavi = convert(installedAvionicsMass * g, "N", "lb")
+    M = cruiseMachNumber
+    
+    Waci = 0.265 * W0**0.52 * Np**0.68 * Wavi**0.17 * M**0.08
+    return convert(Waci, "lb", "N")/g
+
+def PredictFurnishingsMass(airplaneGrossWeight):
+    W0 = convert(airplaneGrossWeight, "N", "lb")
+    
+    W = 0.0582 * W0 - 65
+    return convert(W, "lb", "N")/g
 
 ################################################################################
 # UPDATING FUNCTIONS
@@ -544,21 +761,27 @@ def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     acceleration = AccelerationOnTakeoff(airplane) # find acceleration from thrust, drag and ground friction
     airplane.speed += acceleration * tstep # update speed with acceleration
     airplane.position += airplane.speed * tstep # update position with speed
+    
     UpdateFuel(airplane, tstep) # update the fuel
 
 def UpdateClimb(airplane, t, tstep):
-    T = AirplaneThrust(airplane)
-    D = AirplaneDrag(airplane)
+    # unset to calculate for steady level flight
+    airplane.flightPathAngle = 0
+    airplane.pitch = 0
     W = AirplaneWeight(airplane)
-    gamma = arcsin((T-D)/W)
-    VminP = MinimumPowerSpeed(airplane)
-    # TODO: determine throttle to keep this condition (that way fuel usage will be correct)
+    V = VelocityForMaximumExcessPower(airplane)
     
-    airplane.flightPathAngle = gamma
-    airplane.pitch = gamma
-    airplane.speed = VminP
-    airplane.altitude += VminP * sin(gamma) * tstep
-    airplane.position += VminP * cos(gamma) * tstep
+    airplane.speed = V
+    airplane.pitch = GetAngleOfAttackForSteadyLevelFlight(airplane)
+    
+    ExcessPower = ExcessPowerAtAltitudeForSteadyLevelFlight(airplane)
+    climbRate = ExcessPower / W
+    
+    airplane.flightPathAngle = arcsin(climbRate / V)
+    airplane.pitch = airplane.flightPathAngle + airplane.pitch # make it the angle of attack we're talking about
+    airplane.altitude += V * sin(airplane.flightPathAngle) * tstep
+    airplane.position += V * cos(airplane.flightPathAngle) * tstep
+
     UpdateFuel(airplane, tstep)
 
 def UpdateCruise(airplane, t, tstep):

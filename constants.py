@@ -1,3 +1,5 @@
+# LOCAL DEPENDENCIES
+
 from utilities import *
 
 ################################################################################
@@ -71,13 +73,23 @@ manufacturerLiabilityInsurance = 55000 # [2019 USD]  From Gudmundson's suggestio
 maintF = 0 # 0 for maintenance done by A&P mechanic, -0.15 for done by owner
 engineF = 0 # 0 for easy engine access, 0.02 for hard
 VFRF = 0.02 # 0.02 for VFR radios, 0 for no VFR radios
+IFRF = 0.04 # 0.04 for IFR radios, 0 for no IFR radios
 fuelF = 0 # 0 for non-integral fuel tanks, 0.01 for integral
 flapF = 0 # 0 for simple flap system, 0.02 for complex
 certF = 0 # for 14 CRF part 23
-flightHoursYear = 1040 # 20hrs a week for 52 weeks
+flightHoursYear = 780 # 20 times a week, 45 min flight time, for 52 weeks
 APmechRate = 60 # [2012 USD/hr]
 monthlyStorageRate = 250 # [2012 USD/month]
 fuelRate = 5 # [2019 USD/gal]
+electricityRate = 0.10 # From RFP [2019 USD/ KW-hr]
 pilotRate = 100 # [2012 USD/hr]
 purchasePrice = None # [2019 USD]
 inspectionCost = 2000 # [2019 USD/year] # average from Blue Skies gravitational
+
+################################################################################
+# RFP Constraints
+################################################################################
+
+minimumTakeoffFieldLength = convert(2500, "ft", "m")
+minimumRange = convert(300, "nmi", "m")
+maximumFlightTime = convert(1.5, "hr", "s")

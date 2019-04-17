@@ -33,13 +33,13 @@ def defineAirplane(definingParameters):
     # ASSUMPTIONS # FIXME: Define elsewhere? or get from simulations?
     cruiseDynamicPressure = 0.5*densityAtAltitude(cruiseAltitude)*convert(180, "kts", "m/s")
     sizingLoadFactor = 3.5
-    landingLoadFactor = sizingLoadFactor * 1.5
+    landingLoadFactor = 2.67 * 1.5
     horizontalTailVolumeCoefficient = 0.80
     verticalTailVolumeCoefficient = 0.07
     numberOfEngines = 2
-    uninstalledEngineMass = 98 # kg
+    uninstalledEngineMass = 65.7 # kg
     totalFuelVolume = convert(50, "gal", "m^3")
-    uninstalledAvionicsWeight = 4000 # N
+    uninstalledAvionicsWeight = 4*9.8 # N # FIXME: you sure?
     cruiseMachNumber = convert(180, "kts", "m/s") / machAtAltitude(cruiseAltitude)
     
     ################################################################################
@@ -68,13 +68,19 @@ def defineAirplane(definingParameters):
     gas.energyDensity = avgasEnergyDensity
     gas.density = avgasDensity
     
+    # BATTERY OBJECT DEFINITION
+    battery = Battery()
+    battery.energyDensity = batteryEnergyDensity
+    battery.charge = 1
+    
     # POWERPLANT OBJECT DEFINITION
     
     powerplant = Powerplant()
     
+    powerplant.battery = battery
     powerplant.gas = gas
-    powerplant.percentElectric = 0
-    powerplant.fuelMass = Wf/g
+    powerplant.percentElectric = 0.15
+    powerplant.fuelMass = Wf / g
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -94,6 +100,8 @@ def defineAirplane(definingParameters):
     
     wing.airfoil = airfoil
     wing.interferenceFactor = 1
+    # wing.span = 14.78 # m^2
+    # wing.planformArea = 11.4 # m
     wing.planformArea = W0/WS
     wing.setAspectRatioHoldingPlanformArea(7)
     wing.thicknessToChord = 0.02
@@ -115,8 +123,8 @@ def defineAirplane(definingParameters):
     fuselage = Fuselage()
     
     fuselage.interferenceFactor = 1
-    fuselage.diameter = convert(7, "ft", "m")
-    fuselage.length = convert(30, "ft", "m")
+    fuselage.diameter = 1.4 # m
+    fuselage.length = 8.7 # m
     fuselage.mass = PredictFuselageMass(fuselage.wettedArea, airplane.initialGrossWeight, 0.45*fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, 3.5)
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
@@ -132,7 +140,7 @@ def defineAirplane(definingParameters):
     
     horizontalStabilizer = HorizontalStabilizer()
     horizontalStabilizer.interferenceFactor = 1.2
-    horizontalStabilizer.planformArea = convert(10*3, "ft^2", "m^2")
+    horizontalStabilizer.planformArea = 2.64 # m^2
     horizontalStabilizer.thicknessToChord = 0.12
     horizontalStabilizer.span = convert(10, "ft", "m")
     horizontalStabilizer.sweep = 0
@@ -143,10 +151,10 @@ def defineAirplane(definingParameters):
     
     verticalStabilizer = VerticalStabilizer()
     verticalStabilizer.interferenceFactor = 1.1
-    verticalStabilizer.planformArea = convert(6*3, "ft^2", "m^2")
+    verticalStabilizer.planformArea = 2.86 # m^2
     verticalStabilizer.thicknessToChord = 0.12
     verticalStabilizer.span = convert(6, "ft", "m")
-    verticalStabilizer.sweep = 0
+    verticalStabilizer.sweep = convert(20, "deg", "rad")
     verticalStabilizer.taperRatio = 1
     verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 1, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.5 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord)
     
@@ -164,7 +172,7 @@ def defineAirplane(definingParameters):
     
     propeller = Propeller()
     
-    propeller.diameter = convert(6, "ft", "m")
+    propeller.diameter = 1.65 # m
     propeller.efficiency = 0.9
     
     # ENGINE OBJECT
@@ -172,11 +180,12 @@ def defineAirplane(definingParameters):
     engine = Engine()
     
     engine.interferenceFactor = 1
-    engine.diameter = convert(1.5, "ft", "m")
-    engine.length = convert(4, "ft", "m")
+    engine.diameter = 0.65 # m
+    engine.length = 1.8 # m
     engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines)
     engine.propeller = propeller
     engine.maxPower = (PW*W0) / numberOfEngines
+    # engine.maxPower = convert(98.6, "hp", "W")
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -193,17 +202,17 @@ def defineAirplane(definingParameters):
     
     mainGear = MainGear()
     
-    mainGear.length = 1 # m
+    mainGear.length = 0.5 # m
     mainGear.interferenceFactor = 1
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, landingLoadFactor, mainGear.length)
     mainGear.retractable = True #Is landing Gear retractable?
-    
+        
     # FRONT GEAR OBJECT
     
     frontGear = FrontGear()
     
-    frontGear.length = 1 # m
+    frontGear.length = 0.5 # m
     frontGear.interferenceFactor = 1
     frontGear.wettedArea = 0
     frontGear.mass = PredictFrontGearMass(airplane.initialGrossWeight, landingLoadFactor, frontGear.length)

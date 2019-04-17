@@ -9,11 +9,9 @@ def CSVToMatrix(filename):
     """reads a csv file and returns a list of lists where each list item is a row in the csv"""
     with open(filename) as csvfile:
         reader = csv.reader(csvfile, delimiter=",")
-        
         csvmatrix = []
         for row in reader:
             csvmatrix.append(row)
-        
         return csvmatrix
 
 def CSVToDict(filename):
@@ -30,14 +28,14 @@ def CSVToDict(filename):
 
 def writeCSVLine(filename, row):
     """writes a single line to a file, delimited by commas"""
-    with open(filename, "a") as file:
+    with open(filename, "a", newline="") as file: # ensure newline is \n character, not windows default of \r
         print(1)
         writer = csv.writer(file)
         writer.writerows(row)
 
 def matrixToCSV(filename, matrix):
     """writes a csv file given a list of lists corresponding to rows of the file"""
-    with open(filename, "w") as newfile:
+    with open(filename, "w", newline="") as newfile:
         writer = csv.writer(newfile)
         writer.writerows(matrix)
 

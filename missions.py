@@ -1,3 +1,5 @@
+# LOCAL DEPENDENCIES
+
 from utilities import *
 
 from constants import *
@@ -30,6 +32,8 @@ designMission.segments = Segments([
 # STARTUP
 
 def _designMissionInitializeStartup(airplane, t, t0):
+    airplane.altitude = 0
+    airplane.speed = 0
     airplane.throttle = 0.3
     airplane.position = 0
     airplane.pitch = 0
@@ -74,7 +78,7 @@ def _designMissionInitializeCruise(airplane, t, t0):
     airplane.throttle = 0.7
 
 def _designMissionCompletedCruise(airplane, t, t0):
-    return convert(300, "nmi", "m") <= airplane.position
+    return minimumRange <= airplane.position
 
 designMission.segments["cruise"].initialize = _designMissionInitializeCruise
 designMission.segments["cruise"].completed = _designMissionCompletedCruise

@@ -66,6 +66,7 @@ def defineAirplane(definingParameters):
 
     gas.energyDensity = avgasEnergyDensity
     gas.density = avgasDensity
+    gas.x = 4 # m
 
     # POWERPLANT OBJECT DEFINITION
 
@@ -93,8 +94,6 @@ def defineAirplane(definingParameters):
 
     wing.airfoil = airfoil
     wing.interferenceFactor = 1
-    # wing.span = 14.78 # m^2
-    # wing.planformArea = 11.4 # m
     wing.planformArea = W0/WS
     wing.setAspectRatioHoldingPlanformArea(7)
     wing.thicknessToChord = 0.02
@@ -134,6 +133,7 @@ def defineAirplane(definingParameters):
     # HORIZONTAL STABILIZER OBJECT
 
     horizontalStabilizer = HorizontalStabilizer()
+
     horizontalStabilizer.interferenceFactor = 1.2
     horizontalStabilizer.planformArea = 2.64 # m^2
     horizontalStabilizer.thicknessToChord = 0.12
@@ -146,6 +146,7 @@ def defineAirplane(definingParameters):
     # VERTICAL STABILIZER OBJECT
 
     verticalStabilizer = VerticalStabilizer()
+
     verticalStabilizer.interferenceFactor = 1.1
     verticalStabilizer.planformArea = 2.86 # m^2
     verticalStabilizer.thicknessToChord = 0.12
@@ -338,6 +339,12 @@ def defineAirplane(definingParameters):
     pilotPayload.mass = CalculatePilotPayloadMass(airplane.pilots)
 
     airplane.payloads = [passengerPayload, baggagePayload, pilotPayload]
+    ################################################################################
+    # FINISH DEFINING AIRPLANE
+    ################################################################################
+
+    airplane.emptyMass = sum([component.mass for component in airplane.components])
+
     ################################################################################
 
     return airplane

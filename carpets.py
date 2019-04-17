@@ -38,6 +38,9 @@ PW = convert(0.072, "hp/lb", "W/N")
 WSs = [WS * 0.8, WS, WS * 1.2]
 PWs = [PW * 0.8, PW, PW * 1.2]
 
+fit_WS = linspace(WS*0.5, WS*1.5, 1000)
+fit_PW = linspace(PW*0.5, PW*1.5, 1000)
+
 # FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
 
 p = [[getPerformanceParameters("testcraft", {
@@ -46,20 +49,22 @@ p = [[getPerformanceParameters("testcraft", {
     }, designMission) for WS in WSs] for PW in PWs]
 
 ###### W0 TRENDS
-
+W0FitParameters = []
 # Plot W0 as function of W/S for each T/W
 figure()
-plot(WSs, [i["empty weight"] for i in p[0]], ".")
-plot(WSs, [i["empty weight"] for i in p[1]], ".")
-plot(WSs, [i["empty weight"] for i in p[2]], ".")
+
+for PWlist in p:
+    plot(WSs, [i["empty weight"] for i in PWlist], "k.")
+    W0params, pconv = curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
+    plot(fit_WS, [exponentialForm(WS, W0params[0], W0params[1]) for WS in fit_WS])
+    
+    W0FitParameters.append(W0params)
+print(W0FitParameters)
 title("W0 Trends")
 ylabel("Wing Loading [N/m^2]")
 xlabel("Gross Weight [N]")
 
 ###### CROSS PLOTS
-
-fit_WS = linspace(WS*0.5, WS*1.5, 1000)
-fit_PW = linspace(PW*0.5, PW*1.5, 1000)
 dT0s = []
 ranges = []
 flightTimes = []
@@ -117,21 +122,17 @@ ylabel("Flight Time [s]")
 
 emptyWeights = [[a["empty weight"] for a in row] for row in p]
 wingLoadings = [copy(WSs) for row in p]
-wingLoadings = map
 
 figure()
-
 for (ews, wss) in zip(emptyWeights, wingLoadings):
-    plot(ews, wss)
+    plot(ews, wss, "k")
 
 for (ews, wss) in zip(transpose(emptyWeights), transpose(wingLoadings)):
-    plot(ews, wss)
-
-
-
-offset = convert(4, "lb/ft^2", "N/m^2")
+    plot(ews, dT0s)
+    plot(ews, wss, "k")
 
 title("Carpet Plot")
+xlabel("Wing Loading")
 ylabel("Empty Weight")
 
 show()

@@ -31,7 +31,7 @@ def invExponentialForm(y, a, b):
 
 ###### Create sizing matrix
 # Obtain center cell W/S and T/W from guess or previous best carpet plot result
-WS = convert(50, "lb/ft^2", "N/m^2")
+WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 
 # Driving parameters
@@ -43,7 +43,7 @@ fit_PW = linspace(PW*0.5, PW*1.5, 1000)
 
 # FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
 
-p = [[getPerformanceParameters("testcraft", {
+p = [[getPerformanceParameters("tecnam", {
     "wing loading": WS,
     "power to weight ratio": PW
     }, designMission) for WS in WSs] for PW in PWs]
@@ -54,22 +54,22 @@ W0FitParameters = []
 figure()
 
 for PWlist in p:
-    plot(WSs, [i["empty weight"] for i in PWlist], "k.")
+    plot([convert(i["empty weight"], "N", "lb") for i in PWlist], [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs], "k.")
     W0params, pconv = curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
-    plot(fit_WS, [exponentialForm(WS, W0params[0], W0params[1]) for WS in fit_WS])
-    
+    #plot(fit_WS, [exponentialForm(WS, W0params[0], W0params[1]) for WS in fit_WS])
     W0FitParameters.append(W0params)
-print(W0FitParameters)
+    
 title("W0 Trends")
-ylabel("Wing Loading [N/m^2]")
-xlabel("Gross Weight [N]")
+ylabel("Wing Loading [lb/ft^2]")
+xlabel("Gross Weight [lb]")
 
 ###### CROSS PLOTS
-dT0s = []
-ranges = []
-flightTimes = []
+dT0W0s = []
+rangeWSs = []
+flightTimeWSs = []
 
 # Plot dTO as function of W/S for each P/W
+inc = 0
 figure()
 for PWlist in p:
     plot(WSs, [i["takeoff distance"] for i in PWlist], "k.")
@@ -77,8 +77,11 @@ for PWlist in p:
     plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
     
     # Find intersection of curve with dT0 limit
-    dT0Intersection = invExponentialForm(minimumTakeoffFieldLength, params[0], params[1])
-    dT0s.append(dT0Intersection)
+    WS_dT0Intersection = invExponentialForm(minimumTakeoffFieldLength, params[0], params[1])
+    W0_WS_dT0Intersection = invExponentialForm(WS_dT0Intersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
+    dT0W0s.append(W0_WS_dT0Intersection)
+    inc = inc+1
+    
 hlines(minimumTakeoffFieldLength, fit_WS[0], fit_WS[-1])
 
 title("Takeoff Distance")
@@ -86,6 +89,7 @@ xlabel("Wing Loading [N/m^2]")
 ylabel("Takeoff Distance [m]")
 
 # Plot range as function of W/S for each P/W
+inc = 0
 figure()
 for PWlist in p:
     plot(WSs, [i["range"] for i in PWlist], "k.")
@@ -93,8 +97,12 @@ for PWlist in p:
     plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
     
     # Find intersection of curve with range limit
-    rangeIntersection = invExponentialForm(minimumRange, params[0], params[1])
-    ranges.append(rangeIntersection)
+    W0_rangeIntersection = invExponentialForm(minimumRange, params[0], params[1])
+    W0_WS_rangeIntersection = invExponentialForm(W0_rangeIntersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
+    rangeWSs.append(W0_WS_rangeIntersection)
+    
+    inc = inc+1
+
 hlines(minimumRange, fit_WS[0], fit_WS[-1])
 
 title("Range")
@@ -102,6 +110,7 @@ xlabel("Wing Loading [N/m^2]")
 ylabel("Range [m]")
 
 # Plot flight time as function of W/S for each P/W
+inc = 0
 figure()
 for PWlist in p:
     plot(WSs, [i["flight time"] for i in PWlist], "k.")
@@ -109,8 +118,12 @@ for PWlist in p:
     plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
     
     # Find intersection of curve with flight time limit
-    flightTimeIntersection = invExponentialForm(maximumFlightTime, params[0], params[1])
-    flightTimes.append(flightTimeIntersection)
+    W0_flightTimeIntersection = invExponentialForm(maximumFlightTime, params[0], params[1])
+    W0_WS_flightTimeIntersection = invExponentialForm(W0_flightTimeIntersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
+    flightTimeWSs.append(W0_WS_flightTimeIntersection)
+    
+    inc=inc+1
+
 hlines(maximumFlightTime, fit_WS[0], fit_WS[-1])
 
 title("Flight Time")
@@ -128,7 +141,7 @@ for (ews, wss) in zip(emptyWeights, wingLoadings):
     plot(ews, wss, "k")
 
 for (ews, wss) in zip(transpose(emptyWeights), transpose(wingLoadings)):
-    plot(ews, dT0s)
+    plot(ews, dT0W0s)
     plot(ews, wss, "k")
 
 title("Carpet Plot")

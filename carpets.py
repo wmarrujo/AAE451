@@ -43,7 +43,7 @@ fit_PW = linspace(PW*0.5, PW*1.5, 1000)
 
 # FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
 
-p = [[getPerformanceParameters("", {
+p = [[getPerformanceParameters("tecnam", {
     "wing loading": WS,
     "power to weight ratio": PW
     }, designMission) for WS in WSs] for PW in PWs]

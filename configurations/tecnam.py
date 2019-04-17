@@ -93,14 +93,13 @@ def defineAirplane(definingParameters):
     
     wing.airfoil = airfoil
     wing.interferenceFactor = 1
-    # wing.span = 14.78 # m^2
-    # wing.planformArea = 11.4 # m
     wing.planformArea = W0/WS
     wing.setAspectRatioHoldingPlanformArea(7)
     wing.thicknessToChord = 0.02
     wing.sweep = 0
     wing.taperRatio = 1
     wing.mass = PredictWingMass(wing.span, wing.aspectRatio, wing.chord, 3.5, wing.sweep, wing.taperRatio, wing.planformArea, airplane.initialGrossWeight, powerplant.fuelMass*g, cruiseDynamicPressure, wing.thicknessToChord)
+    wing.x = 4 # [m]
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -119,6 +118,7 @@ def defineAirplane(definingParameters):
     fuselage.diameter = 1.4 # m
     fuselage.length = 8.7 # m
     fuselage.mass = PredictFuselageMass(fuselage.wettedArea, airplane.initialGrossWeight, 0.45*fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, 3.5)
+    fuselage.x = fuselage.length / 2 # [m]
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -132,6 +132,7 @@ def defineAirplane(definingParameters):
     # HORIZONTAL STABILIZER OBJECT
     
     horizontalStabilizer = HorizontalStabilizer()
+    
     horizontalStabilizer.interferenceFactor = 1.2
     horizontalStabilizer.planformArea = 2.64 # m^2
     horizontalStabilizer.thicknessToChord = 0.12
@@ -139,10 +140,12 @@ def defineAirplane(definingParameters):
     horizontalStabilizer.sweep = 0
     horizontalStabilizer.taperRatio = 1
     horizontalStabilizer.mass = PredictHorizontalStabilizerMass(airplane.initialGrossWeight, sizingLoadFactor, horizontalStabilizer.taperRatio, horizontalStabilizer.sweep, wing.taperRatio, horizontalTailVolumeCoefficient, wing.span, wing.chord, 0.5 * fuselage.length, cruiseDynamicPressure, wing.thicknessToChord)
+    horizontalStabilizer.x = 8.6 # [m]
     
     # VERTICAL STABILIZER OBJECT
     
     verticalStabilizer = VerticalStabilizer()
+    
     verticalStabilizer.interferenceFactor = 1.1
     verticalStabilizer.planformArea = 2.86 # m^2
     verticalStabilizer.thicknessToChord = 0.12
@@ -150,6 +153,7 @@ def defineAirplane(definingParameters):
     verticalStabilizer.sweep = convert(20, "deg", "rad")
     verticalStabilizer.taperRatio = 1
     verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 1, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.5 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord)
+    verticalStabilizer.x = 8.65 # [m]
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -178,6 +182,8 @@ def defineAirplane(definingParameters):
     engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines)
     engine.propeller = propeller
     engine.maxPower = (PW*W0) / numberOfEngines
+    engine.x = wing.x - wing.chord/2 # [m]
+    
     # engine.maxPower = convert(98.6, "hp", "W")
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
@@ -199,6 +205,7 @@ def defineAirplane(definingParameters):
     mainGear.interferenceFactor = 1
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, landingLoadFactor, mainGear.length)
+    mainGear.x = 5.5 # [m]
     
     # FRONT GEAR OBJECT
     
@@ -208,6 +215,7 @@ def defineAirplane(definingParameters):
     frontGear.interferenceFactor = 1
     frontGear.wettedArea = 0
     frontGear.mass = PredictFrontGearMass(airplane.initialGrossWeight, landingLoadFactor, frontGear.length)
+    frontGear.x = 2 # [m]
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -227,6 +235,7 @@ def defineAirplane(definingParameters):
     fuelSystem.wettedArea = 0
     fuelSystem.referenceLength = 0
     fuelSystem.mass = PredictFuelSystemMass(totalFuelVolume, 0, 2, numberOfEngines)
+    fuelSystem.x = wing.x - wing.chord / 4 # [m]
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
@@ -245,11 +254,12 @@ def defineAirplane(definingParameters):
     avionics.wettedArea = 0
     avionics.referenceLength = 0
     avionics.mass = PredictAvionicsMass(uninstalledAvionicsWeight)
+    avionics.x = 1.5 # [m]
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
     airplane.avionics = avionics
-    print('AVIONICS ', avionics.mass)
+    print("AVIONICS ", avionics.mass)
     airplane.components += [avionics]
     
     ################################################################################
@@ -264,8 +274,8 @@ def defineAirplane(definingParameters):
     flightControls.wettedArea = 0
     flightControls.referenceLength = 0
     flightControls.mass = PredictFlightControlsMass(fuselage.length, wing.span, sizingLoadFactor, airplane.initialGrossWeight)
-    print('FLIGHT CONTROLS ', flightcontrols.mass)
-
+    flightControls.x = avionics.x + .1 # [m]
+    print("FLIGHT CONTROLS ", flightcontrols.mass)
     
     # HYDRAULICS OBJECT
     
@@ -275,6 +285,7 @@ def defineAirplane(definingParameters):
     hydraulics.wettedArea = 0
     hydraulics.referenceLength = 0
     hydraulics.mass = PredictHydraulicsMass(airplane.initialGrossWeight)
+    hydraulics.x = (mainGear.x + frontGear.x) / 2 # [m] -- assume the bulk of the hydraulics mass is between the front and main gear
     
     # ELECTRONICS OBJECT
     
@@ -284,8 +295,8 @@ def defineAirplane(definingParameters):
     electronics.wettedArea = 0
     electronics.referenceLength = 0
     electronics.mass = PredictElectronicsMass(fuelSystem.mass, avionics.mass)
+    electronics.x = avionics.x - .1 # [m] -- Assume most of the electronics mass (likely the battery for )
     print('ELECTRONICS ', electronics.mass)
-
     
     # AIRCONICE OBJECT
     
@@ -295,6 +306,7 @@ def defineAirplane(definingParameters):
     airConIce.wettedArea = 0
     airConIce.referenceLength = 0
     airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.passengers, avionics.mass, cruiseMachNumber)
+    airConIce.x = 3.5 # [m] #GUESS
     
     # FURNISHINGS OBJECT
     
@@ -304,10 +316,12 @@ def defineAirplane(definingParameters):
     furnishings.wettedArea = 0
     furnishings.referenceLength = 0
     furnishings.mass = PredictFurnishingsMass(airplane.initialGrossWeight)
+    furnishings.x = 3.5 # [m] (SPLIT INTO SEATS??)
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
     airplane.components += [flightControls, hydraulics, electronics, airConIce, furnishings]
+    airplane.xcg = sum([(comp.x * comp.mass) for comp in airplane.components])
     
     ################################################################################
     

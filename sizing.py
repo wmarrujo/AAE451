@@ -54,7 +54,7 @@ simulationParametersKeys = [
 
 performanceParametersKeys = [
     "empty weight",
-    "takeoff feild length",
+    "takeoff field length",
     "range",
     "average ground speed",
     "flight time",
@@ -94,7 +94,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     # GET AIRPLANE AND SIMULATION DATA
     
     id = airplaneDefinitionID(airplaneName, drivingParameters)
-    print("Getting Performance Parameters for Airplane", id) if not silent else None
+    print("Getting Performance Parameters for Airplane       - {:10.10}".format(id)) if not silent else None
     initialAirplane = loadInitialAirplane(id, silent=silent) if cache and initialAirplaneCached(id) else defineAirplane(airplaneName, drivingParameters, mission, silent=silent)
     if cache and simulationCached(id):
         simulation = loadSimulation(id, silent=silent)
@@ -126,7 +126,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     
     return {
         "empty weight": emptyWeight,
-        "takeoff distance": dTO,
+        "takeoff field length": dTO,
         "range": cruiseRange,
         "average ground speed": avgGroundSpeedInCruise,
         "flight time": cruiseFlightTime,
@@ -138,7 +138,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
 
 def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=False):
     id = airplaneDefinitionID(airplaneName, drivingParameters)
-    print("Defining Airplane", id) if not silent else None
+    print("Defining Airplane                                 - {:10.10}".format(id)) if not silent else None
     defineAirplaneSpecifically = airplaneDefinitionFunction(airplaneName)
     
     def setDefiningParameters(drivingParameters, X):
@@ -166,7 +166,7 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
         return [W0 - W0guess, WFf - WFe] # the gross weight should match the guess and the mission should use all the fuel
     
     X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
-    result = root(functionToFindRootOf, X0)
+    result = root(functionToFindRootOf, X0, tol=1e-1)
     Xf = result["x"]
     definingParameters = setDefiningParameters(drivingParameters, Xf)
     airplane = defineAirplaneSpecifically(definingParameters)
@@ -222,29 +222,29 @@ def finalAirplaneCached(airplaneID):
     return os.path.exists(os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
 
 def loadInitialAirplane(airplaneID, silent=False):
-    print("Loading Initial Airplane Configuration from Cache", airplaneID) if not silent else None
+    print("Loading Initial Airplane Configuration from Cache - {:10.10}".format(airplaneID)) if not silent else None
     return loadObject(os.path.join(simulationDirectory, airplaneID, "initial.pyobj")) if initialAirplaneCached(airplaneID) else None
 
 def loadSimulation(airplaneID, silent=False):
-    print("Loading Simulation from Cache", airplaneID) if not silent else None
+    print("Loading Simulation from Cache                     - {:10.10}".format(airplaneID)) if not silent else None
     return CSVToDict(os.path.join(simulationDirectory, airplaneID, "simulation.csv")) if simulationCached(airplaneID) else {}
 
 def loadFinalAirplane(airplaneID, silent=False):
-    print("Loading Final Airplane Configuration from Cache", airplaneID)
+    print("Loading Final Airplane Configuration from Cache   - {:10.10}".format(airplaneID))
     return loadObject(os.path.join(simulationDirectory, airplaneID, "final.pyobj")) if finalAirplaneCached(airplaneID) else None
 
 def saveInitialAirplane(airplaneObject, airplaneID, silent=False):
-    print("Saving Initial Airplane Configuration to Cache", airplaneID) if not silent else None
+    print("Saving Initial Airplane Configuration to Cache    - {:10.10}".format(airplaneID)) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
 
 def saveSimulation(airplaneID, silent=False):
     global simulation
-    print("Saving Simulation to Cache", airplaneID) if not silent else None
+    print("Saving Simulation to Cache                        - {:10.10}".format(airplaneID)) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     dictToCSV(os.path.join(simulationDirectory, airplaneID, "simulation.csv"), simulation)
 
 def saveFinalAirplane(airplaneObject, airplaneID, silent=False):
-    print("Saving Final Airplane Configuration to Cache", airplaneID) if not silent else None
+    print("Saving Final Airplane Configuration to Cache      - {:10.10}".format(airplaneID)) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "final.pyobj"))

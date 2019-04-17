@@ -267,6 +267,11 @@ def MaximumLiftOverDragVelocity(airplane):
     
     return sqrt(2 / (rho * CL) * (W/S))
 
+def CarsonVelocity(airplane):
+    VminLD = MaximumLiftOverDragVelocity(airplane)
+    
+    return 1.3 * VminLD
+
 def ClimbVelocity(airplane):
     flightPathAngle = airplane.flightPathAngle
     climbRate = ClimbAltitudeRate(airplane)
@@ -314,21 +319,21 @@ def BestRateOfClimbSpeed(airplane):
 # DAPCA assumes all aluminum framing, but provides fudge factors to adjust hour calculations
 
 def EngineeringHours(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
     V = None  # Maximum velocity [km/h]
     Q = Aiplane.productionQuantityNeeded
     
     return 5.18 * (We**0.777) * (V**0.894) * (Q**0.163)
 
 def ToolingHours(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
     V = None  # Maximum velocity [km/h]
     Q = Aiplane.productionQuantityNeeded
     
     return 7.22 * (We**0.777) * (V**0.696) * (Q**0.263)
 
 def ManufacturingHours(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
     V = None  # Maximum velocity [km/h]
     Q = Aiplane.productionQuantityNeeded
     
@@ -340,14 +345,14 @@ def QualityControlHours(airplane):
     return 0.133 * mfgHours
 
 def DevelopmentSupportCost(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
     V = None  # Maximum velocity [km/h]
     iR = inflation2012to2019
     
     return iR * 67.4 * (We**0.630) * (V**1.3)
 
 def FlightTestCost(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
     V = None  # Maximum velocity [km/h]
     FTA = airplane.numberFlightTestAircraft
     iR = inflation2012to2019
@@ -355,7 +360,7 @@ def FlightTestCost(airplane):
     return iR * 1947 * (We**0.325) * (V**0.822) * (FTA**1.21)
 
 def ManufacturingMaterialsCost(airplane):
-    We = airplane.emptyWeight / g # DAPCA model needs empty weight in [kgs]
+    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
     V = None  # Maximum velocity [km/h]
     Q = Aiplane.productionQuantityNeeded
     iR = inflation2012to2019
@@ -569,7 +574,7 @@ def UpdateClimb(airplane, t, tstep):
     UpdateFuel(airplane, tstep)
 
 def UpdateCruise(airplane, t, tstep):
-    VbestR = BestRateOfClimbSpeed(airplane)
+    VbestR = CarsonVelocity(airplane)
     
     airplane.speed = VbestR
     airplane.position += VbestR * tstep

@@ -184,11 +184,11 @@ class Battery:
         C = self.charge
         
         return E*C
-        
+    
     @energy.setter
     def energy(self, E):
         self.charge = E / self.capacity
-        
+
 class Generator:
     efficiency = None # number : (0 <= x <= 1)
     power = None # number : (0 <= x) # most efficient power setting, the only one we'll run it at
@@ -198,6 +198,7 @@ class Component:
     interferenceFactor = None # number : (1 <= x)
     wettedArea = None # number [m^2] : (0 <= x)
     referenceLength = None # number [m] : (0 <= x)
+    x = None # number [m] : -- location from reference datum for CG calcs
     
     def formFactor(self, airplane):
         return 0 # default, to be overwritten if defined # TODO: put this independently in each component class definition, not a default value

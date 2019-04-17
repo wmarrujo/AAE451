@@ -27,11 +27,17 @@ from matplotlib.pyplot import *
 # TESTS
 ################################################################################
 
-WS = convert(50, "lb/ft^2", "N/m^2")
+WS = convert(17.5, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}
 PPs = getPerformanceParameters("tecnamHYBRID", DPS, designMission)
-print(PPs)
+
+print("empty weight {} lb".format(convert(PPs["empty weight"], "N", "lb")))
+print("takeoff feild length {} ft".format(convert(PPs["takeoff feild length"], "m", "ft")))
+print("range {} nmi".format(convert(PPs["range"], "m", "nmi")))
+print("average ground speed {} kts".format(convert(PPs["average ground speed"], "m/s", "kts")))
+print("flight time {} hr".format(convert(PPs["flight time"], "s", "hr")))
+print("fuel used {} lb".format(convert(PPs["fuel used"]*g, "N", "lb")))
 
 ID = airplaneDefinitionID("tecnamHYBRID", DPS)
 plane = loadFinalAirplane(ID)

@@ -267,6 +267,11 @@ def MaximumLiftOverDragVelocity(airplane):
     
     return sqrt(2 / (rho * CL) * (W/S))
 
+def CarsonVelocity(airplane):
+    VminLD = MaximumLiftOverDragVelocity(airplane)
+    
+    return 1.3 * VminLD
+
 def ClimbVelocity(airplane):
     flightPathAngle = airplane.flightPathAngle
     climbRate = ClimbAltitudeRate(airplane)
@@ -569,7 +574,7 @@ def UpdateClimb(airplane, t, tstep):
     UpdateFuel(airplane, tstep)
 
 def UpdateCruise(airplane, t, tstep):
-    VbestR = BestRateOfClimbSpeed(airplane)
+    VbestR = CarsonVelocity(airplane)
     
     airplane.speed = VbestR
     airplane.position += VbestR * tstep

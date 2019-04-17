@@ -48,7 +48,8 @@ simulationParametersKeys = [
     "altitude",
     "weight",
     "thrust",
-    "speed"]
+    "speed",
+    "center of gravity"]
 
 # PERFORMANCE PARAMETERS
 
@@ -75,6 +76,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
     V = airplane.speed
+    CG = CenterOfGravity(airplane)
     
     simulation["time"].append(time)
     simulation["segment"].append(segmentName)
@@ -83,6 +85,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     simulation["weight"].append(W)
     simulation["thrust"].append(T)
     simulation["speed"].append(V)
+    simulation["center of gravity"].append(CG)
 
 ################################################################################
 # PERFORMANCE
@@ -112,7 +115,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     Ts = simulation["thrust"]
     
     #emptyWeight = EmptyWeight(initialAirplane)
-    emptyWeight = Ws[0] #TODO fix this
+    emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: h >= 50)]
     range = ps[-1]
     cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")

@@ -18,7 +18,7 @@ import copy
 def AirplaneWeight(airplane): # TODO: calculate with airplane.mass?
     Wpay = PayloadWeight(airplane)
     Wfuel = FuelWeight(airplane)
-    Wempty = EmptyWeight(airplane)
+    Wempty = airplane.emptyMass * g
     
     return Wpay + Wfuel + Wempty
 
@@ -35,10 +35,13 @@ def FuelWeight(airplane):
     
     return mf*g
 
-def EmptyWeight(airplane):
-    W0 = airplane.initialGrossWeight
+def CenterOfGravity(airplane):
+    Mcs = [component.mass*g * component.x for component in airplane.components] # get the moments for each component
+    Mcs += [airplane.powerplant.gas.mass*g * airplane.powerplant.gas.x] if airplane.powerplant.gas else [] # get the gas moment
+    Mcs += [airplane.powerplant.battery.mass*g * airplane.powerplant.battery.x] if airplane.powerplant.battery else [] # get the battery moment
+    W = AirplaneWeight(airplane)
     
-    return convert(2000, "lb", "N") # TODO: temporary, replace with component weight buildup later
+    return sum(Mcs) / W
 
 def AirplaneReynoldsNumber(airplane):
     rho = densityAtAltitude(airplane.altitude)
@@ -574,7 +577,7 @@ def UpdateClimb(airplane, t, tstep):
     UpdateFuel(airplane, tstep)
 
 def UpdateCruise(airplane, t, tstep):
-    VbestR = CarsonVelocity(airplane)
+    VbestR = MaximumLiftOverDragVelocity(airplane)
     
     airplane.speed = VbestR
     airplane.position += VbestR * tstep

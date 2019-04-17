@@ -116,6 +116,7 @@ class Airplane:
     verticalStabilizer = None # VerticalStabilizer object
     fuelSystem = None # FuelSystem object
     avionics = None # Avionics object
+    emptyMass = None # number [kg] : (0 <= x) # set once at the beginning (for algorithm optimization)
     
     @property
     def angleOfAttack(self):
@@ -171,12 +172,14 @@ class Gas:
     mass = None # number [kg] : (0 <= x)
     energyDensity = None # number [J/kg] : (0 <= x)
     density = None # number [kg/m^3] : (0 <= x)
+    x = None # number [m]
 
 class Battery:
     mass = None # number [kg] : (0 <= x)
     energyDensity = None # number [W*h/kg] : (0 <= x)
     capacity = None # number [J] : (0 <= x)
     charge = None # number : (0 <= x <= 1)
+    x = None # number [m]
     
     @property
     def energy(self):

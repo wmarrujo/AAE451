@@ -66,6 +66,7 @@ def defineAirplane(definingParameters):
     
     gas.energyDensity = avgasEnergyDensity
     gas.density = avgasDensity
+    gas.x = 4 # m
     
     # POWERPLANT OBJECT DEFINITION
     
@@ -259,7 +260,6 @@ def defineAirplane(definingParameters):
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
     airplane.avionics = avionics
-    print("AVIONICS ", avionics.mass)
     airplane.components += [avionics]
     
     ################################################################################
@@ -275,7 +275,6 @@ def defineAirplane(definingParameters):
     flightControls.referenceLength = 0
     flightControls.mass = PredictFlightControlsMass(fuselage.length, wing.span, sizingLoadFactor, airplane.initialGrossWeight)
     flightControls.x = avionics.x + .1 # [m]
-    print("FLIGHT CONTROLS ", flightControls.mass)
     
     # HYDRAULICS OBJECT
     
@@ -296,7 +295,6 @@ def defineAirplane(definingParameters):
     electronics.referenceLength = 0
     electronics.mass = PredictElectronicsMass(fuelSystem.mass, avionics.mass)
     electronics.x = avionics.x - .1 # [m] -- Assume most of the electronics mass (likely the battery for )
-    print('ELECTRONICS ', electronics.mass)
     
     # AIRCONICE OBJECT
     
@@ -321,7 +319,12 @@ def defineAirplane(definingParameters):
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
     airplane.components += [flightControls, hydraulics, electronics, airConIce, furnishings]
-    airplane.xcg = sum([(comp.x * comp.mass) for comp in airplane.components])
+    
+    ################################################################################
+    # FINISH DEFINING AIRPLANE
+    ################################################################################
+    
+    airplane.emptyMass = sum([component.mass for component in airplane.components])
     
     ################################################################################
     

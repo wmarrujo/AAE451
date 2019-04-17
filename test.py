@@ -44,10 +44,16 @@ print("average ground speed:    {:.0f} kts".format(convert(PPs["average ground s
 print("flight time:             {:.1f} hr".format(convert(PPs["flight time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(PPs["fuel used"]*g, "N", "lb")))
 
+for c in airplane.components:
+    print(type(c))
+    print("weight: ", convert(c.mass*g, "N", "lb"))
+
 ts = simulation["time"]
 ps = simulation["position"]
 hs = simulation["altitude"]
 Vs = simulation["speed"]
+Ws = simulation["weight"]
+CGs = simulation["center of gravity"]
 
 figure()
 plot([convert(p, "m", "nmi") for p in ps], [convert(h, "m", "ft") for h in hs])
@@ -58,5 +64,10 @@ figure()
 plot([convert(t, "s", "hr") for t in ts], [convert(V, "m/s", "kts") for V in Vs])
 xlabel("Time [s]")
 ylabel("Speed [kts]")
+
+figure()
+plot([convert(CG, "m", "ft") for CG in CGs], [convert(W, "N", "lb") for W in Ws])
+xlabel("C.G. [ft]")
+ylabel("Weight [lb]")
 
 show()

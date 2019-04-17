@@ -66,6 +66,7 @@ def defineAirplane(definingParameters):
     
     gas.energyDensity = avgasEnergyDensity
     gas.density = avgasDensity
+    gas.x # m
     
     # BATTERY OBJECT DEFINITION
     battery = Battery()
@@ -309,6 +310,12 @@ def defineAirplane(definingParameters):
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     
     airplane.components += [flightControls, hydraulics, electronics, airConIce, furnishings]
+    
+    ################################################################################
+    # FINISH DEFINING AIRPLANE
+    ################################################################################
+    
+    airplane.emptyMass = sum([component.mass for component in airplane.components])
     
     ################################################################################
     

@@ -1,4 +1,4 @@
-# PATHS
+kkoujij# PATHS
 
 import sys
 import os
@@ -101,7 +101,7 @@ def defineAirplane(definingParameters):
     wing = Wing()
     
     wing.airfoil = airfoil
-    wing.interferenceFactor = 1
+    wing.interferenceFactor = 1.2
     wing.planformArea = W0/WS
     wing.setAspectRatioHoldingPlanformArea(8.7)
     wing.thicknessToChord = 0.02

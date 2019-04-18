@@ -488,7 +488,7 @@ def PredictFuelSystemMass(totalFuelVolume, dropTanksVolume, numberOfFuelTanks, n
     Neng = numberOfEngines
 
     Vi = Vt - Vd
-    Wfs = 2.49 * Vt**0.726 * (1 / (Vi/Vt))**0.363 * Nt**0.242 * Neng**0.157
+    Wfs = 0.436 * 2.49 * Vt**0.726 * (1 / (Vi/Vt))**0.363 * Nt**0.242 * Neng**0.157
     return convert(Wfs, "lb", "N")/g
 
 def PredictFlightControlsMass(fuselageLength, wingSpan, loadFactor, airplaneGrossWeight):
@@ -515,7 +515,7 @@ def PredictElectronicsMass(fuelSystemMass, installedAvionicsMass):
     Wfs = convert(fuelSystemMass * g, "N", "lb")
     Wavi = convert(installedAvionicsMass * g, "N", "lb")
 
-    Welec = 12.57 * (Wfs + Wavi)**0.51
+    Welec = 0.47 * 12.57 * (Wfs + Wavi)**0.51
     return convert(Welec, "lb", "N")/g
 
 def PredictAirConIceMass(airplaneGrossWeight, peopleLoaded, installedAvionicsMass, cruiseMachNumber):
@@ -524,7 +524,7 @@ def PredictAirConIceMass(airplaneGrossWeight, peopleLoaded, installedAvionicsMas
     Wavi = convert(installedAvionicsMass * g, "N", "lb")
     M = cruiseMachNumber
 
-    Waci = 0.265 * W0**0.52 * Np**0.68 * Wavi**0.17 * M**0.08
+    Waci = .067 * 0.265 * W0**0.52 * Np**0.68 * Wavi**0.17 * M**0.08
     return convert(Waci, "lb", "N")/g
 
 def PredictFurnishingsMass(airplaneGrossWeight):

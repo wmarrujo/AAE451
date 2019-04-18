@@ -39,7 +39,7 @@ def defineAirplane(definingParameters):
     numberOfEngines = 2
     uninstalledEngineMass = 117 #kg  65.7 # kg
     totalFuelVolume = convert(50, "gal", "m^3")
-    uninstalledAvionicsWeight = 4*9.8 # N # FIXME: you sure?
+    uninstalledAvionicsWeight = 8*9.8 # N # FIXME: you sure?
     cruiseMachNumber = convert(180, "kts", "m/s") / machAtAltitude(cruiseAltitude)
 
     ################################################################################

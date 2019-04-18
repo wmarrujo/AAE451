@@ -80,3 +80,6 @@ def maybeReadAsNumber(string):
             return float(string)
         except Exception as e:
             return string
+            
+def dropOnOtherList(listToDropFrom, conditionalList):
+    return [v for i, v in enumerate(listToDropFrom) if conditionalList[i]]

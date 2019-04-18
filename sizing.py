@@ -76,6 +76,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
     V = airplane.speed
+    cg = CenterGravity(airplane)
 
     simulation["time"].append(time)
     simulation["segment"].append(segmentName)
@@ -84,7 +85,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     simulation["weight"].append(W)
     simulation["thrust"].append(T)
     simulation["speed"].append(V)
-    simulation["cg"].append(airplane.xcg)
+    simulation["cg"].append(cg)
 
 ################################################################################
 # PERFORMANCE

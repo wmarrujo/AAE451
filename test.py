@@ -22,6 +22,7 @@ from testcraft import defineAirplane as defineTestcraft
 # EXTERNAL DEPENDENCIES
 
 from matplotlib.pyplot import *
+import cProfile
 
 ################################################################################
 # TESTS
@@ -31,6 +32,7 @@ airplaneName = "tecnam"
 WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}
+# cProfile.run("PPs = getPerformanceParameters(airplaneName, DPS, designMission)")
 PPs = getPerformanceParameters(airplaneName, DPS, designMission)
 
 id = airplaneDefinitionID(airplaneName, DPS)
@@ -44,9 +46,9 @@ print("average ground speed:    {:.0f} kts".format(convert(PPs["average ground s
 print("flight time:             {:.1f} hr".format(convert(PPs["flight time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(PPs["fuel used"]*g, "N", "lb")))
 
-for c in airplane.components:
-    print(type(c))
-    print("weight: ", convert(c.mass*g, "N", "lb"))
+# for c in airplane.components:
+#     print(type(c))
+#     print("weight: ", convert(c.mass*g, "N", "lb"))
 
 ts = simulation["time"]
 ps = simulation["position"]
@@ -62,7 +64,7 @@ ylabel("Altitude [ft]")
 
 figure()
 plot([convert(t, "s", "hr") for t in ts], [convert(V, "m/s", "kts") for V in Vs])
-xlabel("Time [s]")
+xlabel("Time [hr]")
 ylabel("Speed [kts]")
 
 figure()

@@ -32,14 +32,18 @@ class Mission:
             segment.initialize(airplane, t, t0)
             
             while verified and not segment.completed(airplane, t, t0):
-                segment.update(airplane, t, tstep)
+                try:
+                    segment.update(airplane, t, tstep)
+                    verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
+                except Exception as e:
+                    print("The Simulation Encountered an Error: ", e)
+                    verified = False
+                    raise e
                 recordingFunction(t, segment.name, airplane)
+                printSimulationProgressBar(iteration) if not silent else None
                 
                 t = t + tstep
                 iteration += 1
-                
-                verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
-                printSimulationProgressBar(iteration) if not silent else None
         
         printSimulationProgressBar(iteration, ended=True, message="succeeded" if verified else "failed") if not silent else None
         if verified:
@@ -125,6 +129,9 @@ class Airplane:
         fpA = self.flightPathAngle
         
         return p - fpA
+    @angleOfAttack.setter
+    def angleOfAttack(self, a):
+        self.pitch = a + self.flightPathAngle # add the angle of attack to the flight path angle
 
 ################################################################################
 # COMPONENTS

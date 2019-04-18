@@ -250,7 +250,7 @@ def ExcessPowerAtAltitudeForSteadyLevelFlight(airplane):
 
 def VelocityForMaximumExcessPower(airplane):
     Vguess = airplane.speed
-    Vstall = StallSpeed(airplane)
+    VTO = TakeoffSpeed(airplane)
 
     def functionToMinimize(X):
         A = copy.deepcopy(airplane)
@@ -258,13 +258,15 @@ def VelocityForMaximumExcessPower(airplane):
         A.flightPathAngle = 0
         A.pitch = GetAngleOfAttackForSteadyLevelFlight(A)
         if A.pitch is None: # CL is too high for steady level flight
-            EP = 0 # pseudo bound to minimizer
+            EP = -1e10 # pseudo bound to minimizer
         else:
             EP = ExcessPowerAtAltitudeForSteadyLevelFlight(A)
+            if EP < 0: # cannot fly
+                EP = -1e10 # pseudo bound to minimizer
 
         return -EP
 
-    result = minimize(functionToMinimize, [Vguess], bounds = [(Vstall, None)], tol=1e0) # tolerance set pretty high because it doesn't need to be that accurate
+    result = minimize(functionToMinimize, [Vguess], bounds = [(VTO, None)], tol=1e0) # tolerance set pretty high because it doesn't need to be that accurate
     V = result["x"][0]
 
     return V
@@ -571,13 +573,8 @@ def UpdateFuel(airplane, tstep):
     if gas is not None:
         gas.mass -= Eg/gas.energyDensity
 
-def UpdateCG(airplane):
-    cg = CenterGravity(airplane)
-    airplane.xcg = cg
-
 def UpdateWaiting(airplane, t, tstep):
     UpdateFuel(airplane, tstep)
-    UpdateCG(airplane)
 
 def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     acceleration = AccelerationOnTakeoff(airplane) # find acceleration from thrust, drag and ground friction
@@ -585,20 +582,17 @@ def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     airplane.position += airplane.speed * tstep # update position with speed
 
     UpdateFuel(airplane, tstep) # update the fuel
-    UpdateCG(airplane)
 
 def UpdateClimb(airplane, t, tstep):
     # unset to calculate for steady level flight
     airplane.flightPathAngle = 0
     airplane.pitch = 0
     W = AirplaneWeight(airplane)
-    V = VelocityForMaximumExcessPower(airplane)
-
-    airplane.speed = V
-    airplane.pitch = GetAngleOfAttackForSteadyLevelFlight(airplane)
+    airplane.angleOfAttack = GetAngleOfAttackForSteadyLevelFlight(airplane)
 
     ExcessPower = ExcessPowerAtAltitudeForSteadyLevelFlight(airplane)
     climbRate = ExcessPower / W
+    V = airplane.speed
 
     airplane.flightPathAngle = arcsin(climbRate / V)
     airplane.pitch = airplane.flightPathAngle + airplane.pitch # make it the angle of attack we're talking about
@@ -606,7 +600,6 @@ def UpdateClimb(airplane, t, tstep):
     airplane.position += V * cos(airplane.flightPathAngle) * tstep
 
     UpdateFuel(airplane, tstep)
-    UpdateCG(airplane)
 
 def UpdateCruise(airplane, t, tstep):
     VbestR = MaximumLiftOverDragVelocity(airplane)
@@ -614,7 +607,6 @@ def UpdateCruise(airplane, t, tstep):
     airplane.speed = VbestR
     airplane.position += VbestR * tstep
     UpdateFuel(airplane, tstep)
-    UpdateCG(airplane)
 
 def UpdateDescent(airplane, t, tstep):
     gamma = arctan2(convert(-1000, "ft", "m"), convert(3, "nmi", "m")) # using "rule of threes" (for passenger comfort) - glide ratio of 3nmi per 1000ft of descent
@@ -627,7 +619,6 @@ def UpdateDescent(airplane, t, tstep):
     airplane.altitude += VminP * sin(gamma) * tstep
     airplane.position += VminP * cos(gamma) * tstep
     UpdateFuel(airplane, tstep)
-    UpdateCG(airplane)
 
 def UpdateLanding(airplane, t, tstep):
     acceleration = AccelerationOnLanding(airplane) # find acceleration from thrust, drag and ground friction
@@ -635,4 +626,3 @@ def UpdateLanding(airplane, t, tstep):
     airplane.position += airplane.speed * tstep # update position with speed
 
     UpdateFuel(airplane, tstep) # update the fuel
-    UpdateCG(airplane)

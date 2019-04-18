@@ -126,8 +126,6 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     fuelWeightUsed = Ws[0] - Ws[-1]
 
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
-    print("EMPTY MASS: ", We / g, " kg")
-
     return {
         "empty weight": emptyWeight,
         "takeoff field length": dTO,

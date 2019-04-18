@@ -342,23 +342,6 @@ def defineAirplane(definingParameters):
     ################################################################################
 
     airplane.emptyMass = sum([component.mass for component in airplane.components])
-    print("WDG: ", W0 / g, " kg")
-    print("EMPTY MASS: ", airplane.emptyMass, " kg")
-    print('WING MASS ', wing.mass, " kg")
-    print('FUESELAGE MASS ', fuselage.mass, " kg")
-    print('HORIZONTALSTABILIZER MASS ', horizontalStabilizer.mass, " kg")
-    print('VERTICALSTABILIZER MASS ', verticalStabilizer.mass, " kg")
-    print('ENGINEL MASS ', engineL.mass, " kg")
-    print('ENGINER MASS ', engineR.mass, " kg")
-    print('MAINGEAR MASS ', mainGear.mass, " kg")
-    print('FRONTGEAR MASS ', frontGear.mass, " kg")
-    print('FUELSYSTEM MASS ', fuelSystem.mass, " kg")
-    print('AVIONICS MASS ', avionics.mass, " kg")
-    print('FLIGHT CONTROLS MASS ', flightControls.mass, " kg")
-    print('HYDRAULICS MASS ', hydraulics.mass, " kg")
-    print('ELECTRONICS MASS ', electronics.mass, " kg")
-    print('AIRCONICE MASS ', airConIce.mass, " kg")
-    print('FURNISHINGS MASS ', furnishings.mass, " kg")
 
     ################################################################################
 

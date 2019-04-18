@@ -17,7 +17,7 @@ from equations import *
 from sizing import *
 
 sys.path.append(os.path.join(rootDirectory, "configurations"))
-from testcraft import defineAirplane as defineTestcraft
+from Gopher import defineAirplane as defineTestcraft
 
 # EXTERNAL DEPENDENCIES
 
@@ -28,7 +28,7 @@ import cProfile
 # TESTS
 ################################################################################
 
-airplaneName = "tecnam"
+airplaneName = "Gopher"
 WS = convert(20*0.8, "lb/ft^2", "N/m^2")
 PW = convert(0.072*0.8, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}

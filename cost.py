@@ -41,18 +41,7 @@ engine = airplane.engines[0]
 # PRODUCTION COST
 ################################################################################
 
-# Production Cost for 500, 1000, and 2000 Planned Aircraft
-#
-# plannedAircraft = 500
-# production500 = ProductionCost(airplane,engine, plannedAircraft)
-#
-# plannedAircraft = 1000
-# production1000 = ProductionCost(airplane, engine, plannedAircraft)
-#
-# plannedAircraft = 2000
-# production2000 = ProductionCost(airplane, engine, plannedAircraft)
-
-aircraftProduced = linspace(1, 1000)
+salesPrice = [220000, 250000, 280000] # [2019 USD]
 
 # Production Cost For 500 Planned Aircraft
 
@@ -64,28 +53,16 @@ variableCost = VariableCost(airplane, engine, plannedAircraft)
 print("Variable Cost = {:0.2f} USD/aircraft".format(variableCost))
 
 productionCost = (fixedCost / 500) + variableCost # cost per unit
-print("Production Cost Per Aircraft = {:0.2f} USD/aircraft\n".format(productionCost))
+print("Production Cost Per Aircraft = {:0.2f} USD/aircraft".format(productionCost))
 
-productionList500 = [fixedCost, variableCost]
+    # Breakeven Aircraft
 
-        # Breakeven Plot
-
-salesPrice = [300000, 400000, 500000] # [2019 USD]
-
-totalRevenueA = [salesPrice[0] * a for a in aircraftProduced]
-totalRevenueB = [salesPrice[1] * a for a in aircraftProduced]
-totalRevenueC = [salesPrice[2] * a for a in aircraftProduced]
-totalProductionCost = [productionList500[0] + (productionList500[1] * a) for a in aircraftProduced]
-
-figure()
-plot(aircraftProduced, totalProductionCost, label = "Recurring and Non-Recurring Cost")
-plot(aircraftProduced, totalRevenueA, label = "Low Sales Price")
-plot(aircraftProduced, totalRevenueB, label = "Moderate Sales Price")
-plot(aircraftProduced, totalRevenueC, label = "High Sales Price")
-title("Breakeven Plot for {:0.0f} Planned Aircraft".format(plannedAircraft))
-xlabel("Number of Aircraft Produced")
-ylabel("Total Production Cost and Revenue [2019 USD]")
-legend()
+NbeA = fixedCost / (salesPrice[0] - variableCost)
+NbeB = fixedCost / (salesPrice[1] - variableCost)
+NbeC = fixedCost / (salesPrice[2] - variableCost)
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}".format(salesPrice[0], NbeA))
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}".format(salesPrice[1], NbeB))
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}\n".format(salesPrice[2], NbeC))
 
 # Production Cost For 1000 Planned Aircraft
 
@@ -98,9 +75,16 @@ print("Variable Cost = {:0.2f} USD/aircraft".format(variableCost))
 
 productionCost = (fixedCost / 1000) + variableCost # cost per unit
 #totalProductionCost500plot = [fixedCost + (variableCost * a) for a in aircraftProduced]
-print("Production Cost Per Aircraft = {:0.2f} USD/aircraft\n".format(productionCost))
+print("Production Cost Per Aircraft = {:0.2f} USD/aircraft".format(productionCost))
 
-productionList1000 = [fixedCost, variableCost, productionCost]
+    # Breakeven Aircraft
+
+NbeA = fixedCost / (salesPrice[0] - variableCost)
+NbeB = fixedCost / (salesPrice[1] - variableCost)
+NbeC = fixedCost / (salesPrice[2] - variableCost)
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}".format(salesPrice[0], NbeA))
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}".format(salesPrice[1], NbeB))
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}\n".format(salesPrice[2], NbeC))
 
 # Production Cost For 2000 Planned Aircraft
 
@@ -113,12 +97,28 @@ print("Variable Cost = {:0.2f} USD/aircraft".format(variableCost))
 
 productionCost = (fixedCost / 2000) + variableCost # cost per unit
 #totalProductionCost = [fixedCost + (variableCost * a) for a in aircraftProduced]
-print("Production Cost Per Aircraft = {:0.2f} USD/aircraft\n".format(productionCost))
+print("Production Cost Per Aircraft = {:0.2f} USD/aircraft".format(productionCost))
 
-productionList2000 = [fixedCost, variableCost, productionCost]
+    # Breakeven Aircraft
 
-# Define Breakeven Plot Function
+NbeA = fixedCost / (salesPrice[0] - variableCost)
+NbeB = fixedCost / (salesPrice[1] - variableCost)
+NbeC = fixedCost / (salesPrice[2] - variableCost)
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}".format(salesPrice[0], NbeA))
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}".format(salesPrice[1], NbeB))
+print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}\n".format(salesPrice[2], NbeC))
 
+# Operating Cost
+
+purchasePrice = 280000 # [2019 USD] # We set this based on breakevens above
+
+totalAnnualOperatingCost = TotalAnnualCost(airplane, simulation, purchasePrice)
+operatingCostPerHour = CostPerFlightHour(airplane, simulation, purchasePrice)
+print("Total Annual Operating Cost {:0.2f} USD".format(totalAnnualOperatingCost))
+print("Operating Cost Per Hour {:0.2f} USD/hr".format(operatingCostPerHour))
+
+
+###### An attempt at breakeven plots
 # aircraftProduced = []
 #
 # def BreakevenPlot(productionList, aircraftProduced, plannedAircraft):
@@ -143,39 +143,4 @@ productionList2000 = [fixedCost, variableCost, productionCost]
 #     return
 
 # # Create Breakeven Plots
-aircraftProduced = linspace(1, 1000)
-
-# BreakevenPlot(productionList500, aircraftProduced, 500)
-# BreakevenPlot(production1000, aircraftProduced, 1000)
-# BreakevenPlot(production2000, aircraftProduced, 2000)
-
-#
-# priceA = 300000 # [2019 USD]
-# priceB = 400000 # [2019 USD]
-# priceC = 500000 # [2019 USD]
-#
-# totalRevenueA = [priceA * a for a in aircraftProduced]
-# totalRevenueB = [priceB * a for a in aircraftProduced]
-# totalRevenueC = [priceC * a for a in aircraftProduced]
-#
-# # Plots
-#
-# figure()
-# plot(aircraftProduced, totalProductionCost500plot, label = "Recurring and Non-Recurring Cost")
-# plot(aircraftProduced, totalRevenueA, label = "Low Sales Price")
-# plot(aircraftProduced, totalRevenueB, label = "Moderate Sales Price")
-# plot(aircraftProduced, totalRevenueC, label = "High Sales Price")
-# title("Breakeven Plot for 500 Planned Aircraft")
-# xlabel("Number of Aircraft Produced")
-# ylabel("Total Production Cost and Revenue [2019 USD]")
-# legend()
-
-
-# Operating Cost
-
-purchasePrice = 350000 # [2019 USD] # We set this based on breakevens above
-
-totalAnnualOperatingCost = TotalAnnualCost(airplane, simulation, purchasePrice)
-operatingCostPerHour = CostPerFlightHour(airplane, simulation, purchasePrice)
-print("Total Annual Operating Cost {:0.2f} USD".format(totalAnnualOperatingCost))
-print("Operating Cost Per Hour {:0.2f} USD".format(operatingCostPerHour))
+# aircraftProduced = linspace(1, 1000)

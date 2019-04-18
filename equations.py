@@ -329,10 +329,11 @@ def MaximumSteadyLevelFlightSpeed(airplane):
     # Vh = velocity[minDifIndex]
     
     
-    Vhguess = convert(180, "kts", "m/s")
+    Vhguess = convert(200, "kts", "m/s")
     
     def functionToFindRootOf(X):
         A = copy.deepcopy(airplane)
+        A.speed = X[0]
         A.throttle = 1
         A.altitude = cruiseAltitude
         A.flightPathAngle = 0
@@ -345,11 +346,9 @@ def MaximumSteadyLevelFlightSpeed(airplane):
         return EP
     
     X0 = [Vhguess]
-    result = root(functionToFindRootOf, X0, tol=1e0)
+    result = root(functionToFindRootOf, X0, tol=1e-1)
     Xf = result["x"]
     Vh = Xf[0]
-    
-    #print(convert(Vh, "m/s", "kts"))
     
     return Vh
         
@@ -485,8 +484,7 @@ def SeatingCost(airplane):
     P = seatPrice
     
     return num * P
-    
-    
+        
 def FixedCost(airplane, plannedAircraft):
     #this is a total cost (not per aircraft)
     Ceng = EngineeringCost(airplane, plannedAircraft)
@@ -510,39 +508,19 @@ def VariableCost(airplane, engine, plannedAircraft):
     
     return Cmfg + Cqc + Cmat + Clg + Cav + Cheat + Cseat + Cmfgins + Cpp
     
-def ProductionCost(airplane, engine, plannedAircaft):
-    
-    fixedCost = FixedCost(airplane, plannedAircraft)
-    variableCost = VariableCost(airplane, engine, plannedAircraft)
-    productionCost = (fixedCost/plannedAircraft) + variableCost
-    
-    print("\nFor {:0.0f} planned aircraft".format(plannedAircraft))
-    print("Fixed Cost  = {:0.2f} USD".format(fixedCost))
-    print("Variable Cost = {:0.2f} USD/aircraft".format(variableCost))
-    print("Production Cost Per Unit = {:0.2f} USD/aircraft\n".format(productionCost))
-    
-    return [fixedCost, variableCost, productionCost]
+# def ProductionCost(airplane, engine, plannedAircaft):
+#
+#     fixedCost = FixedCost(airplane, plannedAircraft)
+#     variableCost = VariableCost(airplane, engine, plannedAircraft)
+#     productionCost = (fixedCost/plannedAircraft) + variableCost
+#
+#     print("\nFor {:0.0f} planned aircraft".format(plannedAircraft))
+#     print("Fixed Cost  = {:0.2f} USD".format(fixedCost))
+#     print("Variable Cost = {:0.2f} USD/aircraft".format(variableCost))
+#     print("Production Cost Per Unit = {:0.2f} USD/aircraft\n".format(productionCost))
+#
+#     return [fixedCost, variableCost, productionCost]
 
-def BreakevenPlot(productionList, aircraftProduced, plannedAircraft):
-    salesPrice = [300000, 400000, 500000] # [2019 USD]
-    
-    totalRevenueA = [salesPrice[0] * a for a in aircraftProduced]
-    totalRevenueB = [salesPrice[1] * a for a in aircraftProduced]
-    totalRevenueC = [salesPrice[2] * a for a in aircraftProduced]
-    totalProductionCost = [productionList[0] + (productionList[1] * a) for a in aircraftProduced]
-
-    figure()
-    plot(aircraftProduced, totalProductionCost, label = "Recurring and Non-Recurring Cost")
-    plot(aircraftProduced, totalRevenueA, label = "Low Sales Price")
-    plot(aircraftProduced, totalRevenueB, label = "Moderate Sales Price")
-    plot(aircraftProduced, totalRevenueC, label = "High Sales Price")
-    title("Breakeven Plot for {:0.0f} Planned Aircraft".format(plannedAircraft))
-    xlabel("Number of Aircraft Produced")
-    ylabel("Total Production Cost and Revenue [2019 USD]")
-    legend()
-    
-    return figure()
-    
 ################################################################################
 # OPERATING COST FUNCTIONS
 ################################################################################

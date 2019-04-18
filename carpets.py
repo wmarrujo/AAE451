@@ -94,7 +94,7 @@ for (Cs, WSs, Wes) in zip(pC, pWS, pWe): # for each row
 
 title("Empty Weight Trends")
 ylabel("Wing Loading [lb/ft^2]")
-xlabel("Gross Weight [lb]")
+xlabel("Empty Weight [lb]")
 
 ################################################################################
 # TAKEOFF DISTANCE CROSS PLOT

@@ -8,8 +8,9 @@ from parameters import *
 # EXTERNAL DEPENDENCIES
 
 from scipy import *
-from scipy.optimize import minimize
+from scipy.optimize import minimize, root
 import copy
+from matplotlib.pyplot import *
 
 ################################################################################
 # INFORMATION FUNCTIONS
@@ -191,7 +192,7 @@ def MaximumLiftOverDragAngleOfAttack(airplane):
         
         return -L/D
     
-    result = minimize(functionToMinimize, [aguess], bounds=[(amin, amax)], method="slsqp")
+    result = minimize(functionToMinimize, [aguess], bounds=[(amin, amax)])
     a = result["x"][0]
     
     return a
@@ -234,14 +235,14 @@ def PowerRequiredAtAltitudeForSteadyLevelFlight(airplane):
     
     return PRsl * (rhoAlt / rhoSL)
 
-def PowerAvailableAtAlittudeForSteadyLevelFlight(airplane):
+def PowerAvailableAtAltitudeForSteadyLevelFlight(airplane):
     TAalt = AirplaneThrust(airplane)
     V = airplane.speed
     
     return TAalt * V
 
 def ExcessPowerAtAltitudeForSteadyLevelFlight(airplane):
-    PAalt = PowerAvailableAtAlittudeForSteadyLevelFlight(airplane)
+    PAalt = PowerAvailableAtAltitudeForSteadyLevelFlight(airplane)
     PRalt = PowerRequiredAtAltitudeForSteadyLevelFlight(airplane)
     
     return PAalt - PRalt
@@ -321,71 +322,321 @@ def BestRateOfClimbSpeed(airplane):
     e = airplane.oswaldEfficiencyFactor
     
     return sqrt(2/rho * W/S * sqrt(1 / (CD0 * pi * AR * e)))
-
+    
+def MaximumSteadyLevelFlightSpeed(airplane):
+    # A = copy.deepcopy(airplane)
+    # A.throttle = 1 # max power = max speedy boi
+    # A.altitude = convert(8000, "ft", "m")
+    # A.flightPathAngle = 0
+    # A.pitch = convert(8, "deg", "rad")
+    #
+    # velocity = convert(linspace(50,300), "kts", "m/s")
+    # dif = []
+    #
+    # for v in velocity:
+    #     A.speed = v
+    #
+    #     Pavail = PowerAvailableAtAltitudeForSteadyLevelFlight(A)
+    #     Preq = PowerRequiredAtAltitudeForSteadyLevelFlight(A)
+    #
+    #     dif.append(abs(Pavail - Preq))
+    #
+    # minDifIndex = dif.index(min(dif))
+    # Vh = velocity[minDifIndex]
+    
+    
+    Vhguess = convert(200, "kts", "m/s")
+    
+    def functionToFindRootOf(X):
+        A = copy.deepcopy(airplane)
+        A.speed = X[0]
+        A.throttle = 1
+        A.altitude = cruiseAltitude
+        A.flightPathAngle = 0
+        A.pitch = GetAngleOfAttackForSteadyLevelFlight(A)
+        if A.pitch is None:
+            EP = -1e10
+        else:
+            EP = ExcessPowerAtAltitudeForSteadyLevelFlight(A)
+        
+        return EP
+    
+    X0 = [Vhguess]
+    result = root(functionToFindRootOf, X0, tol=1e-1)
+    Xf = result["x"]
+    Vh = Xf[0]
+    
+    return Vh
+        
 ################################################################################
-# COST FUNCTIONS
+# PRODUCTION COST FUNCTIONS
 ################################################################################
 
-# This is based on the DAPCA IV model in Raymer v6 Ch. 18.4.2
-# DAPCA assumes all aluminum framing, but provides fudge factors to adjust hour calculations
-
-def EngineeringHours(airplane):
-    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    Q = Aiplane.productionQuantityNeeded
+def EngineeringHours(airplane, plannedAircraft):
+    Waf =  0.065* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
+    N = plannedAircraft
+    Fcert = certFudge
+    Fcf = flapFudge
+    Fcomp = 1 + airplane.compositeFraction
+    Fpress = pressFudge
     
-    return 5.18 * (We**0.777) * (V**0.894) * (Q**0.163)
-
-def ToolingHours(airplane):
-    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    Q = Aiplane.productionQuantityNeeded
+    #print("empty weight = {}".format(convert(airplane.initialGrossWeight, "N", "lb")))
     
-    return 7.22 * (We**0.777) * (V**0.696) * (Q**0.263)
+    return 0.0396 * (Waf**0.791) * (Vh**1.526) * (N**0.183) * Fcert * Fcf * Fcomp * Fpress
 
-def ManufacturingHours(airplane):
-    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    Q = Aiplane.productionQuantityNeeded
+def ToolingHours(airplane, plannedAircraft):
+    Waf =  0.065* convert(airplane.initialGrossWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
+    N = plannedAircraft
+    Qm = plannedAircraft/60
+    Ftaper = taperFudge
+    Fcf = flapFudge
+    Fcomp = 1 + airplane.compositeFraction
+    Fpress = pressFudge
     
-    return 10.5 * (We**0.82) * (V**0.484) * (Q**0.641)
-
-def QualityControlHours(airplane):
-    mfgHours = ManufacturingHours(airplane)
+    return 1.0032 * (Waf**0.764) * (Vh**0.899) * (N**0.178) * (Qm**0.066) * Ftaper * Fcf * Fcomp * Fpress
     
-    return 0.133 * mfgHours
-
-def DevelopmentSupportCost(airplane):
-    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    iR = inflation2012to2019
+def ManufacturingHours(airplane, plannedAircraft):
+    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
+    N = plannedAircraft
+    Fcert = certFudge
+    Fcf = flapFudge
+    Fcomp = 1 + 0.25*airplane.compositeFraction
     
-    return iR * 67.4 * (We**0.630) * (V**1.3)
+    return 9.6613 * (Waf**0.74) * (Vh**0.543) * (N**0.524) * Fcert * Fcf * Fcomp
 
+def EngineeringCost(airplane, plannedAircraft):
+    Heng = EngineeringHours(airplane, plannedAircraft)
+    Reng = engineeringLaborRate
+    CPI = inflation2012to2019
+    
+    return 2.0969 * Heng * Reng * CPI
+    
+def DevelopmentalSupportCost(airplane):
+    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
+    Np = numberFlightTestAircraft
+    Fcert = certFudge
+    Fcf = flapFudge
+    Fcomp = 1 + 0.5*airplane.compositeFraction
+    Fpress = pressFudge
+    CPI = inflation2012to2019
+    
+    return 0.06458 * (Waf**0.873) * (Vh**1.89) * (Np**0.346) * Fcert * Fcf * Fcomp * Fpress * CPI
+    
 def FlightTestCost(airplane):
-    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    FTA = airplane.numberFlightTestAircraft
-    iR = inflation2012to2019
+    Waf = 0.065* convert(EmptyWeight(airplane), "N", "lb")   # need to change once compnenet weight build-up is complete
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
+    Np = numberFlightTestAircraft
+    CPI = inflation2012to2019
+    Fcert = certFudge
     
-    return iR * 1947 * (We**0.325) * (V**0.822) * (FTA**1.21)
-
-def ManufacturingMaterialsCost(airplane):
-    We = EmptyWeight(airplane) / g # DAPCA model needs empty weight in [kgs]
-    V = None  # Maximum velocity [km/h]
-    Q = Aiplane.productionQuantityNeeded
-    iR = inflation2012to2019
+    return 0.009646 * (Waf**1.16) * (Vh**1.3718) * (Np**1.281) * CPI * Fcert
     
-    return iR * 31.2 * (We**0.921) * (V**0.621) * (Q**0.799)
+def ToolingCost(airplane, plannedAircraft):
+    Htool = ToolingHours(airplane, plannedAircraft)
+    Rtool = toolingLaborRate
+    CPI = inflation2012to2019
 
-def PassengerAdditionalCost(airplane):
-    N = airplane.passengers
-    P = airplane.pilot
-    Cp = generalAviationPassengerCostFactor
-    iR = inflation2012to2019
+    return 2.0969 * Htool * Rtool * CPI
     
-    return Cp * iR * (N + P)
+def ManufacturingCost(airplane, plannedAircraft):
+    Hmfg = ManufacturingHours(airplane, plannedAircraft)
+    Rmfg = manufacturingLaborRate
+    CPI = inflation2012to2019
+    N = plannedAircraft
+    
+    return (2.0969 * Hmfg * Rmfg * CPI) / N
+    
+def QualityControlCost(airplane, plannedAircraft):
+    Cmfg = ManufacturingCost(airplane, plannedAircraft)
+    Fcert = certFudge
+    Fcomp = 1 + 0.5*airplane.compositeFraction
+    
+    return 0.13 * Cmfg * Fcert * Fcomp
 
+def MaterialCost(airplane, plannedAircraft):
+    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")
+    Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
+    N = plannedAircraft
+    CPI = inflation2012to2019
+    Fcert = certFudge
+    Fcf = flapFudge
+    Fpress = pressFudge
+
+    return (24.896 * (Waf**0.689) * (Vh**0.624) * (N**0.762) * CPI * Fcert * Fcf * Fpress) / N
+    
+def EngineCost(airplane, engine):
+    Npp = numberICEngines
+    CPI = inflation2012to2019
+    
+    PSI = engine.maxPower
+    Pbhp = convert(PSI, "W", "hp")
+    
+    return 174 * Npp * Pbhp * CPI
+    
+def PropellerCost(airplane):
+    Npp = numberICEngines
+    CPI = inflation2012to2019
+    
+    return 3145 * Npp * CPI  # For fixed pitch propeller
+    
+def PowerplantCost(airplane, engine):
+    Cengine = EngineCost(airplane, engine)
+    Cpropeller = PropellerCost(airplane)
+    
+    return Cengine + Cpropeller
+
+def LandingGearCost(airplane):
+    dC = -7500 if airplane.mainGear.retractable is False else 0
+    CPI = inflation2012to2019
+    
+    return dC * CPI
+    
+def SeatingCost(airplane):
+    num = airplane.pilots + airplane.passengers
+    P = seatPrice
+    
+    return num * P
+        
+def FixedCost(airplane, plannedAircraft):
+    #this is a total cost (not per aircraft)
+    Ceng = EngineeringCost(airplane, plannedAircraft)
+    Cdev = DevelopmentalSupportCost(airplane)
+    Cft = FlightTestCost(airplane)
+    Ctool = ToolingCost(airplane, plannedAircraft)
+    
+    return Ceng + Cdev + Cft + Ctool
+
+def VariableCost(airplane, engine, plannedAircraft):
+    #this is a per aircraft cost
+    Cmfg = ManufacturingCost(airplane, plannedAircraft)
+    Cqc = QualityControlCost(airplane, plannedAircraft)
+    Cmat = MaterialCost(airplane, plannedAircraft)
+    Clg = LandingGearCost(airplane)
+    Cav = avionicPrice
+    Cheat = cabinHeaterPrice
+    Cseat = SeatingCost(airplane)
+    Cmfgins = manufacturerLiabilityInsurance
+    Cpp = PowerplantCost(airplane, engine)
+    
+    return Cmfg + Cqc + Cmat + Clg + Cav + Cheat + Cseat + Cmfgins + Cpp
+    
+# def ProductionCost(airplane, engine, plannedAircaft):
+#
+#     fixedCost = FixedCost(airplane, plannedAircraft)
+#     variableCost = VariableCost(airplane, engine, plannedAircraft)
+#     productionCost = (fixedCost/plannedAircraft) + variableCost
+#
+#     print("\nFor {:0.0f} planned aircraft".format(plannedAircraft))
+#     print("Fixed Cost  = {:0.2f} USD".format(fixedCost))
+#     print("Variable Cost = {:0.2f} USD/aircraft".format(variableCost))
+#     print("Production Cost Per Unit = {:0.2f} USD/aircraft\n".format(productionCost))
+#
+#     return [fixedCost, variableCost, productionCost]
+
+################################################################################
+# OPERATING COST FUNCTIONS
+################################################################################
+
+def MaintenanceToFlightHoursRatio(airplane):
+    F1 = maintF
+    F2 = engineF
+    F3 = 0 if airplane.mainGear.retractable is False else 0.02
+    F4 = VFRF
+    F5 = IFRF
+    F6 = fuelF
+    F7 = flapF
+    F8 = certF
+    
+    return 0.30 + F1 + F2 + F3 + F4 + F5 + F6 + F7 + F8
+    
+def MaintenanceCost(airplane):
+    Fmf = MaintenanceToFlightHoursRatio(airplane)
+    Rap = APmechRate
+    Qflgt = flightHoursYear
+    CPI = inflation2012to2019
+    
+    return Fmf * Rap * Qflgt * CPI
+    
+def StorageCost(airplane):
+    Rstor = monthlyStorageRate
+    CPI = inflation2012to2019
+    
+    return 12 * Rstor * CPI
+    
+def AnnualFuelCost(airplane, simulation):
+    ts = simulation["time"]
+    ss = simulation["segment"]
+    mfs = simulation["gas mass"]
+    
+    Qflgt = flightHoursYear
+    
+    # Gas Operating Cost
+    mfUsedInCruise = mfs[firstIndex(ss, lambda s: s == "cruise")] - mfs[lastIndex(ss, lambda s: s == "cruise")]
+    cruiseDuration = ts[lastIndex(ss, lambda s: s == "cruise")] - ts[firstIndex(ss, lambda s: s == "cruise")]
+    MFR = mfUsedInCruise / cruiseDuration # mass flow rate [kg/s]
+    gd = airplane.powerplant.gas.density if airplane.powerplant.gas else 0
+    VFR = MFR / gd if gd != 0 else 0  # volumetric flow rate [m^3/s]
+    
+    FFcruise = 2*convert(VFR, "m^3/s", "gal/hr")
+    
+    Rfuel = fuelRate
+    
+    # Battery Operating Cost
+    batteryCapacity = convert(airplane.powerplant.battery.capacity, "J", "kWh") if airplane.powerplant.percentElectric is not 0 else 0
+    batteryPower = batteryCapacity / convert(cruiseDuration, "s", "hr") # [kW]
+    Rbattery = electricityRate
+    
+    return (FFcruise * Rfuel * Qflgt) + (batteryPower * Rbattery * Qflgt)
+    
+def CrewCost(airplane):
+    Ncrew = airplane.pilots
+    Rcrew = pilotRate
+    Qflgt = flightHoursYear
+    CPI = inflation2012to2019
+    
+    return Ncrew * Rcrew * Qflgt * CPI
+    
+def AnnualInsuranceCost(airplane, purchasePrice): #not a super accurate estimation
+    Cac = purchasePrice
+    CPI = inflation2012to2019
+    
+    return (500 * CPI) + (0.015 * Cac)
+    
+def AnnualEngineOverhaul(airplane):
+    Npp = numberICEngines
+    Qflgt = flightHoursYear
+    CPI = inflation2012to2019
+    
+    return 5 * Npp * Qflgt * CPI
+    
+def AnnualLoanPayment(airplane, purchasePrice):
+    P = purchasePrice
+    i = 0.0075 # 9% APR
+    n = 180 # 12 months for 15 years
+    #
+    return (12 * P * i) / (1 - (1/(1+i)**n))
+    
+def TotalAnnualCost(airplane, simulation, purchasePrice):
+    Cap = MaintenanceCost(airplane)
+    Cstor = StorageCost(airplane)
+    Cfuel = AnnualFuelCost(airplane, simulation)
+    Cins = AnnualInsuranceCost(airplane, purchasePrice)
+    Cinsp = inspectionCost
+    Cover = AnnualEngineOverhaul(airplane)
+    Cloan = AnnualLoanPayment(airplane, purchasePrice)
+    
+    return Cap + Cstor + Cfuel + Cins + Cinsp + Cover + Cloan
+    
+def CostPerFlightHour(airplane, simulation, purchasePrice):
+    Cyear = TotalAnnualCost(airplane, simulation, purchasePrice)
+    Qflgt = flightHoursYear
+    
+    return Cyear / Qflgt
+    
 ################################################################################
 # PREDICTION FUNCTIONS
 ################################################################################

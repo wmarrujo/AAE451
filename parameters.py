@@ -75,10 +75,10 @@ def printSimulationProgressBar(iteration, ended=False, message=""):
 
 class Segments:
     segments = None
-    
+
     def __init__(self, segments):
         self.segments = segments
-    
+
     def __getitem__(self, key):
         if type(key) is int:
             return self.segments[key]
@@ -87,16 +87,16 @@ class Segments:
 
 class Segment:
     name = None
-    
+
     def __init__(self, name):
         self.name = name
-    
+
     def initialize(Airplane, t, t0): # reset the airplane parameters to simulate going forward, t is total mission time elapsed, t0 is the beginning time of the mission segment
         pass
-    
+
     def checkComplete(Airplane, t, t0): # returns true when mission segment has been completed, t is total mission time elapsed, t0 is the beginning time of the mission segment
         pass
-    
+
     def update(Airplane, t, tstep): # TODO: write comment
         pass
 
@@ -116,12 +116,9 @@ class Airplane:
     components = [] # [component objects] # list of components making up airplane (including wing)
     payloads = [] # [payload objects] # list of payloads making up airplane
     oswaldEfficiencyFactor = None # number : (0.7 < x < 0.85) # TODO: get better estimate
-    compressibilityDragCoefficient = 0 # number : (0 = x) # we fly too slow
+    compressibilityDrag = 0 # number : (0 = x) # we fly too slow
     miscellaneousParasiteDragFactor = None # number : (0 <= x)
-    initialGrossWeight = None # number : initial guess for gross weight, changes with iterations
-    productionQuantityNeeded = None  # number [planes] : (0 <= x)
-    numberFlightTestAircraft = None  # number [planes] : (2 <= x <= 6)  # Raymer v6 18.4.2
-    avionicsCost = None  # number [USD] : (0 <= x)
+    initialGrossWeight = None # number : initial guess for gross weight, changes with iteration
     horizontalStabilizer = None # HorizontalStabilizer object
     verticalStabilizer = None # VerticalStabilizer object
     fuelSystem = None # FuelSystem object
@@ -157,7 +154,7 @@ class Powerplant: # the powerplant system configuration
     def fuelMass(self):
         mg = self.gas.mass if self.gas is not None else 0
         mb = self.battery.mass if self.battery is not None else 0
-        
+
         return mg + mb
     
     @fuelMass.setter
@@ -174,6 +171,7 @@ class Powerplant: # the powerplant system configuration
             self.gas.mass = m
         if p == 1: # fully battery
             self.battery.mass = m
+            self.battery.capacity = self.battery.mass / edbn # Sarah
 
     @property
     def emptyFuelMass(self):
@@ -239,7 +237,7 @@ class Engine(Component): # the engines/motors that drive the propeller
     def finenessRatio(self):
         l = self.length
         D = self.diameter
-        
+
         return l / D
     
     def formFactor(self, airplane):
@@ -268,14 +266,14 @@ class Fuselage(Component):
     def finenessRatio(self):
         l = self.length
         D = self.diameter
-        
+
         return l / D
     
     def formFactor(self, airplane):
         fr = self.finenessRatio
         
         return 1 + 60 / fr**3 + fr / 400
-    
+
     @property
     def wettedArea(self):
         D = self.diameter
@@ -313,16 +311,16 @@ class Surface(Component):
         M = V / a
         Zfactor = (2-M**2)/(sqrt(1-M**2))
         tc = self.thicknessToChord
-        
+
         return 1 + Zfactor * tc + 100 * tc**4
-    
+
     @property
     def wettedArea(self):
         S = self.planformArea
         tc = self.thicknessToChord
-        
+
         return S * 2 * (1+tc) # ASSUMPTION: modeling as a cylinder
-    
+
     @property
     def aspectRatio(self):
         S = self.planformArea
@@ -339,9 +337,9 @@ class Surface(Component):
     
     @property
     def chord(self):
-        b = self.span
+        b = self.referenceLength
         AR = self.aspectRatio
-        
+
         return AR/b
 
 class Wing(Surface):

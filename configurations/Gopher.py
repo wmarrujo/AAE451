@@ -220,6 +220,7 @@ def defineAirplane(definingParameters):
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, landingLoadFactor, mainGear.length)
     mainGear.composite = 0
     mainGear.mass += mainGear.composite*mainGear.mass*0.14
+    mainGear.retractable = True
     mainGear.x = convert(15,"ft","m") # [m]
 
     # FRONT GEAR OBJECT

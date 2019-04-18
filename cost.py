@@ -24,15 +24,15 @@ from matplotlib.pyplot import *
 # DEFINE AIRPLANE
 ################################################################################
 
-W0 = convert(2711, "lb", "N")
-Wf = convert(317, "lb", "N")
-WS = convert(17.06, "lb/ft^2", "N/m^2")
+W0 = convert(3481, "lb", "N")
+Wf = convert(525, "lb", "N")
+WS = convert(19.998, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 
 DPS = {"initial gross weight": W0, "initial fuel weight": Wf, "wing loading": WS, "power to weight ratio": PW}
-PPs = getPerformanceParameters("tecnam", DPS, designMission)
+PPs = getPerformanceParameters("Gopher", DPS, designMission)
 
-ID = airplaneDefinitionID("tecnam", DPS)
+ID = airplaneDefinitionID("Gopher", DPS)
 airplane = loadFinalAirplane(ID)
 simulation = loadSimulation(ID)
 engine = airplane.engines[0]

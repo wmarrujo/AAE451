@@ -75,7 +75,7 @@ def defineAirplane(definingParameters):
     powerplant.gas = gas
     powerplant.percentElectric = 0
     powerplant.fuelMass = Wf/g
-
+    
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
 
@@ -219,7 +219,6 @@ def defineAirplane(definingParameters):
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, landingLoadFactor, mainGear.length)
     mainGear.composite = 0
-    mainGear.retractable = True
     mainGear.mass += mainGear.composite*mainGear.mass*0.14
     mainGear.x = convert(15,"ft","m") # [m]
 
@@ -348,21 +347,21 @@ def defineAirplane(definingParameters):
     ################################################################################
     # PAYLOAD DEFINITION
     ################################################################################
-
+    
     passengerPayload = Passengers()
     passengerPayload.x = convert(12,"ft","m")
     passengerPayload.mass = CalculatePassengerPayloadMass(airplane.passengers)
-
+    
     baggagePayload = Baggage()
     baggagePayload.x = convert(17,"ft","m")
     baggagePayload.mass = CalculateBaggageMass(airplane.passengers)
-
+    
     pilotPayload = Pilot()
     pilotPayload.x = convert(6,"ft","m")
     pilotPayload.mass = CalculatePilotPayloadMass(airplane.pilots)
-
+    
     airplane.payloads = [passengerPayload, baggagePayload, pilotPayload]
-
+    
     ################################################################################
     # FINISH DEFINING AIRPLANE
     ################################################################################

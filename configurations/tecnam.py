@@ -39,7 +39,7 @@ def defineAirplane(definingParameters):
     numberOfEngines = 2
     uninstalledEngineMass = 65.7 # kg
     totalFuelVolume = convert(50, "gal", "m^3")
-    uninstalledAvionicsWeight = 4*9.8 # N # FIXME: you sure?
+    uninstalledAvionicsWeight = 8*9.8 # N # FIXME: you sure?
     cruiseMachNumber = convert(180, "kts", "m/s") / machAtAltitude(cruiseAltitude)
     
     ################################################################################
@@ -118,7 +118,7 @@ def defineAirplane(definingParameters):
     fuselage.interferenceFactor = 1
     fuselage.diameter = 1.4 # m
     fuselage.length = 8.7 # m
-    fuselage.mass = PredictFuselageMass(fuselage.wettedArea, airplane.initialGrossWeight, 0.45*fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, 3.5)
+    fuselage.mass = PredictFuselageMass(fuselage.wettedArea, airplane.initialGrossWeight, fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, 3.5)
     fuselage.x = fuselage.length / 2 # [m]
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
@@ -160,6 +160,7 @@ def defineAirplane(definingParameters):
     
     airplane.horizontalStabilizer = horizontalStabilizer
     airplane.verticalStabilizer = verticalStabilizer
+    
     airplane.components += [horizontalStabilizer, verticalStabilizer]
     
     ################################################################################
@@ -180,7 +181,7 @@ def defineAirplane(definingParameters):
     engine.interferenceFactor = 1
     engine.diameter = 0.65 # m
     engine.length = 1.8 # m
-    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines)
+    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines) / numberOfEngines
     engine.propeller = propeller
     engine.maxPower = (PW*W0) / numberOfEngines
     engine.x = wing.x - wing.chord/2 # [m]
@@ -191,6 +192,7 @@ def defineAirplane(definingParameters):
     
     engineL = engine
     engineR = copy.deepcopy(engine)
+    
     airplane.engines = [engineL, engineR]
     airplane.components += [engineL, engineR]
     
@@ -202,7 +204,7 @@ def defineAirplane(definingParameters):
     
     mainGear = MainGear()
     
-    mainGear.length = 0.5 # m
+    mainGear.length = 0.4 # m
     mainGear.interferenceFactor = 1
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, landingLoadFactor, mainGear.length)
@@ -314,7 +316,24 @@ def defineAirplane(definingParameters):
     furnishings.wettedArea = 0
     furnishings.referenceLength = 0
     furnishings.mass = PredictFurnishingsMass(airplane.initialGrossWeight)
-    furnishings.x = 3.5 # [m] (SPLIT INTO SEATS??)
+    furnishings.x = 2.3 # [m] (SPLIT INTO SEATS??)
+    
+    # DEFINE PAYLOAD
+    
+    passengerPayload = Passengers()
+    passengerPayload.x = 2.5
+    passengerPayload.mass = CalculatePassengerPayloadMass(airplane.passengers)
+    
+    baggagePayload = Baggage()
+    baggagePayload.x = 3
+    baggagePayload.mass = CalculateBaggageMass(airplane.passengers)
+    
+    pilotPayload = Pilot()
+    pilotPayload.x = 2
+    pilotPayload.mass = CalculatePilotPayloadMass(airplane.pilots)
+    
+    airplane.payloads = [passengerPayload, baggagePayload, pilotPayload]
+    
     
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
     

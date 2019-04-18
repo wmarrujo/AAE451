@@ -49,7 +49,7 @@ simulationParametersKeys = [
     "weight",
     "thrust",
     "speed",
-    "center of gravity"]
+    "cg"]
 
 # PERFORMANCE PARAMETERS
 
@@ -76,7 +76,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     W = AirplaneWeight(airplane)
     T = AirplaneThrust(airplane)
     V = airplane.speed
-    CG = CenterOfGravity(airplane)
+    cg = CenterGravity(airplane)
     
     simulation["time"].append(time)
     simulation["segment"].append(segmentName)
@@ -85,7 +85,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     simulation["weight"].append(W)
     simulation["thrust"].append(T)
     simulation["speed"].append(V)
-    simulation["center of gravity"].append(CG)
+    simulation["cg"].append(cg)
 
 ################################################################################
 # PERFORMANCE
@@ -155,12 +155,21 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
         W0guess = X[0]
         WFguess = X[1]
         
-        definingParameters = setDefiningParameters(drivingParameters, X)
+        # apply bounds
         
+        if W0guess < 0 or WFguess < 0:
+            return [1e10, 1e10] # pseudo bound
+        
+        # define airplane
+        
+        definingParameters = setDefiningParameters(drivingParameters, X)
+
         initialAirplane = defineAirplaneSpecifically(definingParameters)
         finalAirplane = simulateAirplane(initialAirplane, mission, cache=False, silent=silent)
         if finalAirplane is None: # the simulation has failed
-            return 1e10 # huge penalty for optimizer
+            return [1e10, 1e10] # huge penalty for optimizer
+        
+        # calculate values
         
         W0 = AirplaneWeight(initialAirplane)
         WFf = FuelWeight(finalAirplane)
@@ -177,7 +186,7 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
     if cache:
         saveInitialAirplane(airplane, id, silent=silent)
     
-    print("Airplane Definition Closed", id) if not silent else None
+    print("Airplane Definition Closed                        - {:10.10}".format(id)) if not silent else None
     return airplane
 
 def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None, silent=False):

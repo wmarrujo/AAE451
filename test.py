@@ -29,8 +29,8 @@ import cProfile
 ################################################################################
 
 airplaneName = "tecnam"
-WS = convert(20, "lb/ft^2", "N/m^2")
-PW = convert(0.072, "hp/lb", "W/N")
+WS = convert(20*0.8, "lb/ft^2", "N/m^2")
+PW = convert(0.072*0.8, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}
 # cProfile.run("PPs = getPerformanceParameters(airplaneName, DPS, designMission)")
 PPs = getPerformanceParameters(airplaneName, DPS, designMission)
@@ -55,7 +55,7 @@ ps = simulation["position"]
 hs = simulation["altitude"]
 Vs = simulation["speed"]
 Ws = simulation["weight"]
-CGs = simulation["center of gravity"]
+CGs = simulation["cg"]
 
 figure()
 plot([convert(p, "m", "nmi") for p in ps], [convert(h, "m", "ft") for h in hs])

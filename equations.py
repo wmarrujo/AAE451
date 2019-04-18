@@ -35,13 +35,21 @@ def FuelWeight(airplane):
     
     return mf*g
 
-def CenterOfGravity(airplane):
-    Mcs = [component.mass*g * component.x for component in airplane.components] # get the moments for each component
-    Mcs += [airplane.powerplant.gas.mass*g * airplane.powerplant.gas.x] if airplane.powerplant.gas else [] # get the gas moment
-    Mcs += [airplane.powerplant.battery.mass*g * airplane.powerplant.battery.x] if airplane.powerplant.battery else [] # get the battery moment
-    W = AirplaneWeight(airplane)
+def EmptyWeight(airplane):
+    W0 = airplane.initialGrossWeight
+    We = g * sum([comp.mass for comp in airplane.components])
     
-    return sum(Mcs) / W
+    return We # TODO: temporary, replace with component weight buildup later
+
+def CenterGravity(airplane):
+    cgtop = sum([(comp.x * comp.mass) for comp in airplane.components])
+    cgtop += airplane.powerplant.gas.mass * airplane.wing.x
+    cgtop += sum([pay.x * pay.mass for pay in airplane.payloads])
+    cgbot = sum([comp.mass for comp in airplane.components])
+    cgbot += airplane.powerplant.gas.mass
+    cgbot += sum([pay.x * pay.mass for pay in airplane.payloads])
+    cg = cgtop / cgbot
+    return cg
 
 def AirplaneReynoldsNumber(airplane):
     rho = densityAtAltitude(airplane.altitude)
@@ -525,6 +533,23 @@ def PredictFurnishingsMass(airplaneGrossWeight):
     W = 0.0582 * W0 - 65
     return convert(W, "lb", "N")/g
 
+def CalculatePassengerPayloadMass(ariplanePassengers):
+    numpax = ariplanePassengers
+    Wpax = heavyPassengerWeight if numpax <= 3 else lightPassengerWeight
+    mass = numpax * Wpax / g
+    return mass
+
+def CalculateBaggageMass(airplanePassengers):
+    numpax = airplanePassengers
+    Wbag = heavyPassengerBagWeight if numpax <= 3 else lightPassengerBagWeight
+    mass = numpax * Wbag / g
+    return mass
+
+def CalculatePilotPayloadMass(airplanePilots):
+    numpilots = airplanePilots
+    mass = numpilots * pilotWeight / g
+    return mass
+
 ################################################################################
 # UPDATING FUNCTIONS
 ################################################################################
@@ -573,7 +598,7 @@ def UpdateClimb(airplane, t, tstep):
     airplane.pitch = airplane.flightPathAngle + airplane.pitch # make it the angle of attack we're talking about
     airplane.altitude += V * sin(airplane.flightPathAngle) * tstep
     airplane.position += V * cos(airplane.flightPathAngle) * tstep
-
+    
     UpdateFuel(airplane, tstep)
 
 def UpdateCruise(airplane, t, tstep):
@@ -593,6 +618,7 @@ def UpdateDescent(airplane, t, tstep):
     airplane.speed = VminP
     airplane.altitude += VminP * sin(gamma) * tstep
     airplane.position += VminP * cos(gamma) * tstep
+    
     UpdateFuel(airplane, tstep)
 
 def UpdateLanding(airplane, t, tstep):

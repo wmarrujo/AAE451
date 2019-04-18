@@ -25,7 +25,7 @@ def fit_func(xs, a, b):
 
 def exponentialForm(x, a, b):
     return a * exp(b * x)
-    
+
 def invExponentialForm(y, a, b):
     return log(y / a) / b
     
@@ -84,7 +84,7 @@ for PWlist in p:
     W0params, pconv = curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
     #plot(fit_WS, [exponentialForm(WS, W0params[0], W0params[1]) for WS in fit_WS])
     W0FitParameters.append(W0params)
-    
+
 title("W0 Trends")
 ylabel("Wing Loading [lb/ft^2]")
 xlabel("Gross Weight [lb]")
@@ -112,12 +112,13 @@ for PWlist in p:
     W0fromdT0Intersection.append(W0_WS_dT0Intersection)
     
     inc = inc+1
-    
+
 hlines(minimumTakeoffFieldLength, fit_WS[0], fit_WS[-1])
 
 title("Takeoff Distance")
 xlabel("Wing Loading [N/m^2]")
 ylabel("Takeoff Distance [m]")
+# Find intersection of curve with dT0 limit
 
 ################################################################################
 # RANGE CROSS PLOT
@@ -143,6 +144,7 @@ hlines(minimumRange, fit_WS[0], fit_WS[-1])
 title("Range")
 xlabel("Wing Loading [N/m^2]")
 ylabel("Range [m]")
+# Find intersection of curve with axis
 
 ################################################################################
 # FLIGHT TIME CROSS PLOT
@@ -168,6 +170,7 @@ hlines(maximumFlightTime, fit_WS[0], fit_WS[-1])
 title("Flight Time")
 xlabel("Wing Loading [N/m^2]")
 ylabel("Flight Time [s]")
+# Find intersection of curve with axis
 
 ################################################################################
 # SIZING PLOT

@@ -14,7 +14,10 @@ def firstIndex(iterable, condition = lambda x: True):
             return index
 
 def lastIndex(iterable, condition = lambda x: True):
-    return firstIndex(reversed(iterable), condition)
+    # return firstIndex(reversed(iterable), condition)
+    for index, item in reversed(list(enumerate(iterable))):
+        if condition(item):
+            return index
 
 def first(iterable, condition = lambda x: True):
     # return next(x for x in iterable if condition(x))

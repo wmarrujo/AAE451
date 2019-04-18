@@ -42,6 +42,7 @@ simulation = loadSimulation(id)
 
 print("empty weight:            {:.0f} lb".format(convert(PPs["empty weight"], "N", "lb")))
 print("takeoff field length:    {:.0f} ft".format(convert(PPs["takeoff field length"], "m", "ft")))
+print("landing field length:    {:.0f} ft".format(convert(PPs["landing field length"], "m", "ft")))
 print("range:                   {:.2f} nmi".format(convert(PPs["range"], "m", "nmi")))
 print("average ground speed:    {:.0f} kts".format(convert(PPs["average ground speed"], "m/s", "kts")))
 print("flight time:             {:.1f} hr".format(convert(PPs["flight time"], "s", "hr")))

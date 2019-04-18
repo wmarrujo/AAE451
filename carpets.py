@@ -17,7 +17,7 @@ from scipy.optimize import curve_fit
 from copy import copy
 
 ################################################################################
-# CARPET PLOTS
+# RELATIONSHIPS
 ################################################################################
 
 def fit_func(xs, a, b):
@@ -28,25 +28,51 @@ def exponentialForm(x, a, b):
 
 def invExponentialForm(y, a, b):
     return log(y / a) / b
+    
+################################################################################
+# DEFINITIONS
+################################################################################
 
-###### Create sizing matrix
-# Obtain center cell W/S and T/W from guess or previous best carpet plot result
+# SIZING MATRIX CENTER
+
 WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 
-# Driving parameters
+# DRIVNG PARAMETERS MATRIX
+
 WSs = [WS * 0.8, WS, WS * 1.2]
 PWs = [PW * 0.8, PW, PW * 1.2]
+
+# AIRPLANE
+
+airplaneName = "tecnam"
+
+# GET DRIVING PARAMETERS
+
+p = [[getPerformanceParameters(airplaneName, {
+    "wing loading": WS,
+    "power to weight ratio": PW
+    }, designMission) for WS in WSs] for PW in PWs]
+
+# make matrix for each driving parameter independently
+
+pWS = [copy(WSs) for PW in PWs]
+pPW = transpose([copy(PWs) for WS in WSs])
+
+# make matrix for each performance parameter independently
+
+pWe = [[PP["weight"] for PP in row] for row in p]
+
+# ???
 
 fit_WS = linspace(WS*0.5, WS*1.5, 1000)
 fit_PW = linspace(PW*0.5, PW*1.5, 1000)
 
-# FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
+################################################################################
+# GROSS WEIGHT TRENDS
+################################################################################
 
-p = [[getPerformanceParameters("tecnam", {
-    "wing loading": WS,
-    "power to weight ratio": PW
-    }, designMission) for WS in WSs] for PW in PWs]
+# FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
 
 ###### W0 TRENDS
 W0FitParameters = []
@@ -62,6 +88,10 @@ for PWlist in p:
 title("W0 Trends")
 ylabel("Wing Loading [lb/ft^2]")
 xlabel("Gross Weight [lb]")
+
+################################################################################
+# LANDING DISTANCE CROSS PLOT
+################################################################################
 
 ###### CROSS PLOTS
 dT0W0s = []
@@ -89,6 +119,10 @@ xlabel("Wing Loading [N/m^2]")
 ylabel("Takeoff Distance [m]")
 # Find intersection of curve with dT0 limit
 
+################################################################################
+# RANGE CROSS PLOT
+################################################################################
+
 # Plot range as function of W/S for each P/W
 inc = 0
 figure()
@@ -111,6 +145,10 @@ xlabel("Wing Loading [N/m^2]")
 ylabel("Range [m]")
 # Find intersection of curve with axis
 
+################################################################################
+# FLIGHT TIME CROSS PLOT
+################################################################################
+
 # Plot flight time as function of W/S for each P/W
 inc = 0
 figure()
@@ -132,6 +170,10 @@ title("Flight Time")
 xlabel("Wing Loading [N/m^2]")
 ylabel("Flight Time [s]")
 # Find intersection of curve with axis
+
+################################################################################
+# SIZING PLOT
+################################################################################
 
 ###### SIZING PLOT
 # Plot fit curve intersections on sizing plot

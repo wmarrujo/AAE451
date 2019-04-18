@@ -62,6 +62,7 @@ designMission.segments["takeoff"].update = UpdateTakeoff
 
 def _designMissionInitializeClimb(airplane, t, t0):
     airplane.throttle = 1
+    airplane.speed = VelocityForMaximumExcessPower(airplane)
 
 def _designMissionCompletedClimb(airplane, t, t0):
     return cruiseAltitude <= airplane.altitude
@@ -100,9 +101,7 @@ designMission.segments["descent"].update = UpdateDescent
 
 def _designMissionInitializeAbortClimb(airplane, t, t0):
     airplane.throttle = 1
-    airplane.speed = convert(75, "kts", "m/s")
-    # airplane.altitude = 0 # set for condition in descent
-    # TODO: figure out why still descending
+    airplane.speed = VelocityForMaximumExcessPower(airplane)
 
 def _designMissionCompletedAbortClimb(airplane, t, t0):
     return loiterAltitude <= airplane.altitude

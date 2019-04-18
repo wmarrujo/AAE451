@@ -43,6 +43,10 @@ PW = convert(0.072, "hp/lb", "W/N")
 WSs = [WS * 0.8, WS, WS * 1.2]
 PWs = [PW * 0.8, PW, PW * 1.2]
 
+# Driving Parameters (used for fit curves)
+fit_WS = linspace(WS*0.5, WS*1.5, 1000)
+fit_PW = linspace(PW*0.5, PW*1.5, 1000)
+
 # AIRPLANE
 
 airplaneName = "tecnam"
@@ -61,12 +65,8 @@ pPW = transpose([copy(PWs) for WS in WSs])
 
 # make matrix for each performance parameter independently
 
+converged = [[PP["converged"] for PP in row] for row in p] # Verification that simulation converged at this value
 pWe = [[PP["empty weight"] for PP in row] for row in p]
-
-# ???
-
-fit_WS = linspace(WS*0.5, WS*1.5, 1000)
-fit_PW = linspace(PW*0.5, PW*1.5, 1000)
 
 ################################################################################
 # GROSS WEIGHT TRENDS
@@ -80,8 +80,14 @@ W0FitParameters = []
 figure()
 
 for PWlist in p:
-    plot([convert(i["empty weight"], "N", "lb") for i in PWlist], [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs], ".")
-    W0params, pconv = curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
+    # Clean list by checking if solution converged
+    dirtyW0 = [convert(i["empty weight"], "N", "lb") for i in PWlist]
+    cleanW0 = dropOnOtherList(dirtyW0, converged)
+    print(dirtyW0)
+    print(cleanW0)
+    
+    plot(cleanW0, [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs], ".")
+    W0params, pconv = curve_fit(fit_func, WSs, [convert(i["empty weight"], "N", "lb") for i in PWlist], p0=(1, 0))
     #plot(fit_WS, [exponentialForm(WS, W0params[0], W0params[1]) for WS in fit_WS])
     W0FitParameters.append(W0params)
 

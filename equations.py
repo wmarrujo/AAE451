@@ -8,8 +8,9 @@ from parameters import *
 # EXTERNAL DEPENDENCIES
 
 from scipy import *
-from scipy.optimize import minimize
+from scipy.optimize import minimize, root
 import copy
+from matplotlib.pyplot import *
 
 ################################################################################
 # INFORMATION FUNCTIONS
@@ -307,24 +308,48 @@ def BestRateOfClimbSpeed(airplane):
     return sqrt(2/rho * W/S * sqrt(1 / (CD0 * pi * AR * e)))
     
 def MaximumSteadyLevelFlightSpeed(airplane):
-    A = copy.deepcopy(airplane)
-    A.throttle = 1 # max power = max speedy boi
-    A.altitude = convert(8000, "ft", "m")
-    A.angleOfAttack = 0  # need to change this boi
+    # A = copy.deepcopy(airplane)
+    # A.throttle = 1 # max power = max speedy boi
+    # A.altitude = convert(8000, "ft", "m")
+    # A.flightPathAngle = 0
+    # A.pitch = convert(8, "deg", "rad")
+    #
+    # velocity = convert(linspace(50,300), "kts", "m/s")
+    # dif = []
+    #
+    # for v in velocity:
+    #     A.speed = v
+    #
+    #     Pavail = PowerAvailableAtAltitudeForSteadyLevelFlight(A)
+    #     Preq = PowerRequiredAtAltitudeForSteadyLevelFlight(A)
+    #
+    #     dif.append(abs(Pavail - Preq))
+    #
+    # minDifIndex = dif.index(min(dif))
+    # Vh = velocity[minDifIndex]
     
-    velocity = convert(linspace(50,300), "kts", "m/s")
-    dif = []
     
-    for v in velocity:
-        A.speed = v
+    Vhguess = convert(180, "kts", "m/s")
+    
+    def functionToFindRootOf(X):
+        A = copy.deepcopy(airplane)
+        A.throttle = 1
+        A.altitude = cruiseAltitude
+        A.flightPathAngle = 0
+        A.pitch = GetAngleOfAttackForSteadyLevelFlight(A)
+        if A.pitch is None:
+            EP = -1e10
+        else:
+            EP = ExcessPowerAtAltitudeForSteadyLevelFlight(A)
         
-        Pavail = PowerAvailableAtAltitudeForSteadyLevelFlight(A)
-        Preq = PowerRequiredAtAltitudeForSteadyLevelFlight(A)
-        
-        dif.append = abs(Pavail - Preq)
+        return EP
     
-    minDifIndex = dif.index(min(dif))
-    Vh = velocity[minDifIndex]
+    X0 = [Vhguess]
+    result = root(functionToFindRootOf, X0, tol=1e0)
+    Xf = result["x"]
+    Vh = Xf[0]
+    
+    #print(convert(Vh, "m/s", "kts"))
     
     return Vh
         
@@ -428,12 +453,12 @@ def MaterialCost(airplane, plannedAircraft):
 
     return (24.896 * (Waf**0.689) * (Vh**0.624) * (N**0.762) * CPI * Fcert * Fcf * Fpress) / N
     
-def EngineCost(airplane):
+def EngineCost(airplane, engine):
     Npp = numberICEngines
     CPI = inflation2012to2019
     
-    PSI = airplane.engine.maxPower
-    Pbhp = convert(PSI[0], "W", "hp")
+    PSI = engine.maxPower
+    Pbhp = convert(PSI, "W", "hp")
     
     return 174 * Npp * Pbhp * CPI
     
@@ -443,8 +468,8 @@ def PropellerCost(airplane):
     
     return 3145 * Npp * CPI  # For fixed pitch propeller
     
-def PowerplantCost(airplane):
-    Cengine = EngineCost(airplane)
+def PowerplantCost(airplane, engine):
+    Cengine = EngineCost(airplane, engine)
     Cpropeller = PropellerCost(airplane)
     
     return Cengine + Cpropeller
@@ -471,7 +496,7 @@ def FixedCost(airplane, plannedAircraft):
     
     return Ceng + Cdev + Cft + Ctool
 
-def VariableCost(airplane, plannedAircraft):
+def VariableCost(airplane, engine, plannedAircraft):
     #this is a per aircraft cost
     Cmfg = ManufacturingCost(airplane, plannedAircraft)
     Cqc = QualityControlCost(airplane, plannedAircraft)
@@ -481,10 +506,43 @@ def VariableCost(airplane, plannedAircraft):
     Cheat = cabinHeaterPrice
     Cseat = SeatingCost(airplane)
     Cmfgins = manufacturerLiabilityInsurance
-    Cpp = PowerplantCost(airplane)
+    Cpp = PowerplantCost(airplane, engine)
     
     return Cmfg + Cqc + Cmat + Clg + Cav + Cheat + Cseat + Cmfgins + Cpp
+    
+def ProductionCost(airplane, engine, plannedAircaft):
+    
+    fixedCost = FixedCost(airplane, plannedAircraft)
+    variableCost = VariableCost(airplane, engine, plannedAircraft)
+    productionCost = (fixedCost/plannedAircraft) + variableCost
+    
+    print("\nFor {:0.0f} planned aircraft".format(plannedAircraft))
+    print("Fixed Cost  = {:0.2f} USD".format(fixedCost))
+    print("Variable Cost = {:0.2f} USD/aircraft".format(variableCost))
+    print("Production Cost Per Unit = {:0.2f} USD/aircraft\n".format(productionCost))
+    
+    return [fixedCost, variableCost, productionCost]
 
+def BreakevenPlot(productionList, aircraftProduced, plannedAircraft):
+    salesPrice = [300000, 400000, 500000] # [2019 USD]
+    
+    totalRevenueA = [salesPrice[0] * a for a in aircraftProduced]
+    totalRevenueB = [salesPrice[1] * a for a in aircraftProduced]
+    totalRevenueC = [salesPrice[2] * a for a in aircraftProduced]
+    totalProductionCost = [productionList[0] + (productionList[1] * a) for a in aircraftProduced]
+
+    figure()
+    plot(aircraftProduced, totalProductionCost, label = "Recurring and Non-Recurring Cost")
+    plot(aircraftProduced, totalRevenueA, label = "Low Sales Price")
+    plot(aircraftProduced, totalRevenueB, label = "Moderate Sales Price")
+    plot(aircraftProduced, totalRevenueC, label = "High Sales Price")
+    title("Breakeven Plot for {:0.0f} Planned Aircraft".format(plannedAircraft))
+    xlabel("Number of Aircraft Produced")
+    ylabel("Total Production Cost and Revenue [2019 USD]")
+    legend()
+    
+    return figure()
+    
 ################################################################################
 # OPERATING COST FUNCTIONS
 ################################################################################
@@ -518,7 +576,7 @@ def StorageCost(airplane):
 def AnnualFuelCost(airplane, simulation):
     ts = simulation["time"]
     ss = simulation["segment"]
-    mfs = simulation["fuel mass"]
+    mfs = simulation["gas mass"]
     
     Qflgt = flightHoursYear
     
@@ -529,13 +587,13 @@ def AnnualFuelCost(airplane, simulation):
     gd = airplane.powerplant.gas.density if airplane.powerplant.gas else 0
     VFR = MFR / gd if gd != 0 else 0  # volumetric flow rate [m^3/s]
     
-    FFcruise = convert(VFR, "m^3/s", "gal/hr")
+    FFcruise = 2*convert(VFR, "m^3/s", "gal/hr")
+    
     Rfuel = fuelRate
     
     # Battery Operating Cost
     batteryCapacity = convert(airplane.powerplant.battery.capacity, "J", "kWh") if airplane.powerplant.percentElectric is not 0 else 0
-    missionDuration = ts[lastIndex(ss, lambda s: s == "shutdown")] - ts[firstIndex(ss, lambda s: s == "startup")]
-    batteryPower = batteryCapacity / convert(missionDuration, "s", "hr") # [kW]
+    batteryPower = batteryCapacity / convert(cruiseDuration, "s", "hr") # [kW]
     Rbattery = electricityRate
     
     return (FFcruise * Rfuel * Qflgt) + (batteryPower * Rbattery * Qflgt)
@@ -548,7 +606,7 @@ def CrewCost(airplane):
     
     return Ncrew * Rcrew * Qflgt * CPI
     
-def AnnualInsuranceCost(airplane): #not a super accurate estimation
+def AnnualInsuranceCost(airplane, purchasePrice): #not a super accurate estimation
     Cac = purchasePrice
     CPI = inflation2012to2019
     
@@ -561,31 +619,30 @@ def AnnualEngineOverhaul(airplane):
     
     return 5 * Npp * Qflgt * CPI
     
-def AnnualLoanPayment(airplane):
-    # P = principalLoan
-    # i = interestRate
-    # n = payPeriods
+def AnnualLoanPayment(airplane, purchasePrice):
+    P = purchasePrice
+    i = 0.0075 # 9% APR
+    n = 180 # 12 months for 15 years
     #
-    # return (12 * P * i) / (1 - (1/(1+i)**n))
-    return 0
+    return (12 * P * i) / (1 - (1/(1+i)**n))
     
-def TotalAnnualCost(airplane, simulation):
+def TotalAnnualCost(airplane, simulation, purchasePrice):
     Cap = MaintenanceCost(airplane)
     Cstor = StorageCost(airplane)
     Cfuel = AnnualFuelCost(airplane, simulation)
-    Cins = AnnualInsuranceCost(airplane)
+    Cins = AnnualInsuranceCost(airplane, purchasePrice)
     Cinsp = inspectionCost
     Cover = AnnualEngineOverhaul(airplane)
-    Cloan = AnnualLoanPayment(airplane)
+    Cloan = AnnualLoanPayment(airplane, purchasePrice)
     
     return Cap + Cstor + Cfuel + Cins + Cinsp + Cover + Cloan
     
-def CostPerFlightHour(airplane):
-    Cyear = TotalAnnualCost(airplane)
+def CostPerFlightHour(airplane, simulation, purchasePrice):
+    Cyear = TotalAnnualCost(airplane, simulation, purchasePrice)
     Qflgt = flightHoursYear
     
     return Cyear / Qflgt
-
+    
 ################################################################################
 # PREDICTION FUNCTIONS
 ################################################################################

@@ -65,7 +65,7 @@ manufacturingLaborRate = 53 # [2012 USD/hr]
 numberICEngines = 2 # This is only for all IC engine configuration
 avionicPrice = 20000 # [2019 USD] Based on value from Blue Skies Aviation
 cabinHeaterPrice = 5800 # [2019 USD] Based on average values for Cessna and Beechcraft aircraft of our size
-seatPrice = 400 # [2019 USD] OregonAero pricing average for fixed wing GA aircraft seats
+seatPrice = 500 # [2019 USD] OregonAero pricing average for fixed wing GA aircraft seats
 manufacturerLiabilityInsurance = 55000 # [2019 USD]  From Gudmundson's suggestion
 
 # Operating Cost
@@ -83,7 +83,6 @@ monthlyStorageRate = 250 # [2012 USD/month]
 fuelRate = 5 # [2019 USD/gal]
 electricityRate = 0.10 # From RFP [2019 USD/ KW-hr]
 pilotRate = 100 # [2012 USD/hr]
-purchasePrice = None # [2019 USD]
 inspectionCost = 2000 # [2019 USD/year] # average from Blue Skies gravitational
 
 ################################################################################

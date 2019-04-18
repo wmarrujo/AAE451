@@ -58,6 +58,7 @@ simulationParametersKeys = [
 performanceParametersKeys = [
     "empty weight",
     "takeoff field length",
+    "landing field length",
     "range",
     "average ground speed",
     "flight time",
@@ -119,7 +120,8 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     
     #emptyWeight = EmptyWeight(initialAirplane)
     emptyWeight = initialAirplane.emptyMass*g
-    dTO = ps[firstIndex(hs, lambda h: h >= 50)]
+    dTO = ps[firstIndex(hs, lambda h: obstacleHeight <= h)]
+    dL = ps[-1] - ps[lastIndex(hs, lambda h: obstacleHeight <= h)]
     range = ps[-1]
     cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")
     cruiseEndIndex = lastIndex(ss, lambda s: s == "cruise")
@@ -134,6 +136,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
         "converged": converged,
         "empty weight": emptyWeight,
         "takeoff field length": dTO,
+        "landing field length": dL,
         "range": cruiseRange,
         "average ground speed": avgGroundSpeedInCruise,
         "flight time": cruiseFlightTime,

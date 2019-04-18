@@ -6,17 +6,22 @@ from hashlib import sha256
 
 product = lambda L: reduce((lambda x, y: x * y), L)
 
-def first(iterable, condition = lambda x: True):
-    return next(x for x in iterable if condition(x))
-
-def last(iterable, condition = lambda x: True):
-    return first(reversed(iterable), condition)
 
 def firstIndex(iterable, condition = lambda x: True):
-    return next(i for i, x in enumerate(iterable) if condition(x))
+    # return next(i for i, x in enumerate(iterable) if condition(x))
+    for index, item in enumerate(iterable):
+        if condition(item):
+            return index
 
 def lastIndex(iterable, condition = lambda x: True):
     return firstIndex(reversed(iterable), condition)
+
+def first(iterable, condition = lambda x: True):
+    # return next(x for x in iterable if condition(x))
+    return iterable[firstIndex(iterable, condition)]
+
+def last(iterable, condition = lambda x: True):
+    return iterable[lastIndex(iterable, condition)]
 
 def transpose(matrix):
     """

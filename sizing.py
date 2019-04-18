@@ -22,6 +22,8 @@ from missions import *
 import copy
 from importlib import import_module
 from scipy.optimize import root
+from scipy.spatial.distance import euclidean as norm
+from pathlib import Path
 
 ################################################################################
 # PARAMETERS
@@ -104,6 +106,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
         finalAirplane = loadFinalAirplane(id, silent=silent) if finalAirplaneCached(id) else None
     else:
         finalAirplane = simulateAirplane(initialAirplane, mission, cache=cache, airplaneID=id, silent=silent)
+    converged = not isNotConverged(id)
     
     # CALCULATE PERFORMANCE VALUES
     
@@ -128,6 +131,7 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
     
     return {
+        "converged": converged,
         "empty weight": emptyWeight,
         "takeoff field length": dTO,
         "range": cruiseRange,
@@ -180,13 +184,20 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
     X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
     result = root(functionToFindRootOf, X0, tol=1e-1)
     Xf = result["x"]
+    Xr = result["fun"]
+    
+    tolerance = 30 # within "30" of the 0 point = "close enough"
+    if tolerance < norm([0, 0], Xr): # if it didn't actually converge
+        print("Aircraft did not close ({})".format(norm([0, 0], Xf))) if not silent else None
+        saveNotConvergedMarker(id)
+    
     definingParameters = setDefiningParameters(drivingParameters, Xf)
     airplane = defineAirplaneSpecifically(definingParameters)
     
     if cache:
         saveInitialAirplane(airplane, id, silent=silent)
     
-    print("Airplane Definition Closed                        - {:10.10}".format(id)) if not silent else None
+    print("Airplane Definition Finished                      - {:10.10}".format(id)) if not silent else None
     return airplane
 
 def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None, silent=False):
@@ -245,6 +256,9 @@ def loadFinalAirplane(airplaneID, silent=False):
     print("Loading Final Airplane Configuration from Cache   - {:10.10}".format(airplaneID))
     return loadObject(os.path.join(simulationDirectory, airplaneID, "final.pyobj")) if finalAirplaneCached(airplaneID) else None
 
+def isNotConverged(airplaneID):
+    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "notconverged"))
+
 def saveInitialAirplane(airplaneObject, airplaneID, silent=False):
     print("Saving Initial Airplane Configuration to Cache    - {:10.10}".format(airplaneID)) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
@@ -260,3 +274,7 @@ def saveFinalAirplane(airplaneObject, airplaneID, silent=False):
     print("Saving Final Airplane Configuration to Cache      - {:10.10}".format(airplaneID)) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
+
+def saveNotConvergedMarker(airplaneID):
+    createAirplaneIDDirectoryIfNotMade(airplaneID)
+    Path(os.path.join(simulationDirectory, airplaneID, "notconverged")).touch()

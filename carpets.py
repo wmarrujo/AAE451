@@ -40,7 +40,7 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-WSs = [WS * 0.8, WS*0.9, WS, WS*1.1, WS * 1.2]
+WSs = [WS * 0.8, WS, WS * 1.2]
 PWs = [PW * 0.8, PW, PW * 1.2]
 
 # AIRPLANE

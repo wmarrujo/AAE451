@@ -24,7 +24,7 @@ from matplotlib.pyplot import *
 # DEFINE AIRPLANE
 ################################################################################
 
-W0 = convert(3481, "lb", "N")
+W0 = convert(3952, "lb", "N")
 Wf = convert(525, "lb", "N")
 WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")

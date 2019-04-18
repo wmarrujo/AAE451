@@ -40,7 +40,7 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-WSs = [WS * 0.8, WS*0.9, WS, WS*1.1, WS * 1.2]
+WSs = [WS * 0.8, WS * 0.9, WS, WS * 1.1, WS * 1.2]
 PWs = [PW * 0.8, PW, PW * 1.2]
 
 # Driving Parameters (used for fit curves)
@@ -49,7 +49,7 @@ fit_PW = linspace(PW*0.5, PW*1.5, 1000)
 
 # AIRPLANE
 
-airplaneName = "tecnam"
+airplaneName = "testcraft"
 
 # GET DRIVING PARAMETERS
 
@@ -81,12 +81,12 @@ figure()
 
 for row, PWlist in enumerate(p):
     # Clean list by checking if solution converged
-    dirtyW0 = [convert(i["empty weight"], "N", "lb") for i in PWlist]
-    cleanW0 = dropOnOtherList(dirtyW0, converged[row])
-    print(dirtyW0)
-    print(cleanW0)
+    dirtyW0s = [convert(i["empty weight"], "N", "lb") for i in PWlist]
+    cleanW0s = dropOnOtherList(dirtyW0s, converged[row])
+    dirtyWSs = [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs]
+    cleanWSs = dropOnOtherList(dirtyWSs, converged[row])
     
-    plot(cleanW0, [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs], ".")
+    plot(cleanW0s, cleanWSs, ".")
     W0params, pconv = curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
     #plot(fit_WS, [exponentialForm(WS, W0params[0], W0params[1]) for WS in fit_WS])
     W0FitParameters.append(W0params)
@@ -107,16 +107,18 @@ W0fromFlightTimeIntersection = []
 # Plot dTO as function of W/S for each P/W
 inc = 0
 figure()
-for PWlist in p:
+for row, PWlist in enumerate(p):
+    print(row)
     # Clean list by checking if solution converged
-    dirtydT0 = [convert(i["takeoff field length"], "N", "lb") for i in PWlist]
-    cleandT0 = dropOnOtherList(dirtyW0, converged)
-    print(dirtyW0)
-    print(cleanW0)
+    dirtydT0 = [convert(i["takeoff field length"], "m", "ft") for i in PWlist]
+    cleandT0 = dropOnOtherList(dirtydT0, converged[row])
+    dirtyWSs = [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs]
+    cleanWSs = dropOnOtherList(dirtyWSs, converged[row])
+    print(cleandT0, cleanWSs)
         
     # Plot points and curve fit
-    plot(WSs, [i["takeoff field length"] for i in PWlist], ".")
-    params, pconv = curve_fit(fit_func, WSs, [i["takeoff field length"] for i in PWlist], p0=(1, 0))
+    plot(cleanWSs, cleandT0, ".")
+    params, pconv = curve_fit(fit_func, cleanWSs, cleandT0, p0=(1, 0))
     plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
     
     # Find intersection of curve with dT0 limit
@@ -130,7 +132,7 @@ hlines(minimumTakeoffFieldLength, fit_WS[0], fit_WS[-1])
 
 title("Takeoff Distance")
 xlabel("Wing Loading [N/m^2]")
-ylabel("Takeoff Distance [m]")
+ylabel("Takeoff Field Length [ft]")
 # Find intersection of curve with dT0 limit
 
 ################################################################################

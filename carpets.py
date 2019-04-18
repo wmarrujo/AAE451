@@ -40,7 +40,7 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-WSs = [WS * 0.8, WS, WS * 1.2]
+WSs = [WS * 0.8, WS*0.9, WS, WS*1.1, WS * 1.2]
 PWs = [PW * 0.8, PW, PW * 1.2]
 
 # AIRPLANE
@@ -61,7 +61,7 @@ pPW = transpose([copy(PWs) for WS in WSs])
 
 # make matrix for each performance parameter independently
 
-pWe = [[PP["weight"] for PP in row] for row in p]
+pWe = [[PP["empty weight"] for PP in row] for row in p]
 
 # ???
 
@@ -80,7 +80,7 @@ W0FitParameters = []
 figure()
 
 for PWlist in p:
-    plot([convert(i["empty weight"], "N", "lb") for i in PWlist], [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs], "k.")
+    plot([convert(i["empty weight"], "N", "lb") for i in PWlist], [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs], ".")
     W0params, pconv = curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
     #plot(fit_WS, [exponentialForm(WS, W0params[0], W0params[1]) for WS in fit_WS])
     W0FitParameters.append(W0params)
@@ -102,8 +102,8 @@ W0fromFlightTimeIntersection = []
 inc = 0
 figure()
 for PWlist in p:
-    plot(WSs, [i["takeoff distance"] for i in PWlist], "k.")
-    params, pconv = curve_fit(fit_func, WSs, [i["takeoff distance"] for i in PWlist], p0=(1, 0))
+    plot(WSs, [i["takeoff field length"] for i in PWlist], ".")
+    params, pconv = curve_fit(fit_func, WSs, [i["takeoff field length"] for i in PWlist], p0=(1, 0))
     plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
     
     # Find intersection of curve with dT0 limit

@@ -42,14 +42,12 @@ def EmptyWeight(airplane):
     return We # TODO: temporary, replace with component weight buildup later
 
 def CenterGravity(airplane):
-    cgtop = sum([(comp.x * comp.mass) for comp in airplane.components])
-    cgtop += airplane.powerplant.gas.mass * airplane.wing.x
-    cgtop += sum([pay.x * pay.mass for pay in airplane.payloads])
-    cgbot = sum([comp.mass for comp in airplane.components])
-    cgbot += airplane.powerplant.gas.mass
-    cgbot += sum([pay.x * pay.mass for pay in airplane.payloads])
-    cg = cgtop / cgbot
-    return cg
+    moment = sum([(comp.x * comp.mass*g) for comp in airplane.components])
+    moment += airplane.powerplant.gas.mass*g * airplane.wing.x
+    moment += sum([pay.x * pay.mass*g for pay in airplane.payloads])
+    W = AirplaneWeight(airplane)
+    
+    return moment / W
 
 def AirplaneReynoldsNumber(airplane):
     rho = densityAtAltitude(airplane.altitude)

@@ -105,7 +105,6 @@ W0fromRangeIntersection = []
 W0fromFlightTimeIntersection = []
 
 # Plot dTO as function of W/S for each P/W
-inc = 0
 figure()
 for row, PWlist in enumerate(p):
     print(row)
@@ -125,8 +124,6 @@ for row, PWlist in enumerate(p):
     WS_dT0Intersection = invExponentialForm(minimumTakeoffFieldLength, params[0], params[1])
     W0_WS_dT0Intersection = invExponentialForm(WS_dT0Intersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
     W0fromdT0Intersection.append(W0_WS_dT0Intersection)
-    
-    inc = inc+1
 
 hlines(minimumTakeoffFieldLength, fit_WS[0], fit_WS[-1])
 

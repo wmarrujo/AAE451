@@ -221,6 +221,7 @@ def defineAirplane(definingParameters):
     mainGear.composite = 0
     mainGear.retractable = True
     mainGear.mass += mainGear.composite*mainGear.mass*0.14
+    mainGear.retractable = True
     mainGear.x = convert(15,"ft","m") # [m]
 
     # FRONT GEAR OBJECT

@@ -96,7 +96,7 @@ def defineAirplane(definingParameters):
     wing.airfoil = airfoil
     wing.interferenceFactor = 1
     wing.planformArea = W0/WS
-    wing.setAspectRatioHoldingPlanformArea(7)
+    wing.setAspectRatioHoldingPlanformArea(8.6)
     wing.thicknessToChord = 0.02
     wing.sweep = 0
     wing.taperRatio = 1
@@ -344,20 +344,24 @@ def defineAirplane(definingParameters):
 
     airplane.components += [flightControls, hydraulics, electronics, airConIce, furnishings]
 
-    # DEFINE PAYLOAD INFORMATION
+    ################################################################################
+    # PAYLOAD DEFINITION
+    ################################################################################
+    
     passengerPayload = Passengers()
     passengerPayload.x = convert(12,"ft","m")
     passengerPayload.mass = CalculatePassengerPayloadMass(airplane.passengers)
-
+    
     baggagePayload = Baggage()
     baggagePayload.x = convert(17,"ft","m")
     baggagePayload.mass = CalculateBaggageMass(airplane.passengers)
-
+    
     pilotPayload = Pilot()
     pilotPayload.x = convert(6,"ft","m")
     pilotPayload.mass = CalculatePilotPayloadMass(airplane.pilots)
-
+    
     airplane.payloads = [passengerPayload, baggagePayload, pilotPayload]
+    
     ################################################################################
     # FINISH DEFINING AIRPLANE
     ################################################################################

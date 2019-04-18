@@ -29,13 +29,14 @@ import cProfile
 ################################################################################
 
 airplaneName = "Gopher"
-WS = convert(20*0.8, "lb/ft^2", "N/m^2")
-PW = convert(0.072*0.8, "hp/lb", "W/N")
+WS = convert(20, "lb/ft^2", "N/m^2")
+PW = convert(0.072, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}
 # cProfile.run("PPs = getPerformanceParameters(airplaneName, DPS, designMission)")
 PPs = getPerformanceParameters(airplaneName, DPS, designMission)
 
 id = airplaneDefinitionID(airplaneName, DPS)
+Iairplane = loadInitialAirplane(id)
 airplane = loadFinalAirplane(id)
 simulation = loadSimulation(id)
 
@@ -45,6 +46,17 @@ print("range:                   {:.2f} nmi".format(convert(PPs["range"], "m", "n
 print("average ground speed:    {:.0f} kts".format(convert(PPs["average ground speed"], "m/s", "kts")))
 print("flight time:             {:.1f} hr".format(convert(PPs["flight time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(PPs["fuel used"]*g, "N", "lb")))
+
+print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(Iairplane), "N", "lb")))
+print("wing")
+print("span:                    {:.3f} ft".format(convert(airplane.wing.span, "m", "ft")))
+print("chord:                   {:.3f} ft".format(convert(airplane.wing.chord, "m", "ft")))
+print("horizontal stabilizer")
+print("span:                    {:.3f} ft".format(convert(airplane.horizontalStabilizer.span, "m", "ft")))
+print("chord:                   {:.3f} ft".format(convert(airplane.horizontalStabilizer.chord, "m", "ft")))
+print("vertical stabilizer")
+print("span:                    {:.3f} ft".format(convert(airplane.verticalStabilizer.span, "m", "ft")))
+print("chord:                   {:.3f} ft".format(convert(airplane.verticalStabilizer.chord, "m", "ft")))
 
 ts = simulation["time"]
 ps = simulation["position"]

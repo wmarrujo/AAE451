@@ -342,7 +342,7 @@ class Surface(Component):
         b = self.span
         AR = self.aspectRatio
         
-        return AR/b
+        return b/AR
 
 class Wing(Surface):
     @property

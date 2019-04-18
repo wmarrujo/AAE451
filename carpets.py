@@ -70,6 +70,7 @@ fPW = [convert(PW, "W/N", "hp/lb") for PW in fit_PW]
 pC = [[PP["converged"] for PP in row] for row in p] # Verification that simulation converged at this value
 pWe = [[convert(PP["empty weight"], "N", "lb") for PP in row] for row in p]
 pdT0 = [[convert(PP["takeoff field length"], "m", "ft") for PP in row] for row in p]
+pdL = [[convert(PP["landing field length"], "m", "ft") for PP in row] for row in p]
 pR = [[convert(PP["range"], "m", "nmi") for PP in row] for row in p]
 pV = [[convert(PP["average ground speed"], "m/s", "kts") for PP in row] for row in p]
 pT = [[convert(PP["flight time"], "s", "hr") for PP in row] for row in p]
@@ -79,32 +80,54 @@ pF = [[convert(PP["fuel used"], "N", "lb") for PP in row] for row in p]
 # GROSS WEIGHT TRENDS
 ################################################################################
 
-# FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
-
-###### W0 TRENDS
-W0FitParameters = []
-# Plot W0 as function of W/S for each T/W
 figure()
 
-for (Cs, Wes, WSs) in zip(pC, pWe, pWS): # for each row
+for (Cs, WSs, Wes) in zip(pC, pWS, pWe): # for each row
     # Clean list by checking if solution converged
-    cleanWes = dropOnOtherList(Wes, Cs)
     cleanWSs = dropOnOtherList(WSs, Cs)
+    cleanWes = dropOnOtherList(Wes, Cs)
     W0params, pconv = curve_fit(fit_func, cleanWSs, cleanWes, p0=(1, 0))
     a, b = (W0params[0], W0params[1])
     
     plot(cleanWes, cleanWSs, "k.")
     plot([exponentialForm(WS, a, b) for WS in fWS], fWS, "k-")
-    W0FitParameters.append(W0params)
 
 title("Empty Weight Trends")
 ylabel("Wing Loading [lb/ft^2]")
 xlabel("Gross Weight [lb]")
-# 
-# ################################################################################
-# # LANDING DISTANCE CROSS PLOT
-# ################################################################################
-# 
+
+################################################################################
+# TAKEOFF DISTANCE CROSS PLOT
+################################################################################
+
+figure()
+
+for (Cs, WSs, dT0s) in zip(pC, pWS, pdT0):
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleandT0s = dropOnOtherList(dT0s, Cs)
+    
+    plot(cleanWSs, cleandT0s, "k.")
+
+title("Takeoff Distance")
+xlabel("Wing Loading [lb/ft^2]")
+ylabel("Takeoff Field Length [ft]")
+
+################################################################################
+# LANDING DISTANCE CROSS PLOT
+################################################################################
+
+figure()
+
+for (Cs, WSs, dLs) in zip(pC, pWS, pdL):
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleandLs = dropOnOtherList(dLs, Cs)
+    
+    plot(cleanWSs, cleandLs, "k.")
+
+title("Landing Distance")
+xlabel("Wing Loading [lb/ft^2]")
+ylabel("Landing Field Length [ft]")
+
 # ###### CROSS PLOTS
 # W0fromdT0Intersection = []
 # W0fromRangeIntersection = []
@@ -135,7 +158,7 @@ xlabel("Gross Weight [lb]")
 # xlabel("Wing Loading [N/m^2]")
 # ylabel("Takeoff Field Length [ft]")
 # # Find intersection of curve with dT0 limit
-# 
+
 # ################################################################################
 # # RANGE CROSS PLOT
 # ################################################################################

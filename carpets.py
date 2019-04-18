@@ -79,10 +79,10 @@ W0FitParameters = []
 # Plot W0 as function of W/S for each T/W
 figure()
 
-for PWlist in p:
+for row, PWlist in enumerate(p):
     # Clean list by checking if solution converged
     dirtyW0 = [convert(i["empty weight"], "N", "lb") for i in PWlist]
-    cleanW0 = dropOnOtherList(dirtyW0, converged)
+    cleanW0 = dropOnOtherList(dirtyW0, converged[row])
     print(dirtyW0)
     print(cleanW0)
     

@@ -51,7 +51,8 @@ simulationParametersKeys = [
     "weight",
     "thrust",
     "speed",
-    "cg"]
+    "cg",
+    "gas mass"]
 
 # PERFORMANCE PARAMETERS
 
@@ -80,6 +81,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     T = AirplaneThrust(airplane)
     V = airplane.speed
     cg = CenterGravity(airplane)
+    mf = airplane.powerplant.gas.mass if airplane.powerplant.gas else 0
     
     simulation["time"].append(time)
     simulation["segment"].append(segmentName)
@@ -89,6 +91,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     simulation["thrust"].append(T)
     simulation["speed"].append(V)
     simulation["cg"].append(cg)
+    simulation["gas mass"].append(mf)
 
 ################################################################################
 # PERFORMANCE

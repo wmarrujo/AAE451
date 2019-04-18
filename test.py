@@ -58,6 +58,11 @@ print("vertical stabilizer")
 print("span:                    {:.3f} ft".format(convert(airplane.verticalStabilizer.span, "m", "ft")))
 print("chord:                   {:.3f} ft".format(convert(airplane.verticalStabilizer.chord, "m", "ft")))
 
+print("weight & balance")
+for c in airplane.components:
+    print("weight: {:10.3f} lb - position {:10.3f} ft - {}".format(convert(c.mass*g, "N", "lb"), convert(c.x, "m", "ft"), type(c)))
+
+
 ts = simulation["time"]
 ps = simulation["position"]
 hs = simulation["altitude"]

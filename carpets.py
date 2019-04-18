@@ -94,9 +94,9 @@ xlabel("Gross Weight [lb]")
 ################################################################################
 
 ###### CROSS PLOTS
-dT0W0s = []
-rangeWSs = []
-flightTimeWSs = []
+W0fromdT0Intersection = []
+W0fromRangeIntersection = []
+W0fromFlightTimeIntersection = []
 
 # Plot dTO as function of W/S for each P/W
 inc = 0
@@ -109,7 +109,8 @@ for PWlist in p:
     # Find intersection of curve with dT0 limit
     WS_dT0Intersection = invExponentialForm(minimumTakeoffFieldLength, params[0], params[1])
     W0_WS_dT0Intersection = invExponentialForm(WS_dT0Intersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
-    dT0W0s.append(W0_WS_dT0Intersection)
+    W0fromdT0Intersection.append(W0_WS_dT0Intersection)
+    
     inc = inc+1
     
 hlines(minimumTakeoffFieldLength, fit_WS[0], fit_WS[-1])
@@ -133,7 +134,7 @@ for PWlist in p:
     # Find intersection of curve with range limit
     W0_rangeIntersection = invExponentialForm(minimumRange, params[0], params[1])
     W0_WS_rangeIntersection = invExponentialForm(W0_rangeIntersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
-    rangeWSs.append(W0_WS_rangeIntersection)
+    W0fromRangeIntersection.append(W0_WS_rangeIntersection)
     
     inc = inc+1
 
@@ -158,7 +159,7 @@ for PWlist in p:
     # Find intersection of curve with flight time limit
     W0_flightTimeIntersection = invExponentialForm(maximumFlightTime, params[0], params[1])
     W0_WS_flightTimeIntersection = invExponentialForm(W0_flightTimeIntersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
-    flightTimeWSs.append(W0_WS_flightTimeIntersection)
+    W0fromFlightTimeIntersection.append(W0_WS_flightTimeIntersection)
     
     inc=inc+1
 
@@ -183,8 +184,9 @@ for (ews, wss) in zip(emptyWeights, wingLoadings):
     plot(ews, wss, "k")
 
 for (ews, wss) in zip(transpose(emptyWeights), transpose(wingLoadings)):
-    plot(ews, dT0W0s)
     plot(ews, wss, "k")
+    
+
 
 title("Carpet Plot")
 xlabel("Wing Loading")

@@ -305,7 +305,8 @@ def defineAirplane(definingParameters):
     ################################################################################
     # FINISH DEFINING AIRPLANE
     ################################################################################
-    
+    print([type(c) for c in airplane.components])
+    print([component.mass for component in airplane.components])
     airplane.emptyMass = sum([component.mass for component in airplane.components])
     
     ################################################################################

@@ -167,6 +167,7 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
         # define airplane
         
         definingParameters = setDefiningParameters(drivingParameters, X)
+        print(definingParameters)
 
         initialAirplane = defineAirplaneSpecifically(definingParameters)
         finalAirplane = simulateAirplane(initialAirplane, mission, cache=False, silent=silent)
@@ -179,10 +180,11 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
         WFf = FuelWeight(finalAirplane)
         WFe = finalAirplane.powerplant.emptyFuelMass
         
-        return [W0 - W0guess, WFf - WFe] # the gross weight should match the guess and the mission should use all the fuel
+        print([W0 - W0guess, WFf - WFe])
+        return [(W0 - W0guess), (WFf - WFe)] # the gross weight should match the guess and the mission should use all the fuel
     
-    X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
-    result = root(functionToFindRootOf, X0, tol=1e-1)
+    X0 = [convert(2000, "lb", "N"), convert(300, "lb", "N")]
+    result = root(functionToFindRootOf, X0)
     Xf = result["x"]
     Xr = result["fun"]
     

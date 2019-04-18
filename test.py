@@ -46,10 +46,6 @@ print("average ground speed:    {:.0f} kts".format(convert(PPs["average ground s
 print("flight time:             {:.1f} hr".format(convert(PPs["flight time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(PPs["fuel used"]*g, "N", "lb")))
 
-# for c in airplane.components:
-#     print(type(c))
-#     print("weight: ", convert(c.mass*g, "N", "lb"))
-
 ts = simulation["time"]
 ps = simulation["position"]
 hs = simulation["altitude"]

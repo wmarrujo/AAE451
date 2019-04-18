@@ -23,7 +23,7 @@ avgasDensity = convert(0.721, "kg/L", "kg/m^3")
 
 timestep = 1 # s
 iterationCap = 100000
-timeCap = convert(10, "hr", "s")
+timeCap = convert(5, "hr", "s")
 
 ################################################################################
 # AIRPLANE

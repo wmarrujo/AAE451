@@ -50,7 +50,8 @@ def defineAirplane(definingParameters):
     
     airplane.initialGrossWeight = W0
     airplane.pilots = 1
-    airplane.passengers = 3
+    airplane.passengers = 0
+    airplane.maxPassengers = 3
     airplane.oswaldEfficiencyFactor = 0.8
     airplane.compressibilityDragCoefficient = 0
     airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: what should this be?
@@ -298,7 +299,7 @@ def defineAirplane(definingParameters):
     airConIce.interferenceFactor = 1
     airConIce.wettedArea = 0
     airConIce.referenceLength = 0
-    airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.passengers, avionics.mass, cruiseMachNumber)
+    airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.maxPassengers, avionics.mass, cruiseMachNumber)
     
     # FURNISHINGS OBJECT
     

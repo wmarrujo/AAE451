@@ -13,7 +13,7 @@ from equations import *
 # DESIGN MISSION
 
 designMission = Mission()
-designMission.passengers = 5
+designMission.passengerFactor = 1
 designMission.pilots = 1
 
 designMission.segments = Segments([

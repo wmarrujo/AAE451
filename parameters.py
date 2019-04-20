@@ -19,7 +19,7 @@ class Mission:
         
         the recording function takes the simulation time, the segment name, and the airplane in its current state
         """
-        
+        airplane.passengers = ceil(mission.passengerFactor*airplane.maxPassengers)
         t = 0 # s
         iteration = 0
         verified = verifySimulation(iteration, t, "Start", airplane)

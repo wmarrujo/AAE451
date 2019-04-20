@@ -50,7 +50,8 @@ def defineAirplane(definingParameters):
     
     airplane.initialGrossWeight = W0
     airplane.pilots = 1
-    airplane.passengers = 5
+    airplane.passengers = 0
+    airplane.maxPassengers = 5
     airplane.oswaldEfficiencyFactor = 0.8
     airplane.compressibilityDragCoefficient = 0
     airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: what should this be?
@@ -322,7 +323,7 @@ def defineAirplane(definingParameters):
     airConIce.interferenceFactor = 1
     airConIce.wettedArea = 0
     airConIce.referenceLength = 0
-    airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.passengers, avionics.mass, cruiseMachNumber)
+    airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.maxPassengers, avionics.mass, cruiseMachNumber)
     airConIce.x = convert(2.66,"ft","m")
     airConIce.composite = 0
     
@@ -344,11 +345,11 @@ def defineAirplane(definingParameters):
     # DEFINE PAYLOAD INFORMATION
     passengerPayload = Passengers()
     passengerPayload.x = convert((6.5+2*9.8+2*14.3)/3,"ft","m")
-    passengerPayload.mass = CalculatePassengerPayloadMass(airplane.passengers)
+    passengerPayload.mass = CalculatePassengerPayloadMass(airplane.maxPassengers)
 
     baggagePayload = Baggage()
     baggagePayload.x = convert((4*17.1+19.9)/5,"ft","m")
-    baggagePayload.mass = CalculateBaggageMass(airplane.passengers)
+    baggagePayload.mass = CalculateBaggageMass(airplane.maxPassengers)
 
     pilotPayload = Pilot()
     pilotPayload.x = convert(6.5,"ft","m")

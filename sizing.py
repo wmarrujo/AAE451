@@ -91,7 +91,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
 # PERFORMANCE
 ################################################################################
 
-def getPerformanceParameters(airplaneName, drivingParameters, designMission, referenceMission, cache=True, silent=False):
+def getPerformanceParameters(airplaneName, drivingParameters, designMission, cache=True, silent=False):
     global simulation
     
     # GET AIRPLANE AND SIMULATION DATA

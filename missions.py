@@ -166,3 +166,163 @@ def _designMissionCompletedShutdown(airplane, t, t0):
 designMission.segments["shutdown"].initialize = _designMissionInitializeShutdown
 designMission.segments["shutdown"].completed = _designMissionCompletedShutdown
 designMission.segments["shutdown"].update = UpdateWaiting
+
+######################################################################################
+# REFERENCE MISSION DEFINITION #######################################################
+######################################################################################
+# REFERENCE MISSION
+
+referenceMission = Mission()
+referenceMission.passengers = 2
+referenceMission.pilots = 1
+
+referenceMission.segments = Segments([
+    Segment("startup"),
+    Segment("takeoff"),
+    Segment("climb"),
+    Segment("cruise"),
+    Segment("descent"),
+    Segment("abortClimb"),
+    Segment("loiter"),
+    Segment("abortDescent"),
+    Segment("landing"),
+    Segment("shutdown")
+    ])
+
+# STARTUP
+
+def _referenceMissionInitializeStartup(airplane, t, t0):
+    airplane.altitude = 0
+    airplane.speed = 0
+    airplane.throttle = 0.3
+    airplane.position = 0
+    airplane.pitch = 0
+    airplane.flightPathAngle = 0
+
+def _referenceMissionCompletedStartup(airplane, t, t0):
+    return convert(10, "min", "s") <= t - t0
+
+referenceMission.segments["startup"].initialize = _referenceMissionInitializeStartup
+referenceMission.segments["startup"].completed = _referenceMissionCompletedStartup
+referenceMission.segments["startup"].update = UpdateWaiting
+
+# TAKEOFF
+
+def _referenceMissionInitializeTakeoff(airplane, t, t0):
+    airplane.throttle = 1
+
+def _referenceMissionCompletedTakeoff(airplane, t, t0):
+    return TakeoffSpeed(airplane) <= airplane.speed
+
+referenceMission.segments["takeoff"].initialize = _referenceMissionInitializeTakeoff
+referenceMission.segments["takeoff"].completed = _referenceMissionCompletedTakeoff
+referenceMission.segments["takeoff"].update = UpdateTakeoff
+
+# CLIMB
+
+def _referenceMissionInitializeClimb(airplane, t, t0):
+    airplane.throttle = 1
+    airplane.speed = VelocityForMaximumExcessPower(airplane)
+
+def _referenceMissionCompletedClimb(airplane, t, t0):
+    return cruiseAltitude <= airplane.altitude
+
+referenceMission.segments["climb"].initialize = _referenceMissionInitializeClimb
+referenceMission.segments["climb"].completed = _referenceMissionCompletedClimb
+referenceMission.segments["climb"].update = UpdateClimb
+
+# CRUISE
+
+def _referenceMissionInitializeCruise(airplane, t, t0):
+    airplane.flightPathAngle = 0 # level flight
+    airplane.pitch = 0 # angle of attack to maintain
+    airplane.throttle = 0.7
+
+def _referenceMissionCompletedCruise(airplane, t, t0):
+    return referenceRange <= airplane.position
+
+referenceMission.segments["cruise"].initialize = _referenceMissionInitializeCruise
+referenceMission.segments["cruise"].completed = _referenceMissionCompletedCruise
+referenceMission.segments["cruise"].update = UpdateCruise
+
+# DESCENT
+
+def _referenceMissionInitializeDescent(airplane, t, t0):
+    airplane.throttle = 0
+
+def _referenceMissionCompletedDescent(airplane, t, t0):
+    return airplane.altitude <= convert(100, "ft", "m")
+
+referenceMission.segments["descent"].initialize = _referenceMissionInitializeDescent
+referenceMission.segments["descent"].completed = _referenceMissionCompletedDescent
+referenceMission.segments["descent"].update = UpdateDescent
+
+# ABORT CLIMB
+
+def _referenceMissionInitializeAbortClimb(airplane, t, t0):
+    airplane.throttle = 1
+    airplane.speed = VelocityForMaximumExcessPower(airplane)
+
+def _referenceMissionCompletedAbortClimb(airplane, t, t0):
+    return loiterAltitude <= airplane.altitude
+
+referenceMission.segments["abortClimb"].initialize = _referenceMissionInitializeAbortClimb
+referenceMission.segments["abortClimb"].completed = _referenceMissionCompletedAbortClimb
+referenceMission.segments["abortClimb"].update = UpdateClimb
+
+# LOITER
+
+def _referenceMissionInitializeLoiter(airplane, t, t0):
+    # TODO: initialize properly
+    airplane.throttle = 0.6
+    airplane.flightPathAngle = 0
+    airplane.pitch = 0
+    airplane.speed = MaximumLiftOverDragVelocity(airplane) # speed to maintain
+
+def _referenceMissionCompletedLoiter(airplane, t, t0):
+    return loiterTime <= t - t0
+
+referenceMission.segments["loiter"].initialize = _referenceMissionInitializeLoiter
+referenceMission.segments["loiter"].completed = _referenceMissionCompletedLoiter
+referenceMission.segments["loiter"].update = UpdateCruise
+
+# ABORT DESCENT
+
+def _referenceMissionInitializeAbortDescent(airplane, t, t0):
+    airplane.throttle = 0.3
+    airplane.speed = convert(170, "kts", "m/s") # TODO: fix in same vein as with cruise velocity
+
+def _referenceMissionCompletedAbortDescent(airplane, t, t0):
+    return airplane.altitude <= 0
+
+referenceMission.segments["abortDescent"].initialize = _referenceMissionInitializeAbortDescent
+referenceMission.segments["abortDescent"].completed = _referenceMissionCompletedAbortDescent
+referenceMission.segments["abortDescent"].update = UpdateDescent
+
+# LANDING
+
+def _referenceMissionInitializeLanding(airplane, t, t0):
+    airplane.pitch = 0
+    airplane.flightPathAngle = 0
+    airplane.altitude = 0
+    airplane.throttle = 0
+
+def _referenceMissionCompletedLanding(airplane, t, t0):
+    return airplane.speed <= 0.1
+
+referenceMission.segments["landing"].initialize = _referenceMissionInitializeLanding
+referenceMission.segments["landing"].completed = _referenceMissionCompletedLanding
+referenceMission.segments["landing"].update = UpdateLanding
+
+# SHUTDOWN
+
+def _referenceMissionInitializeShutdown(airplane, t, t0):
+    airplane.speed = 0
+    airplane.throttle = 0.1
+
+def _referenceMissionCompletedShutdown(airplane, t, t0):
+    return convert(10, "min", "s") <= t - t0
+
+referenceMission.segments["shutdown"].initialize = _referenceMissionInitializeShutdown
+referenceMission.segments["shutdown"].completed = _referenceMissionCompletedShutdown
+referenceMission.segments["shutdown"].update = UpdateWaiting

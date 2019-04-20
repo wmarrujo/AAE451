@@ -91,19 +91,20 @@ def simulationRecordingFunction(time, segmentName, airplane):
 # PERFORMANCE
 ################################################################################
 
-def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=True, silent=False):
+def getPerformanceParameters(airplaneName, drivingParameters, designMission, referenceMission, cache=True, silent=False):
     global simulation
     
     # GET AIRPLANE AND SIMULATION DATA
     
     id = airplaneDefinitionID(airplaneName, drivingParameters)
     print("Getting Performance Parameters for Airplane       - {:10.10}".format(id)) if not silent else None
-    initialAirplane = loadInitialAirplane(id, silent=silent) if cache and initialAirplaneCached(id) else defineAirplane(airplaneName, drivingParameters, mission, silent=silent)
+    initialAirplane = loadInitialAirplane(id, silent=silent) if cache and initialAirplaneCached(id) else defineAirplane(airplaneName, drivingParameters, designMission, silent=silent)
     if cache and simulationCached(id):
         simulation = loadSimulation(id, silent=silent)
         finalAirplane = loadFinalAirplane(id, silent=silent) if finalAirplaneCached(id) else None
     else:
-        finalAirplane = simulateAirplane(initialAirplane, mission, cache=cache, airplaneID=id, silent=silent)
+        finalAirplane = simulateAirplane(initialAirplane, designMission, cache=cache, airplaneID=id, silent=silent)
+        
     
     # CALCULATE PERFORMANCE VALUES
     
@@ -114,7 +115,6 @@ def getPerformanceParameters(airplaneName, drivingParameters, mission, cache=Tru
     Ws = simulation["weight"]
     Ts = simulation["thrust"]
     
-    #emptyWeight = EmptyWeight(initialAirplane)
     emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: h >= 50)]
     range = ps[-1]

@@ -46,7 +46,7 @@ salesPrice = [250000, 280000, 300000] # [2019 USD]
 # Production Cost For 500 Planned Aircraft
 
 plannedAircraft = 500
-fixedCost = FixedCost(airplane, plannedAircraft)
+fixedCost =FixedCost(airplane, plannedAircraft)
 print("\nFor {:0.0f} planned aircraft:".format(plannedAircraft))
 print("Fixed Cost = {:0.2f} USD".format(fixedCost))
 variableCost = VariableCost(airplane, engine, plannedAircraft)

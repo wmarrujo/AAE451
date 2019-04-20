@@ -16,9 +16,6 @@ from missions import *
 from equations import *
 from sizing import *
 
-sys.path.append(os.path.join(rootDirectory, "configurations"))
-from Gopher import defineAirplane as defineTestcraft
-
 # EXTERNAL DEPENDENCIES
 
 from matplotlib.pyplot import *
@@ -28,7 +25,7 @@ import cProfile
 # TESTS
 ################################################################################
 
-airplaneName = "Gopher"
+airplaneName = "GopherHYBRID"
 WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}

@@ -58,4 +58,5 @@ generalAviationPassengerCostFactor = 850 # [2012 USD]
 
 minimumTakeoffFieldLength = convert(2500, "ft", "m")
 minimumRange = convert(250, "nmi", "m")
+referenceRange = convert(135, "nmi", "m")
 maximumFlightTime = convert(1.5, "hr", "s")

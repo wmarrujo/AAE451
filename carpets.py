@@ -49,7 +49,7 @@ fit_PW = linspace(PW*0.7, PW*1.3, 1000)
 
 # AIRPLANE
 
-airplaneName = "gopher"
+airplaneName = "Gopher"
 
 # GET DRIVING PARAMETERS
 
@@ -94,12 +94,12 @@ for (Cs, WSs, Wes) in zip(pC, pWS, pWe): # for each row
     
     W0params.append([a,b])
     
-    plot(cleanWes, cleanWSs, "k.")
-    plot([exponentialForm(WS, a, b) for WS in fWS], fWS)
+    plot(cleanWSs, cleanWes, "k.")
+    plot(fWS, [exponentialForm(WS, a, b) for WS in fWS])
 
 title("Empty Weight Trends")
-ylabel("Wing Loading [lb/ft^2]")
-xlabel("Empty Weight [lb]")
+xlabel("Wing Loading [lb/ft^2]")
+ylabel("Empty Weight [lb]")
 
 ################################################################################
 # TAKEOFF DISTANCE CROSS PLOT
@@ -118,8 +118,8 @@ for row, (Cs, WSs, dT0s) in enumerate(zip(pC, pWS, pdT0)):
     plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS])
     
      # Find intersection of curve with flight time limit
-    W0_dT0Intersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
-    W0_WS_dT0Intersection = invExponentialForm(W0_dT0Intersection, W0params[row][0], W0params[row][1])
+    WS_dT0Intersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
+    W0_WS_dT0Intersection = invExponentialForm(WS_dT0Intersection, W0params[row][0], W0params[row][1])
     W0fromdT0Intersection.append(W0_WS_dT0Intersection)
 
 hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
@@ -148,8 +148,9 @@ for row, (Cs, WSs, dLs) in enumerate(zip(pC, pWS, pdL)):
     W0_dLIntersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
     W0_WS_dLIntersection = invExponentialForm(W0_dLIntersection, W0params[row][0], W0params[row][1])
     W0fromdLIntersection.append(W0_WS_dLIntersection)
+    
+    print(W0fromdLIntersection)
 
-print(constrainedFieldLength)
 hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
 
 title("Landing Distance")
@@ -161,25 +162,23 @@ ylabel("Landing Field Length [ft]")
 ################################################################################
 
 ###### SIZING PLOT
-# Plot fit curve intersections on sizing plot
-
-emptyWeights = [[a["empty weight"] for a in row] for row in p]
-wingLoadings = [copy(WSs) for row in p]
+# Plot wing loading vs. empty weight grid
+offset = 4 #lb/ft^2
 
 figure()
-for (Cs, WSs, Wes) in zip(pC, pWS, pWe): # for each row
+for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
     # Clean list by checking if solution converged
     cleanWSs = dropOnOtherList(WSs, Cs)
     cleanWes = dropOnOtherList(Wes, Cs)
     
-    plot(cleanWes, cleanWSs, "k.")
+    plot(cleanWes, cleanWSs, "k")
     
-# for (Cs, WSs, Wes) in zip(transpose(pC), transpose(pWS), transpose(pWe)): # for each row
-#     # Clean list by checking if solution converged
-#     cleanWSs = dropOnOtherList(WSs, Cs)
-#     cleanWes = dropOnOtherList(Wes, Cs)
-#
-#     plot(cleanWes, cleanWSs, "k")
+for (Cs, WSs, Wes) in zip(transpose(pC), transpose(pWS), transpose(pWe)): # for each row
+    # Clean list by checking if solution converged
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleanWes = dropOnOtherList(Wes, Cs)
+
+    plot(cleanWes, cleanWSs, "k")
 
 title("Carpet Plot")
 xlabel("Wing Loading")

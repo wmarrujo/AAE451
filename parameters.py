@@ -11,12 +11,12 @@ from scipy import *
 
 class Mission:
     segments = None
-    
+
     def simulate(self, tstep, airplane, recordingFunction=(lambda t, s, a: None), silent=False):
         """
         takes a time step, an airplane definition, and an optional recording function to run each iteration
         returns the success of the simulation. If it was able to complete it, it returns True, if it encountered something that broke the verification, it returns False
-        
+
         the recording function takes the simulation time, the segment name, and the airplane in its current state
         """
         airplane.passengers = ceil(self.passengerFactor*airplane.maxPassengers)
@@ -26,14 +26,19 @@ class Mission:
         self.segments[0].initialize(airplane, t, t) # make airplane valid before the recording function
         recordingFunction(t, "start", airplane)
         printSimulationProgressBar(iteration) if not silent else None
-        
+
         for segment in self.segments:
             t0 = t
             segment.initialize(airplane, t, t0)
-            
+
             while verified and not segment.completed(airplane, t, t0):
                 try:
                     segment.update(airplane, t, tstep)
+
+                    # hard bounds so it doesn't crash
+                    if airplane.altitude < 0:
+                        airplane.altitude = 0
+
                     verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
                 except Exception as e:
                     print("The Simulation Encountered an Error: ", e)
@@ -41,10 +46,10 @@ class Mission:
                     raise e
                 recordingFunction(t, segment.name, airplane)
                 printSimulationProgressBar(iteration) if not silent else None
-                
+
                 t = t + tstep
                 iteration += 1
-        
+
         printSimulationProgressBar(iteration, ended=True, message="succeeded" if verified else "failed") if not silent else None
         if verified:
             return airplane
@@ -119,12 +124,12 @@ class Airplane:
     fuelSystem = None # FuelSystem object
     avionics = None # Avionics object
     emptyMass = None # number [kg] : (0 <= x) # set once at the beginning (for algorithm optimization)
-    
+
     @property
     def angleOfAttack(self):
         p = self.pitch
         fpA = self.flightPathAngle
-        
+
         return p - fpA
     @angleOfAttack.setter
     def angleOfAttack(self, a):
@@ -144,14 +149,14 @@ class Powerplant: # the powerplant system configuration
     generator = None # generator object
     percentElectric = None # number : (0 <= x <= 1) # how much of the output energy comes from electricity
     generatorOn = None # bool # is the generator on, giving energy to the battery?
-    
+
     @property
     def fuelMass(self):
         mg = self.gas.mass if self.gas is not None else 0
         mb = self.battery.mass if self.battery is not None else 0
 
         return mg + mb
-    
+
     @fuelMass.setter
     def fuelMass(self, m):
         edg = self.gas.energyDensity if self.gas else 0
@@ -171,7 +176,7 @@ class Powerplant: # the powerplant system configuration
     @property
     def emptyFuelMass(self):
         mb = self.battery.mass if self.battery is not None else 0 # TODO: approximation that battery mass is constant with charge & stuff
-        
+
         return mb
 
 class Gas:
@@ -186,14 +191,14 @@ class Battery:
     capacity = None # number [J] : (0 <= x)
     charge = None # number : (0 <= x <= 1)
     x = None # number [m]
-    
+
     @property
     def energy(self):
         E = self.capacity
         C = self.charge
-        
+
         return E*C
-    
+
     @energy.setter
     def energy(self, E):
         self.charge = E / self.capacity
@@ -208,7 +213,7 @@ class Component:
     wettedArea = None # number [m^2] : (0 <= x)
     referenceLength = None # number [m] : (0 <= x)
     x = None # number [m] : -- location from reference datum for CG calcs
-    
+
     def formFactor(self, airplane):
         return 0 # default, to be overwritten if defined # TODO: put this independently in each component class definition, not a default value
 
@@ -220,53 +225,53 @@ class Engine(Component): # the engines/motors that drive the propeller
     maxPower = None # number [W] : (0 <= x)
     propeller = None # propeller object
     length = None # number [m] : (0 <= x)
-    
+
     @property
     def diameter(self):
         return self.referenceLength
     @diameter.setter
     def diameter(self, d):
         self.referenceLength = d
-    
+
     @property
     def finenessRatio(self):
         l = self.length
         D = self.diameter
 
         return l / D
-    
+
     def formFactor(self, airplane):
         fr = self.finenessRatio
-        
+
         return 1 + 0.35 / fr
-    
+
     @property
     def wettedArea(self):
         d = self.diameter
         l = self.length
-        
+
         return pi * d * l # ASSUMPTION: modeling as a cylinder
 
 class Fuselage(Component):
     length = None # number [m]
-    
+
     @property
     def diameter(self):
         return self.referenceLength
     @diameter.setter
     def diameter(self, d):
         self.referenceLength = d
-    
+
     @property
     def finenessRatio(self):
         l = self.length
         D = self.diameter
 
         return l / D
-    
+
     def formFactor(self, airplane):
         fr = self.finenessRatio
-        
+
         return 1 + 60 / fr**3 + fr / 400
 
     @property
@@ -274,7 +279,7 @@ class Fuselage(Component):
         D = self.diameter
         l = self.length
         fr = self.finenessRatio
-        
+
         return pi * D * l * (1 - 2/fr)**(2/3) * (1 + 1/fr**2) # ASSUMPTION: modeling as "hotdog"
 
 class Surface(Component):
@@ -283,20 +288,20 @@ class Surface(Component):
     airfoil = None # airfoil object
     sweep = None # IN RADIANS
     taperRatio = None # taper ratio
-    
+
     def setPlanformAreaHoldingAspectRatio(self, S):
         AR = self.aspectRatio
         self.planformArea = S
         self.span = sqrt(AR * S) # set the span
-    
+
     def setAspectRatioHoldingSpan(self, AR):
         b = self.span
         self.planformArea = b**2/AR
-    
+
     def setAspectRatioHoldingPlanformArea(self, AR):
         S = self.planformArea
         self.span = sqrt(AR*S)
-    
+
     def formFactor(self, airplane):
         #Zfactor = 2 # FIXME: PLEASE: the Z factor depends on the Mach at which you are flying, for us its between 0 and 0.3, 1.7<Z<2
         V = Airplane.speed
@@ -320,28 +325,28 @@ class Surface(Component):
     def aspectRatio(self):
         S = self.planformArea
         b = self.span
-        
+
         return b**2/S
-    
+
     @property
     def span(self):
         return self.referenceLength
     @span.setter
     def span(self, b):
         self.referenceLength = b
-    
+
     @property
     def chord(self):
         b = self.referenceLength
         AR = self.aspectRatio
 
-        return AR/b
+        return b/AR
 
 class Wing(Surface):
     @property
     def maximumLiftCoefficient(self):
         maxCL = self.airfoil.maximumLiftCoefficient
-        
+
         return maxCL
 
 class HorizontalStabilizer(Surface):
@@ -351,7 +356,7 @@ class VerticalStabilizer(Surface):
     pass
 
 class MainGear(Component):
-    
+
     @property
     def length(self):
         return self.referenceLength
@@ -360,7 +365,7 @@ class MainGear(Component):
         self.referenceLength = l
 
 class FrontGear(Component):
-    
+
     @property
     def length(self):
         return self.referenceLength
@@ -400,32 +405,32 @@ class Pilot(Payload):
 
 class Airfoil:
     data = None # the dictionary containing aerodynamic information
-    
+
     def __init__(self, filepath):
         self.data = CSVToDict(filepath)
-    
+
     def liftCoefficientAtAngleOfAttack(self, angleOfAttack):
         a = convert(angleOfAttack, "rad", "deg") # gets angleOfAttack in radians, csv in degrees
         f = functionFromPairs(pairsFromColumns(self.data, "alpha", "CL"))
-        
+
         return f(a)
-    
+
     def dragCoefficientAtAngleOfAttack(self, angleOfAttack):
         a = convert(angleOfAttack, "rad", "deg") # gets angleOfAttack in radians, csv in degrees
         f = functionFromPairs(pairsFromColumns(self.data, "alpha", "CD"))
-        
+
         return f(a)
-    
+
     @property
     def minimumDefinedAngleOfAttack(self):
         return convert(float(self.data["alpha"][0]), "deg", "rad")
-    
+
     @property
     def maximumDefinedAngleOfAttack(self):
         return convert(float(self.data["alpha"][-1]), "deg", "rad")
-    
+
     @property
     def maximumLiftCoefficient(self):
         CLs = [float(cl) for cl in self.data["CL"]]
-        
+
         return max(CLs)

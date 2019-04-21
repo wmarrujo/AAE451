@@ -37,7 +37,7 @@ def defineAirplane(definingParameters):
     horizontalTailVolumeCoefficient = 0.80
     verticalTailVolumeCoefficient = 0.07
     numberOfEngines = 2
-    uninstalledEngineMass = 65.7 # kg
+    uninstalledEngineMass = 117 #65.7 # kg
     totalFuelVolume = convert(50, "gal", "m^3")
     uninstalledAvionicsWeight = 8*9.8 # N # FIXME: you sure?
     cruiseMachNumber = convert(180, "kts", "m/s") / machAtAltitude(cruiseAltitude)
@@ -280,7 +280,7 @@ def defineAirplane(definingParameters):
     flightControls.referenceLength = 0
     flightControls.mass = PredictFlightControlsMass(fuselage.length, wing.span, sizingLoadFactor, airplane.initialGrossWeight)
     flightControls.x = avionics.x + .1 # [m]
-
+    
     # HYDRAULICS OBJECT
 
     hydraulics = Hydraulics()
@@ -300,7 +300,7 @@ def defineAirplane(definingParameters):
     electronics.referenceLength = 0
     electronics.mass = PredictElectronicsMass(fuelSystem.mass, avionics.mass)
     electronics.x = avionics.x - .1 # [m] -- Assume most of the electronics mass (likely the battery for )
-
+    
     # AIRCONICE OBJECT
 
     airConIce = AirConIce()
@@ -347,23 +347,6 @@ def defineAirplane(definingParameters):
     ################################################################################
 
     airplane.emptyMass = sum([component.mass for component in airplane.components])
-    print("WDG: ", convert(W0, "N", "lb"), " lb")
-    print("EMPTY MASS: ", convert(airplane.emptyMass * g, "N", "lb"), " lb")
-    print('WING MASS ', convert(wing.mass * g, "N", "lb"), " lb")
-    print('FUESELAGE MASS ', convert(fuselage.mass * g, "N", "lb"), " lb")
-    print('HORIZONTALSTABILIZER MASS ', convert(horizontalStabilizer.mass * g, "N", "lb"), " lb")
-    print('VERTICALSTABILIZER MASS ', convert(verticalStabilizer.mass * g, "N", "lb"), " lb")
-    print('ENGINEL MASS ', convert(engineL.mass * g, "N", "lb"), " lb")
-    print('ENGINER MASS ', convert(engineR.mass * g, "N", "lb"), " lb")
-    print('MAINGEAR MASS ', convert(mainGear.mass * g, "N", "lb"), " lb")
-    print('FRONTGEAR MASS ', convert(frontGear.mass * g, "N", "lb"), " lb")
-    print('FUELSYSTEM MASS ', convert(fuelSystem.mass * g, "N", "lb"), " lb")
-    print('AVIONICS MASS ', convert(avionics.mass * g, "N", "lb"), " lb")
-    print('FLIGHT CONTROLS MASS ', convert(flightControls.mass * g, "N", "lb"), " lb")
-    print('HYDRAULICS MASS ', convert(hydraulics.mass * g, "N", "lb"), " lb")
-    print('ELECTRONICS MASS ', convert(electronics.mass * g, "N", "lb"), " lb")
-    print('AIRCONICE MASS ', convert(airConIce.mass * g, "N", "lb"), " lb")
-    print('FURNISHINGS MASS ', convert(furnishings.mass * g, "N", "lb"), " lb")
 
     ################################################################################
 

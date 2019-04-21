@@ -55,6 +55,7 @@ def defineAirplane(definingParameters):
     airplane.oswaldEfficiencyFactor = 0.8
     airplane.compressibilityDragCoefficient = 0
     airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: what should this be?
+    airplane.compositeFraction = 0 # Percent of airframe that is composite materials
     airplane.components = []
     
     ################################################################################
@@ -224,6 +225,7 @@ def defineAirplane(definingParameters):
     mainGear.mass += mainGear.composite*mainGear.mass*0.14
     mainGear.retractable = True
     mainGear.x = convert(12.4,"ft","m")
+    mainGear.retractable = True #Is landing Gear retractable?
     
     # FRONT GEAR OBJECT
     

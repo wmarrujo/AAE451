@@ -22,6 +22,8 @@ from missions import *
 import copy
 from importlib import import_module
 from scipy.optimize import root
+from scipy.spatial.distance import euclidean as norm
+from pathlib import Path
 
 ################################################################################
 # PARAMETERS
@@ -49,13 +51,15 @@ simulationParametersKeys = [
     "weight",
     "thrust",
     "speed",
-    "cg"]
+    "cg",
+    "gas mass"]
 
 # PERFORMANCE PARAMETERS
 
 performanceParametersKeys = [
     "empty weight",
     "takeoff field length",
+    "landing field length",
     "range",
     "average ground speed",
     "flight time",
@@ -77,6 +81,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     T = AirplaneThrust(airplane)
     V = airplane.speed
     cg = CenterGravity(airplane)
+    mf = airplane.powerplant.gas.mass if airplane.powerplant.gas else 0
     
     simulation["time"].append(time)
     simulation["segment"].append(segmentName)
@@ -86,6 +91,7 @@ def simulationRecordingFunction(time, segmentName, airplane):
     simulation["thrust"].append(T)
     simulation["speed"].append(V)
     simulation["cg"].append(cg)
+    simulation["gas mass"].append(mf)
 
 ################################################################################
 # PERFORMANCE
@@ -104,7 +110,6 @@ def getPerformanceParameters(airplaneName, drivingParameters, designMission, cac
         finalAirplane = loadFinalAirplane(id, silent=silent) if finalAirplaneCached(id) else None
     else:
         finalAirplane = simulateAirplane(initialAirplane, designMission, cache=cache, airplaneID=id, silent=silent)
-        
     
     # CALCULATE PERFORMANCE VALUES
     
@@ -116,7 +121,8 @@ def getPerformanceParameters(airplaneName, drivingParameters, designMission, cac
     Ts = simulation["thrust"]
     
     emptyWeight = initialAirplane.emptyMass*g
-    dTO = ps[firstIndex(hs, lambda h: h >= 50)]
+    dTO = ps[firstIndex(hs, lambda h: obstacleHeight <= h)]
+    dL = ps[-1] - ps[lastIndex(hs, lambda h: obstacleHeight <= h)]
     range = ps[-1]
     cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")
     cruiseEndIndex = lastIndex(ss, lambda s: s == "cruise")
@@ -128,8 +134,10 @@ def getPerformanceParameters(airplaneName, drivingParameters, designMission, cac
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
     
     return {
+        "converged": converged,
         "empty weight": emptyWeight,
         "takeoff field length": dTO,
+        "landing field length": dL,
         "range": cruiseRange,
         "average ground speed": avgGroundSpeedInCruise,
         "flight time": cruiseFlightTime,
@@ -174,19 +182,25 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
         W0 = AirplaneWeight(initialAirplane)
         WFf = FuelWeight(finalAirplane)
         WFe = finalAirplane.powerplant.emptyFuelMass
-        
         return [W0 - W0guess, WFf - WFe] # the gross weight should match the guess and the mission should use all the fuel
-    
-    X0 = [convert(3500, "lb", "N"), convert(300, "lb", "N")]
+
+    X0 = [convert(2711, "lb", "N"), convert(300, "lb", "N")]
     result = root(functionToFindRootOf, X0, tol=1e-1)
     Xf = result["x"]
+    Xr = result["fun"]
+    
+    tolerance = 30 # within "30" of the 0 point = "close enough"
+    if tolerance < norm([0, 0], Xr): # if it didn't actually converge
+        print("Aircraft did not close ({})".format(norm([0, 0], Xf))) if not silent else None
+        saveNotConvergedMarker(id)
+    
     definingParameters = setDefiningParameters(drivingParameters, Xf)
     airplane = defineAirplaneSpecifically(definingParameters)
     
     if cache:
         saveInitialAirplane(airplane, id, silent=silent)
     
-    print("Airplane Definition Closed                        - {:10.10}".format(id)) if not silent else None
+    print("Airplane Definition Finished                      - {:10.10}".format(id)) if not silent else None
     return airplane
 
 def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None, silent=False):
@@ -245,6 +259,9 @@ def loadFinalAirplane(airplaneID, silent=False):
     print("Loading Final Airplane Configuration from Cache   - {:10.10}".format(airplaneID))
     return loadObject(os.path.join(simulationDirectory, airplaneID, "final.pyobj")) if finalAirplaneCached(airplaneID) else None
 
+def isNotConverged(airplaneID):
+    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "notconverged"))
+
 def saveInitialAirplane(airplaneObject, airplaneID, silent=False):
     print("Saving Initial Airplane Configuration to Cache    - {:10.10}".format(airplaneID)) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
@@ -260,3 +277,7 @@ def saveFinalAirplane(airplaneObject, airplaneID, silent=False):
     print("Saving Final Airplane Configuration to Cache      - {:10.10}".format(airplaneID)) if not silent else None
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
+
+def saveNotConvergedMarker(airplaneID):
+    createAirplaneIDDirectoryIfNotMade(airplaneID)
+    Path(os.path.join(simulationDirectory, airplaneID, "notconverged")).touch()

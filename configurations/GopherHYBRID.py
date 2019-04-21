@@ -68,13 +68,26 @@ def defineAirplane(definingParameters):
     gas.density = avgasDensity
     gas.x = 4 # m
 
+    # BATTERY OBJECT DEFINITION
+    battery = Battery()
+    battery.energyDensity = batteryEnergyDensity
+    battery.charge = 1
+
+    generator = Generator()
+    generator.efficiency = 0.4
+    generator.power = convert(160, "hp", "W")
+    generator.x = convert(2.2,"ft","m")
     # POWERPLANT OBJECT DEFINITION
 
     powerplant = Powerplant()
 
+    powerplant.battery = battery
     powerplant.gas = gas
-    powerplant.percentElectric = 0
+    powerplant.generator = generator
+    powerplant.percentElectric = .20
     powerplant.fuelMass = Wf/g
+    powerplant.generatorOn = True
+
 
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
@@ -209,6 +222,33 @@ def defineAirplane(definingParameters):
     ################################################################################
     # 6: LANDING GEAR DEFINITION
     ################################################################################
+
+    # MAIN GEAR OBJECT
+
+    mainGear = MainGear()
+
+    mainGear.length = 0.4 # m
+    mainGear.interferenceFactor = 1
+    mainGear.wettedArea = 0
+    mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, landingLoadFactor, mainGear.length)
+    mainGear.composite = 0
+    mainGear.retractable = True
+    mainGear.mass += mainGear.composite*mainGear.mass*0.14
+    mainGear.retractable = True
+    mainGear.x = convert(15,"ft","m") # [m]
+
+    # FRONT GEAR OBJECT
+
+    frontGear = FrontGear()
+
+    frontGear.length = 0.5 # m
+    frontGear.interferenceFactor = 1
+    frontGear.wettedArea = 0
+    frontGear.mass = PredictFrontGearMass(airplane.initialGrossWeight, landingLoadFactor, frontGear.length)
+    frontGear.composite = 0
+    frontGear.mass += frontGear.composite*frontGear.mass*0.14
+    frontGear.x = convert(4.28,"ft","m") # [m]
+
 
     # MAIN GEAR OBJECT
 

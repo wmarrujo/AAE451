@@ -89,6 +89,6 @@ inspectionCost = 2000 # [2019 USD/year] # average from Blue Skies gravitational
 # RFP Constraints
 ################################################################################
 
-minimumTakeoffFieldLength = convert(2500, "ft", "m")
+minimumTakeoffFieldLength = convert(1500, "ft", "m")
 minimumRange = convert(300, "nmi", "m")
 maximumFlightTime = convert(1.5, "hr", "s")

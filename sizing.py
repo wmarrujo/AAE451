@@ -69,7 +69,7 @@ performanceParametersKeys = [
 # LIFECYCLE
 ################################################################################
 
-def getAirplaneData(airplaneName, drivingParameters, designMission, silent=False):
+def getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent=False):
     id = airplaneDefinitionID(airplaneName, drivingParameters)
     
     # get initial airplane

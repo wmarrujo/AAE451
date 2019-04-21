@@ -91,3 +91,6 @@ def maybeReadAsNumber(string):
             
 def dropOnOtherList(listToDropFrom, conditionalList):
     return [v for i, v in enumerate(listToDropFrom) if conditionalList[i]]
+
+def map2D(function, list2D):
+    return [[function(item) for item in row] for row in list2D]

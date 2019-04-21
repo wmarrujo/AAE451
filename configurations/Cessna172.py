@@ -32,10 +32,10 @@ def defineAirplane(definingParameters):
 
     # ASSUMPTIONS # FIXME: Define elsewhere? or get from simulations?
     cruiseDynamicPressure = 0.5*densityAtAltitude(cruiseAltitude)*convert(180, "kts", "m/s")**2
-    sizingLoadFactor = 3.5
+    sizingLoadFactor = 3.8
     landingLoadFactor = 2.67 * 1.5
-    horizontalTailVolumeCoefficient = 0.80
-    verticalTailVolumeCoefficient = 0.07
+    horizontalTailVolumeCoefficient = 0.70
+    verticalTailVolumeCoefficient = 0.04
     numberOfEngines = 1 # 2
     uninstalledEngineMass = 117# 65.7 # kg
     totalFuelVolume = convert(50, "gal", "m^3")
@@ -109,15 +109,15 @@ def defineAirplane(definingParameters):
 
     ################################################################################
     # 3: FUSELAGE DEFINITION
-    ################################################################################
+    ##########################WingMas######################################################
 
     # FUSELAGE OBJECT
 
     fuselage = Fuselage()
 
     fuselage.interferenceFactor = 1
-    fuselage.diameter = 1.4 # m
-    fuselage.length = 8.7 # m
+    fuselage.diameter = 1.2 # m
+    fuselage.length = 8.28 # m
     fuselage.mass = PredictFuselageMass(fuselage.wettedArea, airplane.initialGrossWeight, fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, 3.5)
     fuselage.x = fuselage.length / 2 # [m]
 
@@ -134,12 +134,11 @@ def defineAirplane(definingParameters):
     horizontalStabilizer = HorizontalStabilizer()
 
     horizontalStabilizer.interferenceFactor = 1.2
-    horizontalStabilizer.planformArea = 3.35 # m^2
     horizontalStabilizer.thicknessToChord = 0.12
     horizontalStabilizer.span = convert(10, "ft", "m")
     horizontalStabilizer.sweep = 0
     horizontalStabilizer.taperRatio = 1
-    horizontalStabilizer.mass = PredictHorizontalStabilizerMass(airplane.initialGrossWeight, sizingLoadFactor, horizontalStabilizer.taperRatio, horizontalStabilizer.sweep, wing.taperRatio, horizontalTailVolumeCoefficient, wing.span, wing.chord, 0.55 * fuselage.length, cruiseDynamicPressure, wing.thicknessToChord)
+    horizontalStabilizer.mass = PredictHorizontalStabilizerMass(airplane.initialGrossWeight, sizingLoadFactor, horizontalStabilizer.taperRatio, horizontalStabilizer.sweep, wing.sweep, horizontalTailVolumeCoefficient, wing.span, wing.chord, 0.6 * fuselage.length, cruiseDynamicPressure, wing.thicknessToChord)
     horizontalStabilizer.x = 8.6 # [m]
 
     # VERTICAL STABILIZER OBJECT
@@ -147,10 +146,8 @@ def defineAirplane(definingParameters):
     verticalStabilizer = VerticalStabilizer()
 
     verticalStabilizer.interferenceFactor = 1.1
-    verticalStabilizer.planformArea = 1.734 # m^2
     verticalStabilizer.thicknessToChord = 0.12
-    verticalStabilizer.span = convert(6, "ft", "m")
-    verticalStabilizer.sweep = convert(20, "deg", "rad")
+    verticalStabilizer.sweep = convert(10, "deg", "rad")
     verticalStabilizer.taperRatio = .8
     verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 0, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.6 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord)
     verticalStabilizer.x = 8.65 # [m]

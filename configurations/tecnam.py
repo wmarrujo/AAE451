@@ -138,7 +138,6 @@ def defineAirplane(definingParameters):
     horizontalStabilizer.interferenceFactor = 1.2
     horizontalStabilizer.planformArea = 2.64 # m^2
     horizontalStabilizer.thicknessToChord = 0.12
-    horizontalStabilizer.span = convert(10, "ft", "m")
     horizontalStabilizer.sweep = 0
     horizontalStabilizer.taperRatio = 1
     horizontalStabilizer.mass = PredictHorizontalStabilizerMass(airplane.initialGrossWeight, sizingLoadFactor, horizontalStabilizer.taperRatio, horizontalStabilizer.sweep, wing.taperRatio, horizontalTailVolumeCoefficient, wing.span, wing.chord, 0.5 * fuselage.length, cruiseDynamicPressure, wing.thicknessToChord)
@@ -154,7 +153,7 @@ def defineAirplane(definingParameters):
     verticalStabilizer.span = convert(6, "ft", "m")
     verticalStabilizer.sweep = convert(20, "deg", "rad")
     verticalStabilizer.taperRatio = 1
-    verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 1, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.5 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord)
+    verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 0, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.6 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord)
     verticalStabilizer.x = 8.65 # [m]
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
@@ -347,21 +346,21 @@ def defineAirplane(definingParameters):
 
     airplane.emptyMass = sum([component.mass for component in airplane.components])
     print("WDG: ", convert(W0, "N", "lb"), " lb")
-    print("EMPTY MASS: ", convert(airplane.emptyMass * g, "N", "lb"), " lb")
-    print('WING MASS ', convert(wing.mass * g, "N", "lb"), " lb")
-    print('FUESELAGE MASS ', convert(fuselage.mass * g, "N", "lb"), " lb")
-    print('HORIZONTALSTABILIZER MASS ', convert(horizontalStabilizer.mass * g, "N", "lb"), " lb")
-    print('VERTICALSTABILIZER MASS ', convert(verticalStabilizer.mass * g, "N", "lb"), " lb")
-    print('ENGINEL MASS ', convert(engineL.mass * g, "N", "lb"), " lb")
-    print('ENGINER MASS ', convert(engineR.mass * g, "N", "lb"), " lb")
-    print('MAINGEAR MASS ', convert(mainGear.mass * g, "N", "lb"), " lb")
-    print('FRONTGEAR MASS ', convert(frontGear.mass * g, "N", "lb"), " lb")
-    print('FUELSYSTEM MASS ', convert(fuelSystem.mass * g, "N", "lb"), " lb")
-    print('AVIONICS MASS ', convert(avionics.mass * g, "N", "lb"), " lb")
-    print('FLIGHT CONTROLS MASS ', convert(flightControls.mass * g, "N", "lb"), " lb")
-    print('HYDRAULICS MASS ', convert(hydraulics.mass * g, "N", "lb"), " lb")
-    print('ELECTRONICS MASS ', convert(electronics.mass * g, "N", "lb"), " lb")
-    print('AIRCONICE MASS ', convert(airConIce.mass * g, "N", "lb"), " lb")
+    print("EMPTY WEIGHT: ", convert(airplane.emptyMass * g, "N", "lb"), " lb")
+    print('WING WEIGHT ', convert(wing.mass * g, "N", "lb"), " lb")
+    print('FUESELAGE WEIGHT ', convert(fuselage.mass * g, "N", "lb"), " lb")
+    print('HORIZONTALSTABILIZER WEIGHT ', convert(horizontalStabilizer.mass * g, "N", "lb"), " lb")
+    print('VERTICALSTABILIZER WEIGHT ', convert(verticalStabilizer.mass * g, "N", "lb"), " lb")
+    print('ENGINEL WEIGHT ', convert(engineL.mass * g, "N", "lb"), " lb")
+    print('ENGINER WEIGHT ', convert(engineR.mass * g, "N", "lb"), " lb")
+    print('MAINGEAR WEIGHT ', convert(mainGear.mass * g, "N", "lb"), " lb")
+    print('FRONTGEAR WEIGHT ', convert(frontGear.mass * g, "N", "lb"), " lb")
+    print('FUELSYSTEM WEIGHT ', convert(fuelSystem.mass * g, "N", "lb"), " lb")
+    print('AVIONICS WEIGHT ', convert(avionics.mass * g, "N", "lb"), " lb")
+    print('FLIGHT CONTROLS WEIGHT ', convert(flightControls.mass * g, "N", "lb"), " lb")
+    print('HYDRAULICS WEIGHT ', convert(hydraulics.mass * g, "N", "lb"), " lb")
+    print('ELECTRONICS WEIGHT ', convert(electronics.mass * g, "N", "lb"), " lb")
+    print('AIRCONICE WEIGHT ', convert(airConIce.mass * g, "N", "lb"), " lb")
     print('FURNISHINGS MASS ', convert(furnishings.mass * g, "N", "lb"), " lb")
 
     ################################################################################

@@ -194,7 +194,6 @@ def computeReferenceMission(initialAirplane, referenceMission):
     
     def functionToFindRootOf(X):
         WFguess = X[0]
-        print(WFguess)
         A = copy.deepcopy(initialAirplane)
 
         if WFguess < 0:
@@ -207,7 +206,6 @@ def computeReferenceMission(initialAirplane, referenceMission):
             return 1e10 # huge penalty for optimizer
 
         Ws = simulation["weight"]
-        print(Ws[0]-Ws[-1])
 
         return Ws[0] - Ws[-1]
 

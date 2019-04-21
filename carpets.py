@@ -40,159 +40,156 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-WSs = [WS * 0.8, WS, WS * 1.2]
-PWs = [PW * 0.8, PW, PW * 1.2]
+#WSs = [WS*0.8, WS, WS*1.2]
+#PWs = [PW*0.9, PW, PW*1.1]
+
+WSs = [WS*0.8, WS]
+PWs = [PW*0.9, PW]
+
+DPs = [[{
+    "wing loading": WS,
+    "power to weight ratio": PW
+    } for WS in WSs] for PW in PWs]
+
+# Driving Parameters (used for fit curves)
+fit_WS = linspace(WS*0.7, WS*1.3, 1000)
+fit_PW = linspace(PW*0.7, PW*1.3, 1000)
 
 # AIRPLANE
 
-airplaneName = "tecnam"
+airplaneName = "Gopher"
 
 # GET DRIVING PARAMETERS
 
-p = [[getPerformanceParameters(airplaneName, {
-    "wing loading": WS,
-    "power to weight ratio": PW
-    }, designMission) for WS in WSs] for PW in PWs]
+data = map2D(lambda DP: getAirplaneDesignData(airplaneName, DP, designMission), DPs) # FIXME: should this be reference mission data?
+p = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), data)
 
 # make matrix for each driving parameter independently
 
-pWS = [copy(WSs) for PW in PWs]
-pPW = transpose([copy(PWs) for WS in WSs])
+pWS = [[convert(WS, "N/m^2", "lb/ft^2") for WS in copy(WSs)] for PW in PWs]
+pPW = transpose([[convert(PW, "W/N", "hp/lb") for PW in copy(PWs)] for WS in WSs])
+fWS = [convert(WS, "N/m^2", "lb/ft^2") for WS in fit_WS]
+fPW = [convert(PW, "W/N", "hp/lb") for PW in fit_PW]
 
 # make matrix for each performance parameter independently
 
-pWe = [[PP["weight"] for PP in row] for row in p]
+pC = [[True for PP in row] for row in p] # TODO: cache convergence # Verification that simulation converged at this value
+pWe = [[convert(PP["empty weight"], "N", "lb") for PP in row] for row in p]
+pdT0 = [[convert(PP["takeoff field length"], "m", "ft") for PP in row] for row in p]
+pdL = [[convert(PP["landing field length"], "m", "ft") for PP in row] for row in p]
+pR = [[convert(PP["range"], "m", "nmi") for PP in row] for row in p]
+pV = [[convert(PP["average ground speed"], "m/s", "kts") for PP in row] for row in p]
+pT = [[convert(PP["flight time"], "s", "hr") for PP in row] for row in p]
+pF = [[convert(PP["fuel used"], "N", "lb") for PP in row] for row in p]
 
-# ???
-
-fit_WS = linspace(WS*0.5, WS*1.5, 1000)
-fit_PW = linspace(PW*0.5, PW*1.5, 1000)
+constrainedFieldLength = convert(minimumTakeoffFieldLength, "m", "ft")
 
 ################################################################################
 # GROSS WEIGHT TRENDS
 ################################################################################
 
-# FOR loop that iterates through 3x3 permutations of W/S and T/W and create matrix
+W0params = []
 
-###### W0 TRENDS
-W0FitParameters = []
-# Plot W0 as function of W/S for each T/W
+figure()
+for (Cs, WSs, Wes) in zip(pC, pWS, pWe): # for each row
+    # Clean list by checking if solution converged
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleanWes = dropOnOtherList(Wes, Cs)
+    W0param, pconv = curve_fit(fit_func, cleanWSs, cleanWes, p0=(1, 0))
+    a, b = (W0param[0], W0param[1])
+
+    W0params.append([a,b])
+
+    plot(cleanWSs, cleanWes, "k.")
+    plot(fWS, [exponentialForm(WS, a, b) for WS in fWS])
+
+title("Empty Weight Trends")
+xlabel("Wing Loading [lb/ft^2]")
+ylabel("Empty Weight [lb]")
+
+################################################################################
+# TAKEOFF DISTANCE CROSS PLOT
+################################################################################
+W0fromdT0Intersection = []
+
 figure()
 
-for PWlist in p:
-    plot([convert(i["empty weight"], "N", "lb") for i in PWlist], [convert(WS, "N/m^2", "lb/ft^2") for WS in WSs], "k.")
-    W0params, pconv = curve_fit(fit_func, WSs, [i["empty weight"] for i in PWlist], p0=(1, 0))
-    #plot(fit_WS, [exponentialForm(WS, W0params[0], W0params[1]) for WS in fit_WS])
-    W0FitParameters.append(W0params)
+for row, (Cs, WSs, dT0s) in enumerate(zip(pC, pWS, pdT0)):
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleandT0s = dropOnOtherList(dT0s, Cs)
+    plot(cleanWSs, cleandT0s, "k.")
 
-title("W0 Trends")
-ylabel("Wing Loading [lb/ft^2]")
-xlabel("Gross Weight [lb]")
+    # Create fit curves
+    params, pconv = curve_fit(fit_func, cleanWSs, cleandT0s, p0=(1, 0))
+    plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS])
+
+     # Find intersection of curve with flight time limit
+    WS_dT0Intersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
+    W0_WS_dT0Intersection = invExponentialForm(WS_dT0Intersection, W0params[row][0], W0params[row][1])
+    W0fromdT0Intersection.append(W0_WS_dT0Intersection)
+
+hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
+
+title("Takeoff Distance")
+xlabel("Wing Loading [lb/ft^2]")
+ylabel("Takeoff Field Length [ft]")
 
 ################################################################################
 # LANDING DISTANCE CROSS PLOT
 ################################################################################
+W0fromdLIntersection = []
 
-###### CROSS PLOTS
-W0fromdT0Intersection = []
-W0fromRangeIntersection = []
-W0fromFlightTimeIntersection = []
-
-# Plot dTO as function of W/S for each P/W
-inc = 0
 figure()
-for PWlist in p:
-    plot(WSs, [i["takeoff distance"] for i in PWlist], "k.")
-    params, pconv = curve_fit(fit_func, WSs, [i["takeoff distance"] for i in PWlist], p0=(1, 0))
-    plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
-    
-    # Find intersection of curve with dT0 limit
-    WS_dT0Intersection = invExponentialForm(minimumTakeoffFieldLength, params[0], params[1])
-    W0_WS_dT0Intersection = invExponentialForm(WS_dT0Intersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
-    W0fromdT0Intersection.append(W0_WS_dT0Intersection)
-    
-    inc = inc+1
 
-hlines(minimumTakeoffFieldLength, fit_WS[0], fit_WS[-1])
+for row, (Cs, WSs, dLs) in enumerate(zip(pC, pWS, pdL)):
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleandLs = dropOnOtherList(dLs, Cs)
+    plot(cleanWSs, cleandLs, "k.")
 
-title("Takeoff Distance")
-xlabel("Wing Loading [N/m^2]")
-ylabel("Takeoff Distance [m]")
-# Find intersection of curve with dT0 limit
+    # Create fit curves
+    params, pconv = curve_fit(fit_func, cleanWSs, cleandLs, p0=(1, 0))
+    plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS])
 
-################################################################################
-# RANGE CROSS PLOT
-################################################################################
+     # Find intersection of curve with flight time limit
+    W0_dLIntersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
+    W0_WS_dLIntersection = invExponentialForm(W0_dLIntersection, W0params[row][0], W0params[row][1])
+    W0fromdLIntersection.append(W0_WS_dLIntersection)
 
-# Plot range as function of W/S for each P/W
-inc = 0
-figure()
-for PWlist in p:
-    plot(WSs, [i["range"] for i in PWlist], "k.")
-    params, pconv = curve_fit(fit_func, WSs, [i["range"] for i in PWlist], p0=(1, 0))
-    plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
-    
-    # Find intersection of curve with range limit
-    W0_rangeIntersection = invExponentialForm(minimumRange, params[0], params[1])
-    W0_WS_rangeIntersection = invExponentialForm(W0_rangeIntersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
-    W0fromRangeIntersection.append(W0_WS_rangeIntersection)
-    
-    inc = inc+1
+    print(W0fromdLIntersection)
 
-hlines(minimumRange, fit_WS[0], fit_WS[-1])
+hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
 
-title("Range")
-xlabel("Wing Loading [N/m^2]")
-ylabel("Range [m]")
-# Find intersection of curve with axis
-
-################################################################################
-# FLIGHT TIME CROSS PLOT
-################################################################################
-
-# Plot flight time as function of W/S for each P/W
-inc = 0
-figure()
-for PWlist in p:
-    plot(WSs, [i["flight time"] for i in PWlist], "k.")
-    params, pconv = curve_fit(fit_func, WSs, [i["flight time"] for i in PWlist], p0=(1, 0))
-    plot(fit_WS, [exponentialForm(WS, params[0], params[1]) for WS in fit_WS])
-    
-    # Find intersection of curve with flight time limit
-    W0_flightTimeIntersection = invExponentialForm(maximumFlightTime, params[0], params[1])
-    W0_WS_flightTimeIntersection = invExponentialForm(W0_flightTimeIntersection, W0FitParameters[inc][0], W0FitParameters[inc][1])
-    W0fromFlightTimeIntersection.append(W0_WS_flightTimeIntersection)
-    
-    inc=inc+1
-
-hlines(maximumFlightTime, fit_WS[0], fit_WS[-1])
-
-title("Flight Time")
-xlabel("Wing Loading [N/m^2]")
-ylabel("Flight Time [s]")
-# Find intersection of curve with axis
+title("Landing Distance")
+xlabel("Wing Loading [lb/ft^2]")
+ylabel("Landing Field Length [ft]")
 
 ################################################################################
 # SIZING PLOT
 ################################################################################
 
 ###### SIZING PLOT
-# Plot fit curve intersections on sizing plot
-
-emptyWeights = [[a["empty weight"] for a in row] for row in p]
-wingLoadings = [copy(WSs) for row in p]
+# Plot wing loading vs. empty weight grid
+offset = 4 #lb/ft^2
 
 figure()
-for (ews, wss) in zip(emptyWeights, wingLoadings):
-    plot(ews, wss, "k")
+for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
+    # Clean list by checking if solution converged
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleanWes = dropOnOtherList(Wes, Cs)
 
-for (ews, wss) in zip(transpose(emptyWeights), transpose(wingLoadings)):
-    plot(ews, wss, "k")
-    
+    plot(cleanWes, cleanWSs, "k")
 
+for (Cs, WSs, Wes) in zip(transpose(pC), transpose(pWS), transpose(pWe)): # for each row
+    # Clean list by checking if solution converged
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleanWes = dropOnOtherList(Wes, Cs)
+
+    plot(cleanWes, cleanWSs, "k")
 
 title("Carpet Plot")
 xlabel("Wing Loading")
 ylabel("Empty Weight")
+
+################################################################################
 
 show()

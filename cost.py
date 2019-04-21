@@ -24,15 +24,15 @@ from matplotlib.pyplot import *
 # DEFINE AIRPLANE
 ################################################################################
 
-W0 = convert(2711, "lb", "N")
-Wf = convert(317, "lb", "N")
-WS = convert(17.06, "lb/ft^2", "N/m^2")
+W0 = convert(3952, "lb", "N")
+Wf = convert(525, "lb", "N")
+WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 
 DPS = {"initial gross weight": W0, "initial fuel weight": Wf, "wing loading": WS, "power to weight ratio": PW}
-PPs = getPerformanceParameters("tecnam", DPS, designMission)
+PPs = getPerformanceParameters("Gopher", DPS, designMission)
 
-ID = airplaneDefinitionID("tecnam", DPS)
+ID = airplaneDefinitionID("Gopher", DPS)
 airplane = loadFinalAirplane(ID)
 simulation = loadSimulation(ID)
 engine = airplane.engines[0]
@@ -41,12 +41,12 @@ engine = airplane.engines[0]
 # PRODUCTION COST
 ################################################################################
 
-salesPrice = [220000, 250000, 280000] # [2019 USD]
+salesPrice = [250000, 280000, 300000] # [2019 USD]
 
 # Production Cost For 500 Planned Aircraft
 
 plannedAircraft = 500
-fixedCost = FixedCost(airplane, plannedAircraft)
+fixedCost =FixedCost(airplane, plannedAircraft)
 print("\nFor {:0.0f} planned aircraft:".format(plannedAircraft))
 print("Fixed Cost = {:0.2f} USD".format(fixedCost))
 variableCost = VariableCost(airplane, engine, plannedAircraft)

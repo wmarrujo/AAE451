@@ -50,7 +50,8 @@ def defineAirplane(definingParameters):
 
     airplane.initialGrossWeight = W0
     airplane.pilots = 1
-    airplane.passengers = 3
+    airplane.passengers = 0
+    airplane.maxPassengers = 5
     airplane.oswaldEfficiencyFactor = 0.8
     airplane.compressibilityDragCoefficient = 0
     airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: what should this be?
@@ -75,7 +76,7 @@ def defineAirplane(definingParameters):
     powerplant.gas = gas
     powerplant.percentElectric = 0
     powerplant.fuelMass = Wf/g
-    
+
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
 
@@ -96,7 +97,7 @@ def defineAirplane(definingParameters):
     wing.airfoil = airfoil
     wing.interferenceFactor = 1
     wing.planformArea = W0/WS
-    wing.setAspectRatioHoldingPlanformArea(7)
+    wing.setAspectRatioHoldingPlanformArea(8.6)
     wing.thicknessToChord = 0.02
     wing.sweep = 0
     wing.taperRatio = 1
@@ -219,7 +220,9 @@ def defineAirplane(definingParameters):
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, landingLoadFactor, mainGear.length)
     mainGear.composite = 0
+    mainGear.retractable = True
     mainGear.mass += mainGear.composite*mainGear.mass*0.14
+    mainGear.retractable = True
     mainGear.x = convert(15,"ft","m") # [m]
 
     # FRONT GEAR OBJECT
@@ -325,7 +328,7 @@ def defineAirplane(definingParameters):
     airConIce.interferenceFactor = 1
     airConIce.wettedArea = 0
     airConIce.referenceLength = 0
-    airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.passengers, avionics.mass, cruiseMachNumber)
+    airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.maxPassengers, avionics.mass, cruiseMachNumber)
     airConIce.x = convert(2.35,"ft","m") # [m] #GUESS
     airConIce.composite = 0
 
@@ -344,20 +347,24 @@ def defineAirplane(definingParameters):
 
     airplane.components += [flightControls, hydraulics, electronics, airConIce, furnishings]
 
-    # DEFINE PAYLOAD INFORMATION
+    ################################################################################
+    # PAYLOAD DEFINITION
+    ################################################################################
+
     passengerPayload = Passengers()
     passengerPayload.x = convert(12,"ft","m")
-    passengerPayload.mass = CalculatePassengerPayloadMass(airplane.passengers)
+    passengerPayload.mass = CalculatePassengerPayloadMass(airplane.maxPassengers)
 
     baggagePayload = Baggage()
     baggagePayload.x = convert(17,"ft","m")
-    baggagePayload.mass = CalculateBaggageMass(airplane.passengers)
+    baggagePayload.mass = CalculateBaggageMass(airplane.maxPassengers)
 
     pilotPayload = Pilot()
     pilotPayload.x = convert(6,"ft","m")
     pilotPayload.mass = CalculatePilotPayloadMass(airplane.pilots)
 
     airplane.payloads = [passengerPayload, baggagePayload, pilotPayload]
+
     ################################################################################
     # FINISH DEFINING AIRPLANE
     ################################################################################

@@ -50,10 +50,12 @@ def defineAirplane(definingParameters):
     
     airplane.initialGrossWeight = W0
     airplane.pilots = 1
-    airplane.passengers = 5
+    airplane.passengers = 0
+    airplane.maxPassengers = 5
     airplane.oswaldEfficiencyFactor = 0.8
     airplane.compressibilityDragCoefficient = 0
     airplane.miscellaneousParasiteDragFactor = 0.004 # FIXME: what should this be?
+    airplane.compositeFraction = 0 # Percent of airframe that is composite materials
     airplane.components = []
     
     ################################################################################
@@ -223,6 +225,7 @@ def defineAirplane(definingParameters):
     mainGear.mass += mainGear.composite*mainGear.mass*0.14
     mainGear.retractable = True
     mainGear.x = convert(12.4,"ft","m")
+    mainGear.retractable = True #Is landing Gear retractable?
     
     # FRONT GEAR OBJECT
     
@@ -326,7 +329,7 @@ def defineAirplane(definingParameters):
     airConIce.interferenceFactor = 1
     airConIce.wettedArea = 0
     airConIce.referenceLength = 0
-    airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.passengers, avionics.mass, cruiseMachNumber)
+    airConIce.mass = PredictAirConIceMass(airplane.initialGrossWeight, airplane.pilots + airplane.maxPassengers, avionics.mass, cruiseMachNumber)
     airConIce.x = convert(3*convert(wing.chord,"m","ft")/4,"ft","m") + wing.x
     airConIce.composite = 0
     
@@ -348,11 +351,11 @@ def defineAirplane(definingParameters):
     # DEFINE PAYLOAD INFORMATION
     passengerPayload = Passengers()
     passengerPayload.x = convert((1*7.143+2*10.238+2*13.095)/5,"ft","m")
-    passengerPayload.mass = CalculatePassengerPayloadMass(airplane.passengers)
+    passengerPayload.mass = CalculatePassengerPayloadMass(airplane.maxPassengers)
 
     baggagePayload = Baggage()
     baggagePayload.x = convert(14,"ft","m")
-    baggagePayload.mass = CalculateBaggageMass(airplane.passengers)
+    baggagePayload.mass = CalculateBaggageMass(airplane.maxPassengers)
 
     pilotPayload = Pilot()
     pilotPayload.x = convert(7.143,"ft","m")

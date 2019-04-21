@@ -7,13 +7,11 @@ from parameters import *
 from equations import *
 
 ################################################################################
-# MISSION
+# DESIGN MISSION
 ################################################################################
 
-# DESIGN MISSION
-
 designMission = Mission()
-designMission.passengers = 5
+designMission.passengerFactor = 1
 designMission.pilots = 1
 
 designMission.segments = Segments([
@@ -81,9 +79,13 @@ def _designMissionInitializeCruise(airplane, t, t0):
 def _designMissionCompletedCruise(airplane, t, t0):
     return minimumRange <= airplane.position
 
+def updateCruiseWithCDBuildup(airplane, t, t0):
+    UpdateCruise(airplane, t, t0)
+
 designMission.segments["cruise"].initialize = _designMissionInitializeCruise
 designMission.segments["cruise"].completed = _designMissionCompletedCruise
-designMission.segments["cruise"].update = UpdateCruise
+# designMission.segments["cruise"].update = UpdateCruise
+designMission.segments["cruise"].update = updateCruiseWithCDBuildup
 
 # DESCENT
 
@@ -168,12 +170,11 @@ designMission.segments["shutdown"].completed = _designMissionCompletedShutdown
 designMission.segments["shutdown"].update = UpdateWaiting
 
 ######################################################################################
-# REFERENCE MISSION DEFINITION #######################################################
-######################################################################################
 # REFERENCE MISSION
+######################################################################################
 
 referenceMission = Mission()
-referenceMission.passengers = 2
+referenceMission.passengerFactor = 0.5
 referenceMission.pilots = 1
 
 referenceMission.segments = Segments([

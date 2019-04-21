@@ -1,4 +1,4 @@
-# LOCAL DEPENDENCIES
+# LOCAL DEPENDENCIES        print(airplane.passengers)
 
 from utilities import *
 from constants import *
@@ -19,7 +19,7 @@ class Mission:
 
         the recording function takes the simulation time, the segment name, and the airplane in its current state
         """
-
+        airplane.passengers = ceil(self.passengerFactor*airplane.maxPassengers)
         t = 0 # s
         iteration = 0
         verified = verifySimulation(iteration, t, "Start", airplane)
@@ -34,6 +34,11 @@ class Mission:
             while verified and not segment.completed(airplane, t, t0):
                 try:
                     segment.update(airplane, t, tstep)
+
+                    # hard bounds so it doesn't crash
+                    if airplane.altitude < 0:
+                        airplane.altitude = 0
+
                     verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
                 except Exception as e:
                     print("The Simulation Encountered an Error: ", e)

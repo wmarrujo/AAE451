@@ -40,8 +40,11 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-WSs = [WS*0.8, WS, WS*1.2]
-PWs = [PW*0.9, PW, PW*1.1]
+#WSs = [WS*0.8, WS, WS*1.2]
+#PWs = [PW*0.9, PW, PW*1.1]
+
+WSs = [WS*0.8, WS]
+PWs = [PW*0.9, PW]
 
 DPs = [[{
     "wing loading": WS,

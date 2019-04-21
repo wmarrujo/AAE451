@@ -206,15 +206,14 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
     
     # INITIALIZATION
     
-    tolerance = 1e-1
     guess = [convert(3000, "lb", "N"), convert(300, "lb", "N")]
     
     # ROOT FINDING
     
-    result = root(functionToFindRootOf, guess, tol=tolerance)
+    result = root(functionToFindRootOf, guess, tol=1e-4)
     closestGuess = result["x"]
     airplane = defineSpecificAirplane(setDefiningParameters(drivingParameters, closestGuess))
-    closed = norm([0, 0], result["fun"]) <= tolerance*10 # on the order of magnitude of the tolerance
+    closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 N
     
     return {
         "airplane": airplane,

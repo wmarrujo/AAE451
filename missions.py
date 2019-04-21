@@ -174,7 +174,7 @@ designMission.segments["shutdown"].update = UpdateWaiting
 ######################################################################################
 
 referenceMission = Mission()
-referenceMission.passengers = 2
+referenceMission.passengerFactor = 0.5
 referenceMission.pilots = 1
 
 referenceMission.segments = Segments([

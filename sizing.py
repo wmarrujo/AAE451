@@ -72,31 +72,36 @@ performanceParametersKeys = [
 def getAirplaneData(airplaneName, drivingParameters, designMission, silent=False):
     id = airplaneDefinitionID(airplaneName, drivingParameters)
     
+    # get initial airplane
     initialDesignAirplane = loadAirplaneConfiguration(id, "design-initial")
-    print(initialDesignAirplane)
-    if initialDesignAirplane is None:
+    if initialDesignAirplane is None: # not cached
         print("Creating Design Configuration                                    - {:10.10}".format(id)) if not silent else None
+        # define airplane
         defineSpecificAirplane = airplaneDefinitionFunction(airplaneName)
         closureResult = closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission, silent=silent)
         initialDesignAirplane = closureResult["airplane"]
         closed = closureResult["closed"]
+        # cache results
         saveAirplaneConfiguration(initialDesignAirplane, id, "design-initial")
         print("Design Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
     else:
         print("Loaded Design Initial Configuration                              - {:10.10}".format(id)) if not silent else None
     
+    # get simulation results
     designSimulation = loadSimulation(id, "design-simulation")
     finalDesignAirplane = loadAirplaneConfiguration(id, "design-final")
-    if designSimulation is None:
+    if designSimulation is None: # not cached
         print("Simulating Design Mission                                        - {:10.10}".format(id)) if not silent else None
+        # simulate
         simulationResult = simulateAirplane(initialDesignAirplane, designMission, silent=silent)
-        simulation = simulationResult["simulation"]
+        designSimulation = simulationResult["simulation"]
         finalDesignAirplane = simulationResult["final airplane"]
         succeeded = simulationResult["succeeded"]
-        saveSimulation(simulation, id, "design-simulation")
-        saveAirplaneConfiguration(finalDesignAirplane, True, id, "design-final")
+        # cache results
+        saveSimulation(designSimulation, id, "design-simulation")
+        saveAirplaneConfiguration(finalDesignAirplane, id, "design-final")
         print("Design Mission " + ("SUCCEEDED" if succeeded else "DID NOT SUCCEED")) if not silent else None
-    else:
+    else: # cached
         print("Loaded Design Configuration Design Mission Simulation            - {:10.10}".format(id)) if not silent else None
         print("Loaded Design Final Configuration                                - {:10.10}".format(id)) if not silent else None
     
@@ -104,6 +109,60 @@ def getAirplaneData(airplaneName, drivingParameters, designMission, silent=False
         "initial airplane": initialDesignAirplane,
         "simulation": designSimulation,
         "final airplane": finalDesignAirplane}
+
+def getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", silent=False):
+    id = airplaneDefinitionID(airplaneName, drivingParameters)
+    
+    # get initial airplane
+    initialReferenceAirplane = loadAirplaneConfiguration(id, referenceMissionName + "-initial")
+    if initialReferenceAirplane is None: # not cached
+        # load the design airplane
+        initialDesignAirplane = loadAirplaneConfiguration(id, "design-initial")
+        if initialDesignAirplane is None: # not cached
+            print("Creating Design Configuration                                    - {:10.10}".format(id)) if not silent else None
+            # define airplane
+            defineSpecificAirplane = airplaneDefinitionFunction(airplaneName)
+            closureResult = closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission, silent=silent)
+            initialDesignAirplane = closureResult["airplane"]
+            closed = closureResult["closed"]
+            # cache results
+            saveAirplaneConfiguration(initialDesignAirplane, id, "design-initial")
+            print("Design Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
+        else:
+            print("Loaded Design Initial Configuration                              - {:10.10}".format(id)) if not silent else None
+        # close reference version of design airplane
+        print("Creating Reference Configuration                                 - {:10.10}".format(id)) if not silent else None
+        closureResult = closeFuelOnly(initialDesignAirplane, referenceMission, silent=silent)
+        initialReferenceAirplane = closureResult["airplane"]
+        closed = closureResult["closed"]
+        # cache results
+        saveAirplaneConfiguration(initialReferenceAirplane, id, referenceMissionName + "-initial")
+        print("Reference Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
+    else:
+        print("Loaded Reference Initial Configuration                           - {:10.10}".format(id)) if not silent else None
+    
+    # get simulation results
+    referenceSimulation = loadSimulation(id, referenceMissionName + "-simulation")
+    finalReferenceAirplane = loadAirplaneConfiguration(id, referenceMissionName + "-final")
+    if referenceSimulation is None: # not cached
+        print("Simulating Reference Mission                                     - {:10.10}".format(id)) if not silent else None
+        # simulate
+        simulationResult = simulateAirplane(initialReferenceAirplane, referenceMission, silent=silent)
+        referenceSimulation = simulationResult["simulation"]
+        finalReferenceAirplane = simulationResult["final airplane"]
+        succeeded = simulationResult["succeeded"]
+        # cache results
+        saveSimulation(referenceSimulation, id, referenceMissionName + "-simulation")
+        saveAirplaneConfiguration(finalReferenceAirplane, id, referenceMissionName + "-final")
+        print("Design Mission " + ("SUCCEEDED" if succeeded else "DID NOT SUCCEED")) if not silent else None
+    else: # cached
+        print("Loaded Design Configuration Design Mission Simulation            - {:10.10}".format(id)) if not silent else None
+        print("Loaded Design Final Configuration                                - {:10.10}".format(id)) if not silent else None
+    
+    return {
+        "initial airplane": initialReferenceAirplane,
+        "simulation": referenceSimulation,
+        "final airplane": finalReferenceAirplane}
 
 ################################################################################
 # AIRPLANE CREATION
@@ -124,11 +183,11 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
         definingParameters = setDefiningParameters(drivingParameters, X)
         initialAirplane = defineSpecificAirplane(definingParameters)
         # simulate airplane
-        simulationResults = simulateAirplane(initialAirplane, designMission, silent=silent)
-        initialAirplane = simulationResults["initial airplane"]
-        simulation = simulationResults["simulation"]
-        finalAirplane = simulationResults["final airplane"]
-        succeeded = simulationResults["succeeded"]
+        simulationResult = simulateAirplane(initialAirplane, designMission, silent=silent)
+        initialAirplane = simulationResult["initial airplane"]
+        simulation = simulationResult["simulation"]
+        finalAirplane = simulationResult["final airplane"]
+        succeeded = simulationResult["succeeded"]
         
         # calculate resultant point
         if succeeded:
@@ -150,7 +209,7 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
     tolerance = 1e-1
     guess = [convert(3000, "lb", "N"), convert(300, "lb", "N")]
     
-    # MINIMIZATION
+    # ROOT FINDING
     
     result = root(functionToFindRootOf, guess, tol=tolerance)
     closestGuess = result["x"]
@@ -159,6 +218,53 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
     
     return {
         "airplane": airplane,
+        "closed": closed}
+
+def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
+    # DEPENDENCIES
+    
+    def setInitialAirplaneConfiguration(airplane, X):
+        WFguess = X[0]
+        A = copy.deepcopy(airplane)
+        
+        A.initialGrossWeight = WFguess + AirplaneWeight(A) - FuelWeight(A)
+        
+        return airplane
+    
+    def functionToFindRootOf(X):
+        # define airplane
+        initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, X)
+        # simulation
+        simulationResult = simulateAirplane(baseConfiguration, referenceMission, silent=silent)
+        initialAirplane = simulationResult["initial airplane"]
+        simulation = simulationResult["simulation"]
+        finalAirplane = simulationResult["final airplane"]
+        succeeded = simulationResult["succeeded"]
+        # post-validation
+        if succeeded:
+            Wgs = [mg*g for mg in simulation["gas mass"]]
+            gasMassDifference
+            
+            result = [Wgs[0] - Wgs[-1]]
+        else:
+            result = [1e10] # pseudo bound
+        
+        print(X, "->", result, "=>", result[0])
+        return result
+    
+    # INITIALIZATION
+    
+    tolerance = 1e-1
+    guess = [convert(300,"lb","N")]
+    
+    # ROOT FINDING
+    result = root(functionToFindRootOf, guess)
+    closestGuess = result["x"]
+    initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, closestGuess)
+    closed = closestGuess <= tolerance # use norm if more than 1 dimension
+    
+    return {
+        "airplane": initialAirplane,
         "closed": closed}
 
 ################################################################################

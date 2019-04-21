@@ -66,82 +66,136 @@ performanceParametersKeys = [
     "fuel used"]
 
 ################################################################################
-# SIMULATION LIFECYCLE
+# AIRPLANE CREATION
 ################################################################################
 
-simulation = {} # define as global to write to during simulation
-
-def initializeSimulation():
-    global simulation
-    simulation = dict(zip(simulationParametersKeys, [[] for n in range(len(simulationParametersKeys))])) # put in headers as keys
-
-def simulationRecordingFunction(time, segmentName, airplane):
-    global simulation
-    W = AirplaneWeight(airplane)
-    T = AirplaneThrust(airplane)
-    V = airplane.speed
-    cg = CenterGravity(airplane)
-    mf = airplane.powerplant.gas.mass if airplane.powerplant.gas else 0
+def closeAircraftDesign(airplaneDefinitionFunction, drivingParameters, designMission, silent=False):
+    # DEPENDENCIES
     
-    simulation["time"].append(time)
-    simulation["segment"].append(segmentName)
-    simulation["position"].append(airplane.position)
-    simulation["altitude"].append(airplane.altitude)
-    simulation["weight"].append(W)
-    simulation["thrust"].append(T)
-    simulation["speed"].append(V)
-    simulation["cg"].append(cg)
-    simulation["gas mass"].append(mf)
+    def setDefiningParameters(drivingParameters, X):
+        definingParameters = drivingParameters
+        definingParameters["initial gross weight"] = X[0]
+        definingParameters["initial fuel weight"] = X[1]
+        
+        return definingParameters
+    
+    def functionToFindRootOf(X):
+        # define airplane
+        definingParameters = setDefiningParameters(drivingParameters, X)
+        initialAirplane = airplaneDefinitionFunction(definingParameters)
+        # simulate airplane
+        simulationResults = simulateAirplane(initialAirplane, designMission, silent=False)
+        initialAirplane = simulationResults["initial airplane"]
+        simulation = simulationResults["simulation"]
+        finalAirplane = simulationResults["final airplane"]
+        succeeded = simulationResults["succeeded"]
+        
+        # calculate resultant point
+        if succeeded:
+            guessedGrossWeight = definingParameters["initial gross weight"]
+            predictedGrossWeight = AirplaneWeight(initialAirplane)
+            grossWeightDifference = abs(guessedGrossWeight - predictedGrossWeight)
+            emptyFuelMass = finalAirplane.powerplant.emptyFuelMass
+            finalFuelMass = finalAirplane.powerplant.fuelMass
+            
+            result = [grossWeightDifference, finalFuelMass - emptyFuelMass]
+        else:
+            result = [1e10, 1e10] # pseudo bound
+        
+        print(X, "->", result)
+        return result
+    
+    # INITIALIZATION
+    
+    tolerance = 1e-1
+    guess = [convert(3000, "lb", "N"), convert(300, "lb", "N")]
+    
+    # MINIMIZATION
+    
+    result = root(functionToFindRootOf, guess, tol=tolerance)
+    closestGuess = result["x"]
+    airplane = airplaneDefinitionFunction(setDefiningParameters(drivingParameters, closestGuess))
+    closed = norm([0, 0], result["fun"]) <= tolerance*10
+    
+    return {
+        "airplane": airplane,
+        "closed": closed}
+
+################################################################################
+# SIMULATION
+################################################################################
+
+def simulateAirplane(initialAirplane, mission, silent=False):
+    # INITIALIZATION
+    
+    succeeded = True
+    airplane = copy.deepcopy(initialAirplane)
+    simulation = dict(zip(simulationParametersKeys, [[] for n in range(len(simulationParametersKeys))])) # put in headers as keys
+    
+    def simulationRecordingFunction(time, segmentName, airplane):
+        W = AirplaneWeight(airplane)
+        T = AirplaneThrust(airplane)
+        V = airplane.speed
+        cg = CenterGravity(airplane)
+        mg = airplane.powerplant.gas.mass if airplane.powerplant.gas else 0
+        
+        simulation["time"].append(time)
+        simulation["segment"].append(segmentName)
+        simulation["position"].append(airplane.position)
+        simulation["altitude"].append(airplane.altitude)
+        simulation["weight"].append(W)
+        simulation["thrust"].append(T)
+        simulation["speed"].append(V)
+        simulation["cg"].append(cg)
+        simulation["gas mass"].append(mg)
+    
+    # SIMULATION
+    
+    finalAirplane = mission.simulate(timestep, airplane, simulationRecordingFunction, silent=silent)
+    
+    # RETURN ALL DATA
+    
+    return {
+        "initial airplane": initialAirplane,
+        "final airplane": finalAirplane,
+        "simulation": simulation,
+        "succeeded": succeeded}
 
 ################################################################################
 # PERFORMANCE
 ################################################################################
 
-def getPerformanceParameters(airplaneName, drivingParameters, designMission, cache=True, silent=False):
-    global simulation
-    
-    # GET AIRPLANE AND SIMULATION DATA
-    
-    id = airplaneDefinitionID(airplaneName, drivingParameters)
-    print("Getting Performance Parameters for Airplane       - {:10.10}".format(id)) if not silent else None
-    initialAirplane = loadInitialAirplane(id, silent=silent) if cache and initialAirplaneCached(id) else defineAirplane(airplaneName, drivingParameters, designMission, silent=silent)
-    if cache and simulationCached(id):
-        simulation = loadSimulation(id, silent=silent)
-        finalAirplane = loadFinalAirplane(id, silent=silent) if finalAirplaneCached(id) else None
-    else:
-        finalAirplane = simulateAirplane(initialAirplane, designMission, cache=cache, airplaneID=id, silent=silent)
-    
-    # CALCULATE PERFORMANCE VALUES
+def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
+    # GET DATA FROM SIMULATION
     
     ts = simulation["time"]
     ss = simulation["segment"]
     ps = simulation["position"]
     hs = simulation["altitude"]
-    Ws = simulation["weight"]
-    Ts = simulation["thrust"]
+    
+    # CALCULATE PERFORMANCE PARAMETERS
     
     emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: obstacleHeight <= h)]
     dL = ps[-1] - ps[lastIndex(hs, lambda h: obstacleHeight <= h)]
     range = ps[-1]
-    cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")
-    cruiseEndIndex = lastIndex(ss, lambda s: s == "cruise")
-    cruiseFlightTime = ts[cruiseEndIndex] - ts[cruiseStartIndex]
-    cruiseRange = ps[cruiseEndIndex] - ps[cruiseStartIndex]
-    avgGroundSpeedInCruise = cruiseRange / cruiseFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
-    fuelWeightUsed = Ws[0] - Ws[-1]
+    missionTime = ts[-1]
     
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
     
     return {
-        "converged": converged,
         "empty weight": emptyWeight,
         "takeoff field length": dTO,
         "landing field length": dL,
-        "range": cruiseRange,
-        "average ground speed": avgGroundSpeedInCruise,
-        "flight time": cruiseFlightTime,
-        "fuel used": fuelWeightUsed}
+        "range": range,
+        "mission time": missionTime}
+
+
+
+
+
+
+
 
 ################################################################################
 # AIRCRAFT HANDLING
@@ -202,19 +256,6 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
     
     print("Airplane Definition Finished                      - {:10.10}".format(id)) if not silent else None
     return airplane
-
-def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None, silent=False):
-    """returns the airplane at its final state, or None if the simulation failed"""
-    airplane = copy.deepcopy(initialAirplane)
-    
-    initializeSimulation()
-    finalAirplane = mission.simulate(timestep, airplane, simulationRecordingFunction, silent=silent)
-    
-    if cache and airplaneID is not None:
-        saveSimulation(airplaneID, silent=silent) # save the simulation
-        saveFinalAirplane(finalAirplane, airplaneID, silent=silent) # save the final airplane
-    
-    return finalAirplane
 
 ################################################################################
 # FILE HANDLING

@@ -7,10 +7,8 @@ from parameters import *
 from equations import *
 
 ################################################################################
-# MISSION
-################################################################################
-
 # DESIGN MISSION
+################################################################################
 
 designMission = Mission()
 designMission.passengerFactor = 1
@@ -83,28 +81,6 @@ def _designMissionCompletedCruise(airplane, t, t0):
 
 def updateCruiseWithCDBuildup(airplane, t, t0):
     UpdateCruise(airplane, t, t0)
-    
-    if t == floor(convert(40, "min", "s")): # at 10 min into cruise
-        def ParasiteDragCoefficient(airplane):
-            Sref = airplane.wing.planformArea
-            CD0miscFactor = airplane.miscellaneousParasiteDragFactor
-            
-            def componentDragContribution(component):
-                FFi = component.formFactor(airplane)
-                Qi = component.interferenceFactor
-                Cfi = ComponentSkinFrictionCoefficient(airplane, component)
-                Sweti = component.wettedArea
-                
-                print(FFi * Qi * Cfi * Sweti / Sref, type(component))
-                return FFi * Qi * Cfi * Sweti / Sref
-            
-            CD0Prediction = sum([componentDragContribution(component) for component in airplane.components])
-            
-            return CD0Prediction * (1+CD0miscFactor)
-        
-        print("misc: ", airplane.miscellaneousParasiteDragFactor)
-        print("CD0:", ParasiteDragCoefficient(airplane))
-        print("CDi:", InducedDragCoefficient(airplane))
 
 designMission.segments["cruise"].initialize = _designMissionInitializeCruise
 designMission.segments["cruise"].completed = _designMissionCompletedCruise
@@ -194,9 +170,8 @@ designMission.segments["shutdown"].completed = _designMissionCompletedShutdown
 designMission.segments["shutdown"].update = UpdateWaiting
 
 ######################################################################################
-# REFERENCE MISSION DEFINITION #######################################################
-######################################################################################
 # REFERENCE MISSION
+######################################################################################
 
 referenceMission = Mission()
 referenceMission.passengers = 2

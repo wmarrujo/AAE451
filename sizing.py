@@ -118,11 +118,11 @@ def getPerformanceParameters(airplaneName, drivingParameters, designMission, cac
     emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: h >= 50)]
     range = ps[-1]
-    cruiseStartIndex = firstIndex(ss, lambda s: s == "cruise")
-    cruiseEndIndex = lastIndex(ss, lambda s: s == "cruise")
-    cruiseFlightTime = ts[cruiseEndIndex] - ts[cruiseStartIndex]
-    cruiseRange = ps[cruiseEndIndex] - ps[cruiseStartIndex]
-    avgGroundSpeedInCruise = cruiseRange / cruiseFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
+    climbStartIndex = firstIndex(ss, lambda s: s == "climb")
+    descentEndIndex = lastIndex(ss, lambda s: s == "descent")
+    climbToDescentFlightTime = ts[descentEndIndex] - ts[climbStartIndex]
+    Range = ps[descentEndIndex] - ps[climbStartIndex]
+    avgGroundSpeed = Range / climbToDescentFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
     fuelWeightUsed = Ws[0] - Ws[-1]
     
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
@@ -130,9 +130,9 @@ def getPerformanceParameters(airplaneName, drivingParameters, designMission, cac
     return {
         "empty weight": emptyWeight,
         "takeoff field length": dTO,
-        "range": cruiseRange,
-        "average ground speed": avgGroundSpeedInCruise,
-        "flight time": cruiseFlightTime,
+        "range": Range,
+        "average ground speed": avgGroundSpeed,
+        "flight time": climbToDescentFlightTime,
         "fuel used": fuelWeightUsed}
 
 ################################################################################
@@ -188,6 +188,66 @@ def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=
     
     print("Airplane Definition Closed                        - {:10.10}".format(id)) if not silent else None
     return airplane
+
+def computeReferenceMission(initialAirplane, referenceMission):
+    
+    
+    def functionToFindRootOf(X):
+        WFguess = X[0]
+        print(WFguess)
+        A = copy.deepcopy(initialAirplane)
+
+        if WFguess < 0:
+            return 1e10 # pseudo bound
+
+        A.initialGrossWeight = WFguess + AirplaneWeight(A) - FuelWeight(A)
+
+        finalA = simulateAirplane(A, referenceMission, cache=False, silent=False)
+        if finalA is None: # the simulation has failed
+            return 1e10 # huge penalty for optimizer
+
+        Ws = simulation["weight"]
+        print(Ws[0]-Ws[-1])
+
+        return Ws[0] - Ws[-1]
+
+    X0 = [convert(300,"lb","N")]
+    result = root(functionToFindRootOf, X0)
+    Xf = result.x
+    initialAirplane.initialGrossWeight = Xf + AirplaneWeight(initialAirplane) - FuelWeight(initialAirplane)
+    finalAirplane = simulateAirplane(initialAirplane, referenceMission, False, False)
+    
+    print("REFERENCE MISSION PARAMS")
+    
+    ts = simulation["time"]
+    ss = simulation["segment"]
+    ps = simulation["position"]
+    hs = simulation["altitude"]
+    Ws = simulation["weight"]
+    Ts = simulation["thrust"]
+    
+    emptyWeight = initialAirplane.emptyMass*g
+    dTO = ps[firstIndex(hs, lambda h: h >= 50)]
+    range = ps[-1]
+    climbStartIndex = firstIndex(ss, lambda s: s == "climb")
+    descentEndIndex = lastIndex(ss, lambda s: s == "descent")
+    climbToDescentFlightTime = ts[descentEndIndex] - ts[climbStartIndex]
+    Range = ps[descentEndIndex] - ps[climbStartIndex]
+    avgGroundSpeed = Range / climbToDescentFlightTime # TODO: are we sure we want this just for cruise? or do we need to count the startup & stuff too
+    fuelWeightUsed = Ws[0] - Ws[-1]
+    
+    print("empty weight:            {:.0f} lb".format(convert(emptyWeight, "N", "lb")))
+    print("takeoff field length:    {:.0f} ft".format(convert(dTO, "m", "ft")))
+    print("range:                   {:.2f} nmi".format(convert(range, "m", "nmi")))
+    print("average ground speed:    {:.0f} kts".format(convert(avgGroundSpeed, "m/s", "kts")))
+    print("flight time:             {:.1f} hr".format(convert(climbToDescentFlightTime, "s", "hr")))
+    print("fuel used:               {:.0f} lb".format(convert(fuelWeightUsed*g, "N", "lb")))
+    
+    print("END OF REFERENCE MISSION PARAMS")
+        
+    return initialAirplane
+
+
 
 def simulateAirplane(initialAirplane, mission, cache=True, airplaneID=None, silent=False):
     """returns the airplane at its final state, or None if the simulation failed"""

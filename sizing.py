@@ -66,10 +66,50 @@ performanceParametersKeys = [
     "fuel used"]
 
 ################################################################################
+# LIFECYCLE
+################################################################################
+
+def getAirplaneData(airplaneName, drivingParameters, designMission, silent=False):
+    id = airplaneDefinitionID(airplaneName, drivingParameters)
+    
+    initialDesignAirplane = loadAirplaneConfiguration(id, "design-initial")
+    print(initialDesignAirplane)
+    if initialDesignAirplane is None:
+        print("Creating Design Configuration                                    - {:10.10}".format(id)) if not silent else None
+        defineSpecificAirplane = airplaneDefinitionFunction(airplaneName)
+        closureResult = closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission, silent=silent)
+        initialDesignAirplane = closureResult["airplane"]
+        closed = closureResult["closed"]
+        saveAirplaneConfiguration(initialDesignAirplane, id, "design-initial")
+        print("Design Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
+    else:
+        print("Loaded Design Initial Configuration                              - {:10.10}".format(id)) if not silent else None
+    
+    designSimulation = loadSimulation(id, "design-simulation")
+    finalDesignAirplane = loadAirplaneConfiguration(id, "design-final")
+    if designSimulation is None:
+        print("Simulating Design Mission                                        - {:10.10}".format(id)) if not silent else None
+        simulationResult = simulateAirplane(initialDesignAirplane, designMission, silent=silent)
+        simulation = simulationResult["simulation"]
+        finalDesignAirplane = simulationResult["final airplane"]
+        succeeded = simulationResult["succeeded"]
+        saveSimulation(simulation, id, "design-simulation")
+        saveAirplaneConfiguration(finalDesignAirplane, True, id, "design-final")
+        print("Design Mission " + ("SUCCEEDED" if succeeded else "DID NOT SUCCEED")) if not silent else None
+    else:
+        print("Loaded Design Configuration Design Mission Simulation            - {:10.10}".format(id)) if not silent else None
+        print("Loaded Design Final Configuration                                - {:10.10}".format(id)) if not silent else None
+    
+    return {
+        "initial airplane": initialDesignAirplane,
+        "simulation": designSimulation,
+        "final airplane": finalDesignAirplane}
+
+################################################################################
 # AIRPLANE CREATION
 ################################################################################
 
-def closeAircraftDesign(airplaneDefinitionFunction, drivingParameters, designMission, silent=False):
+def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission, silent=False):
     # DEPENDENCIES
     
     def setDefiningParameters(drivingParameters, X):
@@ -82,9 +122,9 @@ def closeAircraftDesign(airplaneDefinitionFunction, drivingParameters, designMis
     def functionToFindRootOf(X):
         # define airplane
         definingParameters = setDefiningParameters(drivingParameters, X)
-        initialAirplane = airplaneDefinitionFunction(definingParameters)
+        initialAirplane = defineSpecificAirplane(definingParameters)
         # simulate airplane
-        simulationResults = simulateAirplane(initialAirplane, designMission, silent=False)
+        simulationResults = simulateAirplane(initialAirplane, designMission, silent=silent)
         initialAirplane = simulationResults["initial airplane"]
         simulation = simulationResults["simulation"]
         finalAirplane = simulationResults["final airplane"]
@@ -98,11 +138,11 @@ def closeAircraftDesign(airplaneDefinitionFunction, drivingParameters, designMis
             emptyFuelMass = finalAirplane.powerplant.emptyFuelMass
             finalFuelMass = finalAirplane.powerplant.fuelMass
             
-            result = [grossWeightDifference, finalFuelMass - emptyFuelMass]
+            result = [grossWeightDifference, finalFuelMass*g - emptyFuelMass*g]
         else:
             result = [1e10, 1e10] # pseudo bound
         
-        print(X, "->", result)
+        print(X, "->", result, "=>", norm([0, 0], result)) if not silent else None # show convergence
         return result
     
     # INITIALIZATION
@@ -114,8 +154,8 @@ def closeAircraftDesign(airplaneDefinitionFunction, drivingParameters, designMis
     
     result = root(functionToFindRootOf, guess, tol=tolerance)
     closestGuess = result["x"]
-    airplane = airplaneDefinitionFunction(setDefiningParameters(drivingParameters, closestGuess))
-    closed = norm([0, 0], result["fun"]) <= tolerance*10
+    airplane = defineSpecificAirplane(setDefiningParameters(drivingParameters, closestGuess))
+    closed = norm([0, 0], result["fun"]) <= tolerance*10 # on the order of magnitude of the tolerance
     
     return {
         "airplane": airplane,
@@ -190,135 +230,48 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
         "range": range,
         "mission time": missionTime}
 
-
-
-
-
-
-
-
-################################################################################
-# AIRCRAFT HANDLING
-################################################################################
-
-def defineAirplane(airplaneName, drivingParameters, mission, cache=True, silent=False):
-    id = airplaneDefinitionID(airplaneName, drivingParameters)
-    print("Defining Airplane                                 - {:10.10}".format(id)) if not silent else None
-    defineAirplaneSpecifically = airplaneDefinitionFunction(airplaneName)
-    
-    def setDefiningParameters(drivingParameters, X):
-        definingParameters = drivingParameters
-        definingParameters["initial gross weight"] = X[0]
-        definingParameters["initial fuel weight"] = X[1]
-        
-        return definingParameters
-    
-    def functionToFindRootOf(X):
-        W0guess = X[0]
-        WFguess = X[1]
-        
-        # apply bounds
-        
-        if W0guess < 0 or WFguess < 0:
-            return [1e10, 1e10] # pseudo bound
-        
-        # define airplane
-        
-        definingParameters = setDefiningParameters(drivingParameters, X)
-
-        initialAirplane = defineAirplaneSpecifically(definingParameters)
-        finalAirplane = simulateAirplane(initialAirplane, mission, cache=False, silent=silent)
-        if finalAirplane is None: # the simulation has failed
-            return [1e10, 1e10] # huge penalty for optimizer
-        
-        # calculate values
-        
-        W0 = AirplaneWeight(initialAirplane)
-        WFf = FuelWeight(finalAirplane)
-        WFe = finalAirplane.powerplant.emptyFuelMass
-        return [W0 - W0guess, WFf - WFe] # the gross weight should match the guess and the mission should use all the fuel
-
-    X0 = [convert(2711, "lb", "N"), convert(300, "lb", "N")]
-    result = root(functionToFindRootOf, X0, tol=1e-1)
-    Xf = result["x"]
-    Xr = result["fun"]
-    
-    tolerance = 30 # within "30" of the 0 point = "close enough"
-    if tolerance < norm([0, 0], Xr): # if it didn't actually converge
-        print("Aircraft did not close ({})".format(norm([0, 0], Xf))) if not silent else None
-        saveNotConvergedMarker(id)
-    
-    definingParameters = setDefiningParameters(drivingParameters, Xf)
-    airplane = defineAirplaneSpecifically(definingParameters)
-    
-    if cache:
-        saveInitialAirplane(airplane, id, silent=silent)
-    
-    print("Airplane Definition Finished                      - {:10.10}".format(id)) if not silent else None
-    return airplane
-
 ################################################################################
 # FILE HANDLING
 ################################################################################
 
+# DIRECTORY HANDLING
+
 if not os.path.exists(simulationDirectory): # simulation path does not exist
     os.makedirs(simulationDirectory) # create it
-
-def airplaneDefinitionID(airplaneName, drivingParameters):
-    return compareValue(airplaneName, drivingParameters)
-
-def airplaneDefinitionFunction(airplaneName):
-    module = import_module(airplaneName)
-    return module.defineAirplane
 
 def createAirplaneIDDirectoryIfNotMade(airplaneID):
     airplaneDirectory = os.path.join(simulationDirectory, airplaneID)
     if not os.path.exists(airplaneDirectory):
         os.makedirs(airplaneDirectory)
 
-def initialAirplaneCached(airplaneID):
-    """checks if the initial airplane for a certain simulation has been cached"""
-    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
+def airplaneDefinitionID(airplaneName, drivingParameters):
+    return compareValue(airplaneName, drivingParameters)
 
-def simulationCached(airplaneID):
-    """checks if the simulation of the airplane is cached"""
-    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "simulation.csv"))
+# CACHING
 
-def finalAirplaneCached(airplaneID):
-    """checks if the final airplane configuration has been cached"""
-    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
+def loadSimulation(airplaneID, simulationName):
+    """returns a cached simulation, or None if it didn't find one"""
+    simulationFilePath = os.path.join(simulationDirectory, airplaneID, simulationName + ".csv")
+    return CSVToDict(simulationFilePath) if os.path.exists(simulationFilePath) else None
 
-def loadInitialAirplane(airplaneID, silent=False):
-    print("Loading Initial Airplane Configuration from Cache - {:10.10}".format(airplaneID)) if not silent else None
-    return loadObject(os.path.join(simulationDirectory, airplaneID, "initial.pyobj")) if initialAirplaneCached(airplaneID) else None
+def loadAirplaneConfiguration(airplaneID, configurationName):
+    """returns a cached airplane in a certain configuration, or None if it didn't find one"""
+    airplaneConfigurationFilePath = os.path.join(simulationDirectory, airplaneID, configurationName + ".pyobj")
+    return loadObject(airplaneConfigurationFilePath) if os.path.exists(airplaneConfigurationFilePath) else None
 
-def loadSimulation(airplaneID, silent=False):
-    print("Loading Simulation from Cache                     - {:10.10}".format(airplaneID)) if not silent else None
-    return CSVToDict(os.path.join(simulationDirectory, airplaneID, "simulation.csv")) if simulationCached(airplaneID) else {}
-
-def loadFinalAirplane(airplaneID, silent=False):
-    print("Loading Final Airplane Configuration from Cache   - {:10.10}".format(airplaneID))
-    return loadObject(os.path.join(simulationDirectory, airplaneID, "final.pyobj")) if finalAirplaneCached(airplaneID) else None
-
-def isNotConverged(airplaneID):
-    return os.path.exists(os.path.join(simulationDirectory, airplaneID, "notconverged"))
-
-def saveInitialAirplane(airplaneObject, airplaneID, silent=False):
-    print("Saving Initial Airplane Configuration to Cache    - {:10.10}".format(airplaneID)) if not silent else None
+def saveSimulation(simulation, airplaneID, simulationName):
+    """saves a simulation"""
     createAirplaneIDDirectoryIfNotMade(airplaneID)
-    saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "initial.pyobj"))
+    simulationFilePath = os.path.join(simulationDirectory, airplaneID, simulationName + ".csv")
+    dictToCSV(simulationFilePath, simulation)
 
-def saveSimulation(airplaneID, silent=False):
-    global simulation
-    print("Saving Simulation to Cache                        - {:10.10}".format(airplaneID)) if not silent else None
+def saveAirplaneConfiguration(airplaneConfiguration, airplaneID, configurationName):
     createAirplaneIDDirectoryIfNotMade(airplaneID)
-    dictToCSV(os.path.join(simulationDirectory, airplaneID, "simulation.csv"), simulation)
+    airplaneConfigurationFilePath = os.path.join(simulationDirectory, airplaneID, configurationName + ".pyobj")
+    saveObject(airplaneConfiguration, airplaneConfigurationFilePath)
 
-def saveFinalAirplane(airplaneObject, airplaneID, silent=False):
-    print("Saving Final Airplane Configuration to Cache      - {:10.10}".format(airplaneID)) if not silent else None
-    createAirplaneIDDirectoryIfNotMade(airplaneID)
-    saveObject(airplaneObject, os.path.join(simulationDirectory, airplaneID, "final.pyobj"))
-
-def saveNotConvergedMarker(airplaneID):
-    createAirplaneIDDirectoryIfNotMade(airplaneID)
-    Path(os.path.join(simulationDirectory, airplaneID, "notconverged")).touch()
+# RESOURCES
+    
+def airplaneDefinitionFunction(airplaneName):
+    module = import_module(airplaneName)
+    return module.defineAirplane

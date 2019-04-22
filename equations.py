@@ -324,35 +324,9 @@ def BestRateOfClimbSpeed(airplane):
     return sqrt(2/rho * W/S * sqrt(1 / (CD0 * pi * AR * e)))
 
 def MaximumSteadyLevelFlightSpeed(airplane):
-<<<<<<< HEAD
 
     Vhguess = convert(250, "kts", "m/s")
     
-=======
-    # A = copy.deepcopy(airplane)
-    # A.throttle = 1 # max power = max speedy boi
-    # A.altitude = convert(8000, "ft", "m")
-    # A.flightPathAngle = 0
-    # A.pitch = convert(8, "deg", "rad")
-    #
-    # velocity = convert(linspace(50,300), "kts", "m/s")
-    # dif = []
-    #
-    # for v in velocity:
-    #     A.speed = v
-    #
-    #     Pavail = PowerAvailableAtAltitudeForSteadyLevelFlight(A)
-    #     Preq = PowerRequiredAtAltitudeForSteadyLevelFlight(A)
-    #
-    #     dif.append(abs(Pavail - Preq))
-    #
-    # minDifIndex = dif.index(min(dif))
-    # Vh = velocity[minDifIndex]
-
-
-    Vhguess = convert(200, "kts", "m/s")
-
->>>>>>> ed0c4877a701c7480ee0b6e9f93b9a1cc2ccb642
     def functionToFindRootOf(X):
         A = copy.deepcopy(airplane)
         A.speed = X[0]
@@ -400,14 +374,10 @@ def ToolingHours(airplane, plannedAircraft):
     Fcf = flapFudge
     Fcomp = 1 + airplane.compositeFraction
     Fpress = pressFudge
-<<<<<<< HEAD
     
     print(Waf)
     print(convert(airplane.initialGrossWeight, "N", "lb"))
     
-=======
-
->>>>>>> ed0c4877a701c7480ee0b6e9f93b9a1cc2ccb642
     return 1.0032 * (Waf**0.764) * (Vh**0.899) * (N**0.178) * (Qm**0.066) * Ftaper * Fcf * Fcomp * Fpress
 
 def ManufacturingHours(airplane, plannedAircraft):
@@ -581,7 +551,7 @@ def StorageCost(airplane):
     return 12 * Rstor * CPI
 
 def AnnualFuelCost(airplane, simulation):
-    ts = simulation["time"]
+    ts = simulation["flight time"]
     ss = simulation["segment"]
     mfs = simulation["gas mass"]
 

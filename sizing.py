@@ -228,13 +228,13 @@ def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
         
         A.initialGrossWeight = WFguess + AirplaneWeight(A) - FuelWeight(A)
         
-        return airplane
+        return A
     
     def functionToFindRootOf(X):
         # define airplane
         initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, X)
         # simulation
-        simulationResult = simulateAirplane(baseConfiguration, referenceMission, silent=silent)
+        simulationResult = simulateAirplane(initialAirplane, referenceMission, silent=silent)
         initialAirplane = simulationResult["initial airplane"]
         simulation = simulationResult["simulation"]
         finalAirplane = simulationResult["final airplane"]

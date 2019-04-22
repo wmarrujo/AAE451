@@ -111,7 +111,7 @@ print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}\n".format(salesPrice[2], Nbe
 
 # Operating Cost
 
-purchasePrice = 200000 # [2019 USD] # We set this based on breakevens above
+purchasePrice = 380000 # [2019 USD] # We set this based on breakevens above
 
 totalAnnualOperatingCost = TotalAnnualCost(airplane, simulation, purchasePrice)
 operatingCostPerHour = CostPerFlightHour(airplane, simulation, purchasePrice)

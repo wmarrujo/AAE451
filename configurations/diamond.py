@@ -42,7 +42,7 @@ def defineAirplane(definingParameters):
     numberOfEngines = 2
     uninstalledEngineMass = 136.078 # [kg] # l(IO)-360-M1A dry weight = 300lbs
     totalFuelVolume = convert(79.441, "gal", "m^3")
-    uninstalledAvionicsWeight = 4*9.8 # N # FIXME: you sure?   #????
+    uninstalledAvionicsWeight = 8*9.8 # N # FIXME: you sure?   #????
     cruiseMachNumber = convert(176, "kts", "m/s") / machAtAltitude(cruiseAltitude)
     #Composite pieces (1 = comp, 0 = alloy)
     compositeWing = 1
@@ -187,7 +187,7 @@ def defineAirplane(definingParameters):
     engine.interferenceFactor = 1 #??????
     engine.diameter = 0.522 # m
     engine.length = 0.845 # m
-    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines)
+    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines) / numberOfEngines
     engine.propeller = propeller
     engine.maxPower = (PW*W0) / numberOfEngines
     # engine.maxPower = convert(98.6, "hp", "W")

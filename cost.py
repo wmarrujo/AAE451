@@ -26,10 +26,8 @@ from matplotlib.pyplot import *
 
 WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
-W0 = convert(5000, "lb", "N")
-Wf = convert(500, "lb", "N")
 
-DPS = {"wing loading": WS, "power to weight ratio": PW, "initial gross weight": W0, "initial fuel weight": Wf}
+DPS = {"wing loading": WS, "power to weight ratio": PW}
 
 data = getAirplaneDesignData("Gopher", DPS, designMission)
 PPs = getPerformanceParameters(data["initial airplane"], data["simulation"], data["final airplane"])

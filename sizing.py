@@ -226,15 +226,15 @@ def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
         WFguess = X[0]
         A = copy.deepcopy(airplane)
         
-        A.initialGrossWeight = WFguess + AirplaneWeight(A) - FuelWeight(A)
+        A.powerplant.gas.mass = WFguess / g
         
-        return airplane
+        return A
     
     def functionToFindRootOf(X):
         # define airplane
         initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, X)
         # simulation
-        simulationResult = simulateAirplane(baseConfiguration, referenceMission, silent=silent)
+        simulationResult = simulateAirplane(initialAirplane, referenceMission, silent=silent)
         initialAirplane = simulationResult["initial airplane"]
         simulation = simulationResult["simulation"]
         finalAirplane = simulationResult["final airplane"]
@@ -242,7 +242,6 @@ def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
         # post-validation
         if succeeded:
             Wgs = [mg*g for mg in simulation["gas mass"]]
-            gasMassDifference
             
             result = [Wgs[0] - Wgs[-1]]
         else:

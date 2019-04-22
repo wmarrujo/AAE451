@@ -40,10 +40,10 @@ class Mission:
                         airplane.altitude = 0
 
                     verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
-                except Exception as e:
-                    print("The Simulation Encountered an Error: ", e)
+                except:
+                    exception_type, exception_value, exception_traceback = sys.exc_info()
+                    print("The Simulation Encountered an Error: ", exception_value)
                     verified = False
-                    raise e
                 recordingFunction(t, segment.name, airplane)
                 printSimulationProgressBar(iteration) if not silent else None
 

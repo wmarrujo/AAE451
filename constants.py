@@ -15,7 +15,7 @@ rho0 = densityAtAltitude(0) # density at sea level
 
 avgasEnergyDensity = convert(44.65, "MJ/kg", "J/kg")
 batteryEnergyDensity = convert(265, "Wh/kg", "J/kg")
-avgasDensity = convert(0.721, "kg/L", "kg/m^3")
+avgasDensity = convert(0.769, "kg/L", "kg/m^3")
 
 ################################################################################
 # SIMULATION

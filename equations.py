@@ -37,7 +37,6 @@ def FuelWeight(airplane):
     return mf*g
 
 def EmptyWeight(airplane):
-    W0 = airplane.initialGrossWeight
     We = g * sum([comp.mass for comp in airplane.components])
 
     return We # TODO: temporary, replace with component weight buildup later
@@ -326,7 +325,7 @@ def BestRateOfClimbSpeed(airplane):
 def MaximumSteadyLevelFlightSpeed(airplane):
 
     Vhguess = convert(250, "kts", "m/s")
-    
+
     def functionToFindRootOf(X):
         A = copy.deepcopy(airplane)
         A.speed = X[0]
@@ -353,7 +352,7 @@ def MaximumSteadyLevelFlightSpeed(airplane):
 ################################################################################
 
 def EngineeringHours(airplane, plannedAircraft):
-    Waf =  0.65* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
+    Waf = 0.65*convert(EmptyWeight(airplane), "N", "lb")
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Fcert = certFudge
@@ -361,12 +360,12 @@ def EngineeringHours(airplane, plannedAircraft):
     Fcomp = 1 + airplane.compositeFraction
     Fpress = pressFudge
 
-    #print("empty weight = {}".format(convert(airplane.initialGrossWeight, "N", "lb")))
+    print("empty weight = {}".format(convert(EmptyWeight(airplane), "N", "lb")))
 
     return 0.0396 * (Waf**0.791) * (Vh**1.526) * (N**0.183) * Fcert * Fcf * Fcomp * Fpress
 
 def ToolingHours(airplane, plannedAircraft):
-    Waf =  0.65* convert(airplane.initialGrossWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
+    Waf = 0.65*convert(EmptyWeight(airplane), "N", "lb")
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Qm = plannedAircraft/60
@@ -374,14 +373,11 @@ def ToolingHours(airplane, plannedAircraft):
     Fcf = flapFudge
     Fcomp = 1 + airplane.compositeFraction
     Fpress = pressFudge
-    
-    print(Waf)
-    print(convert(airplane.initialGrossWeight, "N", "lb"))
-    
+
     return 1.0032 * (Waf**0.764) * (Vh**0.899) * (N**0.178) * (Qm**0.066) * Ftaper * Fcf * Fcomp * Fpress
 
 def ManufacturingHours(airplane, plannedAircraft):
-    Waf = 0.65* convert(airplane.initialGrossWeight, "N", "lb")
+    Waf = 0.65*convert(EmptyWeight(airplane), "N", "lb")
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Fcert = certFudge
@@ -398,7 +394,7 @@ def EngineeringCost(airplane, plannedAircraft):
     return 2.0969 * Heng * Reng * CPI
 
 def DevelopmentalSupportCost(airplane):
-    Waf = 0.65* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
+    Waf = 0.65*convert(EmptyWeight(airplane), "N", "lb")
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     Np = numberFlightTestAircraft
     Fcert = certFudge
@@ -410,7 +406,7 @@ def DevelopmentalSupportCost(airplane):
     return 0.06458 * (Waf**0.873) * (Vh**1.89) * (Np**0.346) * Fcert * Fcf * Fcomp * Fpress * CPI
 
 def FlightTestCost(airplane):
-    Waf = 0.65* convert(EmptyWeight(airplane), "N", "lb")   # need to change once compnenet weight build-up is complete
+    Waf = 0.65*convert(EmptyWeight(airplane), "N", "lb")
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     Np = numberFlightTestAircraft
     CPI = inflation2012to2019
@@ -441,7 +437,7 @@ def QualityControlCost(airplane, plannedAircraft):
     return 0.13 * Cmfg * Fcert * Fcomp
 
 def MaterialCost(airplane, plannedAircraft):
-    Waf = 0.65* convert(airplane.initialGrossWeight, "N", "lb")
+    Waf = 0.65*convert(EmptyWeight(airplane), "N", "lb")
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     CPI = inflation2012to2019
@@ -551,7 +547,7 @@ def StorageCost(airplane):
     return 12 * Rstor * CPI
 
 def AnnualFuelCost(airplane, simulation):
-    ts = simulation["flight time"]
+    ts = simulation["time"]
     ss = simulation["segment"]
     mfs = simulation["gas mass"]
 
@@ -564,7 +560,9 @@ def AnnualFuelCost(airplane, simulation):
     gd = airplane.powerplant.gas.density if airplane.powerplant.gas else 0
     VFR = MFR / gd if gd != 0 else 0  # volumetric flow rate [m^3/s]
 
-    FFcruise = 2*convert(VFR, "m^3/s", "gal/hr")
+    FFcruise = 10*convert(VFR, "m^3/s", "gal/hr")  # should be in the teens, currently 1.6 gal/hr, NEEDS FIX
+
+    print("Fuel flow rate = {:0.2f} gal/hr". format(FFcruise))
 
     Rfuel = fuelRate
 
@@ -639,7 +637,7 @@ def PredictWingMass(span, aspectRatio, chord, loadFactor, sweep, taperRatio, pla
     composite = compositeYN
 
     Wfw = Wf/2 # fuel weight per wing
-    Ww = (1 + 0.14*composite)*1.08*0.036*S**0.758 * Wfw**0.0035 * (AR / cos(L)**2)**0.6 * q**0.006 * lambd**0.04 * (100 * tc / cos(L))**-0.3 * (Nz * W0)**0.49
+    Ww = (1 + 0.14*composite)*0.036*S**0.758 * Wfw**0.0035 * (AR / cos(L)**2)**0.6 * q**0.006 * lambd**0.04 * (100 * tc / cos(L))**-0.3 * (Nz * W0)**0.49
     return convert(Ww, "lb", "N") / g
 
 def PredictFuselageMass(wettedArea, airplaneGrossWeight, length, diameter, cruiseDynamicPressure, pressurizationWeightPenalty, loadFactor, compositeYN):
@@ -673,8 +671,6 @@ def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio,
 
     AR = b/c
     Sht = convert(ch * (b * c * c / dt), "m^2", "ft^2") # FIXME: move to airplane definition
-    print(convert(wingSpan, "m", "ft"), "  ", convert(wingChord, "m", "ft"))
-    print("Horiz Area ", Sht, " ft")
     WHT = (1 + 0.14*composite)*0.016 * (Nz*W0)**0.414 * q**0.168 * Sht**0.896 * (100 * tc / cos(Lw))**-0.12 * (AR / cos(LHT)**2)**0.043 * lambdaHT**-0.02
     return convert(WHT, "lb", "N")/g
 
@@ -693,7 +689,6 @@ def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, tailConfig, air
     composite = compositeYN
 
     Svt = convert(cv * (Sw * bw / dv), "m^2", "ft^2") # FIXME: move to airplane definition
-    print("Vert Area ", Svt, " ft")
     AR = wingSpan / wingChord
     WVT = (1 + 0.14*composite)*0.35 * 0.073 * (1 + 0.2*HtHv) * (Nz * W0)**0.376 * q**0.122 * Svt**0.873 * (100 * tc / cos(LVT))**-0.49 * (AR / cos(LVT)**2)**0.357 * lambdaVT**0.039
     return convert(WVT, "lb", "N")/g
@@ -702,7 +697,7 @@ def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines):
     mU = convert(uninstalledEngineMass, "N", "lb")
     N = numberOfEngines
 
-    Weng = 0.72*2.575 * mU**0.9 * N
+    Weng = 0.8*2.575 * mU**0.9 * N
     return convert(Weng, "lb", "N")
 
 def PredictMainGearMass(airplaneGrossWeight, airplaneFuelMass, landingLoadFactor, length):

@@ -324,7 +324,7 @@ def BestRateOfClimbSpeed(airplane):
 
 def MaximumSteadyLevelFlightSpeed(airplane):
 
-    Vhguess = convert(250, "kts", "m/s")
+    Vhguess = convert(200, "kts", "m/s")
 
     def functionToFindRootOf(X):
         A = copy.deepcopy(airplane)
@@ -360,7 +360,8 @@ def EngineeringHours(airplane, plannedAircraft):
     Fcomp = 1 + airplane.compositeFraction
     Fpress = pressFudge
 
-    print("empty weight = {}".format(convert(EmptyWeight(airplane), "N", "lb")))
+    print(Vh)
+    print(Waf/0.65)
 
     return 0.0396 * (Waf**0.791) * (Vh**1.526) * (N**0.183) * Fcert * Fcf * Fcomp * Fpress
 
@@ -562,8 +563,6 @@ def AnnualFuelCost(airplane, simulation):
 
     FFcruise = 10*convert(VFR, "m^3/s", "gal/hr")  # should be in the teens, currently 1.6 gal/hr, NEEDS FIX
 
-    print("Fuel flow rate = {:0.2f} gal/hr". format(FFcruise))
-
     Rfuel = fuelRate
 
     # Battery Operating Cost
@@ -598,7 +597,7 @@ def AnnualLoanPayment(airplane, purchasePrice):
     P = purchasePrice
     i = 0.0075 # 9% APR
     n = 180 # 12 months for 15 years
-    #
+
     return (12 * P * i) / (1 - (1/(1+i)**n))
 
 def TotalAnnualCost(airplane, simulation, purchasePrice):
@@ -671,7 +670,6 @@ def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio,
 
     AR = b/c
     Sht = convert(ch * (b * c * c / dt), "m^2", "ft^2") # FIXME: move to airplane definition
-    print("Horiz", Sht)
     WHT = (1 + 0.30*composite)*0.016 * (Nz*W0)**0.414 * q**0.168 * Sht**0.896 * (100 * tc / cos(Lw))**-0.12 * (AR / cos(LHT)**2)**0.043 * lambdaHT**-0.02
     return convert(WHT, "lb", "N")/g
 
@@ -690,7 +688,6 @@ def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, tailConfig, air
     composite = compositeYN
 
     Svt = convert(cv * (Sw * bw / dv), "m^2", "ft^2") # FIXME: move to airplane definition
-    print("Vert", Svt)
     AR = wingSpan / wingChord
     WVT = (1 + 0.30*composite)*0.35 * 0.073 * (1 + 0.2*HtHv) * (Nz * W0)**0.376 * q**0.122 * Svt**0.873 * (100 * tc / cos(LVT))**-0.49 * (AR / cos(LVT)**2)**0.357 * lambdaVT**0.039
     return convert(WVT, "lb", "N")/g
@@ -704,12 +701,12 @@ def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines):
 
 def PredictMainGearMass(airplaneGrossWeight, airplaneFuelMass, landingLoadFactor, length):
     W0 = convert(airplaneGrossWeight, "N", "lb")
-    Wf = airplaneFuelMass * g
+    Wf = convert(airplaneFuelMass * g, "N", "lb")
     Wl = W0 - 0.8 * Wf
     Nz = landingLoadFactor
     Lm = convert(length, "m", "in") # FIXME: you sure this isn't ft?
 
-    Wmg = 0.095 * (Nz * Wl)**0.768 * (Lm/12)**0.409
+    Wmg = 0.095 * (Nz * Wl)**0.768 * (Lm/12)**0.409 # FIXME: error here
     return convert(Wmg, "lb", "N")/g
 
 def PredictFrontGearMass(airplaneGrossWeight, landingLoadFactor, length):
@@ -776,17 +773,20 @@ def CalculatePassengerPayloadMass(ariplanePassengers):
     numpax = ariplanePassengers
     Wpax = heavyPassengerWeight if numpax <= 3 else lightPassengerWeight
     mass = numpax * Wpax / g
+
     return mass
 
 def CalculateBaggageMass(airplanePassengers):
     numpax = airplanePassengers
     Wbag = heavyPassengerBagWeight if numpax <= 3 else lightPassengerBagWeight
     mass = numpax * Wbag / g
+
     return mass
 
 def CalculatePilotPayloadMass(airplanePilots):
     numpilots = airplanePilots
     mass = numpilots * pilotWeight / g
+
     return mass
 
 ################################################################################

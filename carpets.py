@@ -181,6 +181,8 @@ for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
 
 # W/S Contour
 for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), transpose(pWS), transpose(pWe))): # for each row
+    print((transpose(pC), transpose(pWS), transpose(pWe)))
+    
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)

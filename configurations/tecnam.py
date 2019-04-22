@@ -31,7 +31,7 @@ def defineAirplane(definingParameters):
     PW = definingParameters["power to weight ratio"]
 
     # ASSUMPTIONS # FIXME: Define elsewhere? or get from simulations?
-    cruiseDynamicPressure = 0.5*densityAtAltitude(cruiseAltitude)*convert(180, "kts", "m/s")**2
+    cruiseDynamicPressure = 0.5*densityAtAltitude(convert(7000, "ft", "m"))*convert(140, "kts", "m/s")**2
     sizingLoadFactor = 3.8
     landingLoadFactor = 2.67 * 1.5
     horizontalTailVolumeCoefficient = 0.80
@@ -39,8 +39,8 @@ def defineAirplane(definingParameters):
     numberOfEngines = 2
     uninstalledEngineMass = 65.7 # kg
     totalFuelVolume = convert(50, "gal", "m^3")
-    uninstalledAvionicsWeight = 15*9.8 # N # FIXME: you sure?
-    cruiseMachNumber = convert(180, "kts", "m/s") / machAtAltitude(cruiseAltitude)
+    uninstalledAvionicsWeight = 10*9.8 # N # FIXME: you sure?
+    cruiseMachNumber = convert(140, "kts", "m/s") / machAtAltitude(convert(7000, "ft", "m"))
     #Composite pieces (1 = comp, 0 = alloy)
     compositeWing = 0
     compositeFuselage = 0
@@ -103,7 +103,7 @@ def defineAirplane(definingParameters):
     wing.airfoil = airfoil
     wing.interferenceFactor = 1
     wing.planformArea = W0/WS
-    wing.setAspectRatioHoldingPlanformArea(7)
+    wing.setAspectRatioHoldingPlanformArea(7.8)
     wing.thicknessToChord = 0.02
     wing.sweep = 0
     wing.taperRatio = 1

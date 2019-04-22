@@ -16,9 +16,6 @@ from missions import *
 from equations import *
 from sizing import *
 
-sys.path.append(os.path.join(rootDirectory, "configurations"))
-from Gopher import defineAirplane as defineTestcraft
-
 # EXTERNAL DEPENDENCIES
 
 from matplotlib.pyplot import *
@@ -28,7 +25,7 @@ import cProfile
 # TESTS
 ################################################################################
 
-airplaneName = "Gopher"
+airplaneName = "GopherHYBRID"
 WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}
@@ -36,19 +33,32 @@ DPS = {"wing loading": WS, "power to weight ratio": PW}
 PPs = getPerformanceParameters(airplaneName, DPS, designMission)
 
 id = airplaneDefinitionID(airplaneName, DPS)
+Iairplane = loadInitialAirplane(id)
 airplane = loadFinalAirplane(id)
 simulation = loadSimulation(id)
 
 print("empty weight:            {:.0f} lb".format(convert(PPs["empty weight"], "N", "lb")))
 print("takeoff field length:    {:.0f} ft".format(convert(PPs["takeoff field length"], "m", "ft")))
+print("landing field length:    {:.0f} ft".format(convert(PPs["landing field length"], "m", "ft")))
 print("range:                   {:.2f} nmi".format(convert(PPs["range"], "m", "nmi")))
 print("average ground speed:    {:.0f} kts".format(convert(PPs["average ground speed"], "m/s", "kts")))
 print("flight time:             {:.1f} hr".format(convert(PPs["flight time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(PPs["fuel used"]*g, "N", "lb")))
 
-# for c in airplane.components:
-#     print(type(c))
-#     print("weight: ", convert(c.mass*g, "N", "lb"))
+print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(Iairplane), "N", "lb")))
+print("wing")
+print("span:                    {:.3f} ft".format(convert(airplane.wing.span, "m", "ft")))
+print("chord:                   {:.3f} ft".format(convert(airplane.wing.chord, "m", "ft")))
+print("horizontal stabilizer")
+print("span:                    {:.3f} ft".format(convert(airplane.horizontalStabilizer.span, "m", "ft")))
+print("chord:                   {:.3f} ft".format(convert(airplane.horizontalStabilizer.chord, "m", "ft")))
+print("vertical stabilizer")
+print("span:                    {:.3f} ft".format(convert(airplane.verticalStabilizer.span, "m", "ft")))
+print("chord:                   {:.3f} ft".format(convert(airplane.verticalStabilizer.chord, "m", "ft")))
+
+print("weight & balance")
+for c in airplane.components:
+    print("weight: {:10.3f} lb - position {:10.3f} ft - {}".format(convert(c.mass*g, "N", "lb"), convert(c.x, "m", "ft"), type(c)))
 
 ts = simulation["time"]
 ps = simulation["position"]

@@ -10,7 +10,6 @@ def convert(value, fromUnit, toUnit):
     elif fromUnit == "degC":
         value += 273.15
         fromUnit = "K"
-
     
     if toUnit == "degF":
         offset = -459.67
@@ -224,3 +223,10 @@ _derivedUnits = { # {derivedUnit: baseUnitConstruction}
     "degR": "R",
     "RPM": "rev/min",
     }
+
+################################################################################
+# UTILITIES
+################################################################################
+
+def convertList(array, fromUnit, toUnit):
+    return [convert(item, fromUnit, toUnit) for item in array]

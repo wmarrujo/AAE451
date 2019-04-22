@@ -49,8 +49,8 @@ DPs = [[{
     } for WS in WSs] for PW in PWs]
 
 # Driving Parameters (used for fit curves)
-fit_WS = linspace(WS*0.7, WS*1.3, 1000)
-fit_PW = linspace(PW*0.7, PW*1.3, 1000)
+fit_WS = linspace(WS*0.6, WS*1.4, 1000)
+fit_PW = linspace(PW*0.6, PW*1.4, 1000)
 
 # AIRPLANE
 
@@ -75,9 +75,7 @@ pWe = map2D(lambda PP: convert(PP["empty weight"], "N", "lb"), p)
 pdT0 = map2D(lambda PP: convert(PP["takeoff field length"], "m", "ft"), p)
 pdL = map2D(lambda PP: convert(PP["landing field length"], "m", "ft"), p)
 pR = map2D(lambda PP: convert(PP["range"], "m", "nmi"), p)
-# pV = [[convert(PP["average ground speed"], "m/s", "kts") for PP in row] for row in p]
-# pT = [[convert(PP["flight time"], "s", "hr") for PP in row] for row in p]
-# pF = [[convert(PP["fuel used"], "N", "lb") for PP in row] for row in p]
+pT = map2D(lambda PP: convert(PP["mission time"], "s", "hr"), p)
 
 constrainedFieldLength = convert(minimumTakeoffFieldLength, "m", "ft")
 
@@ -132,31 +130,31 @@ xlabel("Wing Loading [lb/ft^2]")
 ylabel("Takeoff Field Length [ft]")
 
 ################################################################################
-# LANDING DISTANCE CROSS PLOT
+# MISSION TIME CROSS PLOT
 ################################################################################
-W0fromdLIntersection = []
+W0fromTIntersection = []
 
 figure()
 
-for row, (Cs, WSs, dLs) in enumerate(zip(pC, pWS, pdL)):
+for row, (Cs, WSs, Ts) in enumerate(zip(pC, pWS, pT)):
     cleanWSs = dropOnOtherList(WSs, Cs)
-    cleandLs = dropOnOtherList(dLs, Cs)
-    plot(cleanWSs, cleandLs, "k.")
+    cleanTs = dropOnOtherList(Ts, Cs)
+    plot(cleanWSs, cleanTs, "k.")
 
     # Create fit curves
-    params, pconv = curve_fit(fit_func, cleanWSs, cleandLs, p0=(1, 0))
+    params, pconv = curve_fit(fit_func, cleanWSs, cleanTs, p0=(1, 0))
     plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS])
 
      # Find intersection of curve with flight time limit
-    W0_dLIntersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
-    W0_WS_dLIntersection = invExponentialForm(W0_dLIntersection, W0params[row][0], W0params[row][1])
-    W0fromdLIntersection.append(W0_WS_dLIntersection)
+    W0_TIntersection = invExponentialForm(maximumFlightTime, params[0], params[1])
+    W0_WS_TIntersection = invExponentialForm(W0_TIntersection, W0params[row][0], W0params[row][1])
+    W0fromTIntersection.append(W0_WS_TIntersection)
 
-hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
+hlines(convert(maximumFlightTime, "s", "hr"), fWS[0], fWS[-1], colors = "k")
 
-title("Landing Distance")
+title("Flight Time")
 xlabel("Wing Loading [lb/ft^2]")
-ylabel("Landing Field Length [ft]")
+ylabel("Flight Time [hr]")
 
 ################################################################################
 # SIZING PLOT
@@ -171,18 +169,22 @@ for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    print(cleanOffsetWSs)
-    plot(cleanWes, cleanOffsetWSs)
+    plot(cleanWes, cleanOffsetWSs, "k")
 
 # W/S Contour
-for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), transpose(pWS), transpose(pWe))): # for each row
-    print((transpose(pC), transpose(pWS), transpose(pWe)))
+print(pWS)
+for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), pWS, transpose(pWe))): # for each row
     
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    print(cleanOffsetWSs)
-    plot(cleanWes, cleanOffsetWSs)
+    plot(cleanWes, cleanOffsetWSs, "k")
+    
+# dT0 Intersection Curve
+for row, (Cs, WSs, W0s) in enumerate(zip(pC, pWS, W0fromdT0Intersection)):
+    cleanWSs = dropOnOtherList(WSs, Cs)
+    #print(WSs, W0s)
+    #plot(cleanWSs, W0s)
 
 title("Carpet Plot")
 xlabel("Wing Loading")

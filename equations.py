@@ -326,7 +326,7 @@ def BestRateOfClimbSpeed(airplane):
 def MaximumSteadyLevelFlightSpeed(airplane):
 
     Vhguess = convert(250, "kts", "m/s")
-    
+
     def functionToFindRootOf(X):
         A = copy.deepcopy(airplane)
         A.speed = X[0]
@@ -374,10 +374,10 @@ def ToolingHours(airplane, plannedAircraft):
     Fcf = flapFudge
     Fcomp = 1 + airplane.compositeFraction
     Fpress = pressFudge
-    
+
     print(Waf)
     print(convert(airplane.initialGrossWeight, "N", "lb"))
-    
+
     return 1.0032 * (Waf**0.764) * (Vh**0.899) * (N**0.178) * (Qm**0.066) * Ftaper * Fcf * Fcomp * Fpress
 
 def ManufacturingHours(airplane, plannedAircraft):
@@ -639,7 +639,7 @@ def PredictWingMass(span, aspectRatio, chord, loadFactor, sweep, taperRatio, pla
     composite = compositeYN
 
     Wfw = Wf/2 # fuel weight per wing
-    Ww = (1 + 0.14*composite)*1.08*0.036*S**0.758 * Wfw**0.0035 * (AR / cos(L)**2)**0.6 * q**0.006 * lambd**0.04 * (100 * tc / cos(L))**-0.3 * (Nz * W0)**0.49
+    Ww = (1 + 0.14*composite)*0.036*S**0.758 * Wfw**0.0035 * (AR / cos(L)**2)**0.6 * q**0.006 * lambd**0.04 * (100 * tc / cos(L))**-0.3 * (Nz * W0)**0.49
     return convert(Ww, "lb", "N") / g
 
 def PredictFuselageMass(wettedArea, airplaneGrossWeight, length, diameter, cruiseDynamicPressure, pressurizationWeightPenalty, loadFactor, compositeYN):
@@ -673,8 +673,6 @@ def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio,
 
     AR = b/c
     Sht = convert(ch * (b * c * c / dt), "m^2", "ft^2") # FIXME: move to airplane definition
-    print(convert(wingSpan, "m", "ft"), "  ", convert(wingChord, "m", "ft"))
-    print("Horiz Area ", Sht, " ft")
     WHT = (1 + 0.14*composite)*0.016 * (Nz*W0)**0.414 * q**0.168 * Sht**0.896 * (100 * tc / cos(Lw))**-0.12 * (AR / cos(LHT)**2)**0.043 * lambdaHT**-0.02
     return convert(WHT, "lb", "N")/g
 
@@ -693,7 +691,6 @@ def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, tailConfig, air
     composite = compositeYN
 
     Svt = convert(cv * (Sw * bw / dv), "m^2", "ft^2") # FIXME: move to airplane definition
-    print("Vert Area ", Svt, " ft")
     AR = wingSpan / wingChord
     WVT = (1 + 0.14*composite)*0.35 * 0.073 * (1 + 0.2*HtHv) * (Nz * W0)**0.376 * q**0.122 * Svt**0.873 * (100 * tc / cos(LVT))**-0.49 * (AR / cos(LVT)**2)**0.357 * lambdaVT**0.039
     return convert(WVT, "lb", "N")/g
@@ -702,7 +699,7 @@ def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines):
     mU = convert(uninstalledEngineMass, "N", "lb")
     N = numberOfEngines
 
-    Weng = 0.72*2.575 * mU**0.9 * N
+    Weng = 0.8*2.575 * mU**0.9 * N
     return convert(Weng, "lb", "N")
 
 def PredictMainGearMass(airplaneGrossWeight, airplaneFuelMass, landingLoadFactor, length):

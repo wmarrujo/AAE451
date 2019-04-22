@@ -6,6 +6,7 @@ from constants import *
 # EXTERNAL DEPENDENCIES
 
 from scipy import *
+import sys
 
 ################################################################################
 
@@ -40,7 +41,9 @@ class Mission:
                         airplane.altitude = 0
 
                     verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
-                except:
+                except (KeyboardInterrupt, SystemExit): # if you quit it, actually quit
+                    raise
+                except: # otherwise, keep going
                     exception_type, exception_value, exception_traceback = sys.exc_info()
                     print("The Simulation Encountered an Error: ", exception_value)
                     verified = False

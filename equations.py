@@ -718,7 +718,7 @@ def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines):
 
 def PredictMainGearMass(airplaneGrossWeight, airplaneFuelMass, landingLoadFactor, length):
     W0 = convert(airplaneGrossWeight, "N", "lb")
-    Wf = airplaneFuelMass * g
+    Wf = convert(airplaneFuelMass * g, "N", "lb")
     Wl = W0 - 0.8 * Wf
     Nz = landingLoadFactor
     Lm = convert(length, "m", "in") # FIXME: you sure this isn't ft?

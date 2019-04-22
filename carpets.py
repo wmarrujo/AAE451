@@ -152,8 +152,6 @@ for row, (Cs, WSs, dLs) in enumerate(zip(pC, pWS, pdL)):
     W0_WS_dLIntersection = invExponentialForm(W0_dLIntersection, W0params[row][0], W0params[row][1])
     W0fromdLIntersection.append(W0_WS_dLIntersection)
 
-    print(W0fromdLIntersection)
-
 hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
 
 title("Landing Distance")

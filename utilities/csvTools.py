@@ -29,7 +29,6 @@ def CSVToDict(filename):
 def writeCSVLine(filename, row):
     """writes a single line to a file, delimited by commas"""
     with open(filename, "a", newline="") as file: # ensure newline is \n character, not windows default of \r
-        print(1)
         writer = csv.writer(file)
         writer.writerows(row)
 

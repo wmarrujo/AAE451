@@ -323,25 +323,6 @@ def BestRateOfClimbSpeed(airplane):
     return sqrt(2/rho * W/S * sqrt(1 / (CD0 * pi * AR * e)))
 
 def MaximumSteadyLevelFlightSpeed(airplane):
-    # A = copy.deepcopy(airplane)
-    # A.throttle = 1 # max power = max speedy boi
-    # A.altitude = convert(8000, "ft", "m")
-    # A.flightPathAngle = 0
-    # A.pitch = convert(8, "deg", "rad")
-    #
-    # velocity = convert(linspace(50,300), "kts", "m/s")
-    # dif = []
-    #
-    # for v in velocity:
-    #     A.speed = v
-    #
-    #     Pavail = PowerAvailableAtAltitudeForSteadyLevelFlight(A)
-    #     Preq = PowerRequiredAtAltitudeForSteadyLevelFlight(A)
-    #
-    #     dif.append(abs(Pavail - Preq))
-    #
-    # minDifIndex = dif.index(min(dif))
-    # Vh = velocity[minDifIndex]
     
     Vhguess = convert(200, "kts", "m/s")
     
@@ -378,6 +359,9 @@ def EngineeringHours(airplane, plannedAircraft):
     Fcf = flapFudge
     Fcomp = 1 + airplane.compositeFraction
     Fpress = pressFudge
+    
+    print(Vh)
+    print(Waf/0.65)
     
     return 0.0396 * (Waf**0.791) * (Vh**1.526) * (N**0.183) * Fcert * Fcf * Fcomp * Fpress
 

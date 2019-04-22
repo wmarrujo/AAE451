@@ -148,8 +148,6 @@ for row, (Cs, WSs, dLs) in enumerate(zip(pC, pWS, pdL)):
     W0_dLIntersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
     W0_WS_dLIntersection = invExponentialForm(W0_dLIntersection, W0params[row][0], W0params[row][1])
     W0fromdLIntersection.append(W0_WS_dLIntersection)
-    
-    print(W0fromdLIntersection)
 
 hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
 
@@ -166,19 +164,21 @@ ylabel("Landing Field Length [ft]")
 offset = 4 #lb/ft^2
 
 figure()
+# P/W Contour
 for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
     # Clean list by checking if solution converged
-    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    
-    plot(cleanWes, cleanWSs, "k")
-    
-for (Cs, WSs, Wes) in zip(transpose(pC), transpose(pWS), transpose(pWe)): # for each row
-    # Clean list by checking if solution converged
-    cleanWSs = dropOnOtherList(WSs, Cs)
-    cleanWes = dropOnOtherList(Wes, Cs)
+    print(cleanOffsetWSs)
+    plot(cleanWes, cleanOffsetWSs)
 
-    plot(cleanWes, cleanWSs, "k")
+# W/S Contour
+for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), transpose(pWS), transpose(pWe))): # for each row
+    # Clean list by checking if solution converged
+    cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
+    cleanWes = dropOnOtherList(Wes, Cs)
+    print(cleanOffsetWSs)
+    plot(cleanWes, cleanOffsetWSs)
 
 title("Carpet Plot")
 xlabel("Wing Loading")

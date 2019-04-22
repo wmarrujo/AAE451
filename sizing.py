@@ -239,11 +239,13 @@ def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
         simulation = simulationResult["simulation"]
         finalAirplane = simulationResult["final airplane"]
         succeeded = simulationResult["succeeded"]
+        
+        
         # post-validation
         if succeeded:
             Wgs = [mg*g for mg in simulation["gas mass"]]
-            
-            result = [Wgs[0] - Wgs[-1]]
+            result = [Wgs[-1]]
+        
         else:
             result = [1e10] # pseudo bound
         
@@ -252,14 +254,13 @@ def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
     
     # INITIALIZATION
     
-    tolerance = 1e-1
     guess = [convert(300,"lb","N")]
     
     # ROOT FINDING
-    result = root(functionToFindRootOf, guess)
+    result = root(functionToFindRootOf, guess, tol=1e-2)
     closestGuess = result["x"]
     initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, closestGuess)
-    closed = closestGuess <= tolerance # use norm if more than 1 dimension
+    closed = closestGuess[0] <= 1 # use norm if more than 1 dimension
     
     return {
         "airplane": initialAirplane,
@@ -316,14 +317,18 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
     ss = simulation["segment"]
     ps = simulation["position"]
     hs = simulation["altitude"]
+    Ws = simulation["weight"]
     
     # CALCULATE PERFORMANCE PARAMETERS
     
     emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: obstacleHeight <= h)]
     dL = ps[-1] - ps[lastIndex(hs, lambda h: obstacleHeight <= h)]
-    range = ps[-1]
-    missionTime = ts[-1]
+    climbBeginIndex = firstIndex(ss, lambda s: s == "climb")
+    descentEndIndex = lastIndex(ss, lambda s: s == "descent")
+    range = ps[descentEndIndex] - ps[climbBeginIndex]
+    missionTime = ts[descentEndIndex] - ts[climbBeginIndex]
+    fuelUsed = Ws[0] - Ws[-1]
     
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
     
@@ -332,7 +337,8 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
         "takeoff field length": dTO,
         "landing field length": dL,
         "range": range,
-        "mission time": missionTime}
+        "mission time": missionTime,
+        "fuel used": fuelUsed}
 
 ################################################################################
 # FILE HANDLING

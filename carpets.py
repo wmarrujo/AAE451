@@ -49,8 +49,8 @@ DPs = [[{
     } for WS in WSs] for PW in PWs]
 
 # Driving Parameters (used for fit curves)
-fit_WS = linspace(WS*0.6, WS*1.4, 1000)
-fit_PW = linspace(PW*0.6, PW*1.4, 1000)
+fit_WS = linspace(WS*0.5, WS*1.5, 1000)
+fit_PW = linspace(PW*0.5, PW*1.5, 1000)
 
 # AIRPLANE
 
@@ -180,10 +180,14 @@ for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), pWS, transpose(pWe))): #
     plot(cleanOffsetWSs, cleanWes, "k")
     
 # dT0 Intersection Curve
-for (Cs, Wes, WSs, W0s) in zip(pC, pWe, pWS, W0fromdT0Intersection):
-    cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
-    print(cleanOffsetWSs, W0fromdT0Intersection)
-    plot(cleanOffsetWSs, W0fromdT0Intersection)
+cleanOffsetWSs = [WS for WS in dropOnOtherList(WSs, Cs)]
+params, pconv = curve_fit(fit_func, cleanOffsetWSs, W0fromdT0Intersection, p0=(1, 0))
+plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS])
+
+# T Intersection Curve
+cleanOffsetWSs = [WS for WS in dropOnOtherList(WSs, Cs)]
+params, pconv = curve_fit(fit_func, cleanOffsetWSs, W0fromTIntersection, p0=(1, 0))
+plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS])
 
 title("Carpet Plot")
 xlabel("Wing Loading")

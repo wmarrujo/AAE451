@@ -26,12 +26,12 @@ import cProfile
 ################################################################################
 
 airplaneName = "Gopher"
-WS = convert(10, "lb/ft^2", "N/m^2")
-PW = convert(0.8, "hp/lb", "W/N")
-DPS = {"wing loading": WS, "power to weight ratio": PW}
+drivingParameters = {
+    "wing loading": convert(20, "lb/ft^2", "N/m^2"),
+    "power to weight ratio": convert(0.072, "hp/lb", "W/N")}
 # cProfile.run("PPs = getPerformanceParameters(airplaneName, DPS, designMission)")
-designDict = getAirplaneDesignData(airplaneName, DPS, designMission, silent=False)
-referenceDict = getReferenceMissionData(airplaneName, DPS, designMission, referenceMission, referenceMissionName="reference", silent=False)
+designDict = getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent=False)
+referenceDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", silent=False)
 referencePPs = getPerformanceParameters(referenceDict["initial airplane"], referenceDict["simulation"], referenceDict["final airplane"])
 designPPs = getPerformanceParameters(designDict["initial airplane"], designDict["simulation"], designDict["final airplane"])
 

@@ -70,8 +70,10 @@ performanceParametersKeys = [
 ################################################################################
 
 def getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent=False):
+    print(airplaneName)
+
     id = airplaneDefinitionID(airplaneName, drivingParameters)
-    
+    print(id)
     # get initial airplane
     initialDesignAirplane = loadAirplaneConfiguration(id, "design-initial")
     if initialDesignAirplane is None: # not cached
@@ -111,7 +113,10 @@ def getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent
         "final airplane": finalDesignAirplane}
 
 def getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", silent=False):
+    print(airplaneName)
+
     id = airplaneDefinitionID(airplaneName, drivingParameters)
+    print(id)
     
     # get initial airplane
     initialReferenceAirplane = loadAirplaneConfiguration(id, referenceMissionName + "-initial")
@@ -170,9 +175,10 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
 
 def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission, silent=False):
     # DEPENDENCIES
+
     
     def setDefiningParameters(drivingParameters, X):
-        definingParameters = drivingParameters
+        definingParameters = copy.deepcopy(drivingParameters)
         definingParameters["initial gross weight"] = X[0]
         definingParameters["initial fuel weight"] = X[1]
         
@@ -202,6 +208,7 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
             result = [1e10, 1e10] # pseudo bound
         
         print(X, "->", result, "=>", norm([0, 0], result)) if not silent else None # show convergence
+        
         return result
     
     # INITIALIZATION
@@ -215,6 +222,7 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
     airplane = defineSpecificAirplane(setDefiningParameters(drivingParameters, closestGuess))
     closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 N
     
+
     return {
         "airplane": airplane,
         "closed": closed}

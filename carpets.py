@@ -118,9 +118,9 @@ for row, (Cs, WSs, dT0s) in enumerate(zip(pC, pWS, pdT0)):
     params, pconv = curve_fit(fit_func, cleanWSs, cleandT0s, p0=(1, 0))
     plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS])
 
-     # Find intersection of curve with flight time limit
+     # Find intersection of curve with field length limit
     WS_dT0Intersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
-    W0_WS_dT0Intersection = invExponentialForm(WS_dT0Intersection, W0params[row][0], W0params[row][1])
+    W0_WS_dT0Intersection = exponentialForm(WS_dT0Intersection, W0params[row][0], W0params[row][1])
     W0fromdT0Intersection.append(W0_WS_dT0Intersection)
 
 hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
@@ -146,8 +146,8 @@ for row, (Cs, WSs, Ts) in enumerate(zip(pC, pWS, pT)):
     plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS])
 
      # Find intersection of curve with flight time limit
-    W0_TIntersection = invExponentialForm(maximumFlightTime, params[0], params[1])
-    W0_WS_TIntersection = invExponentialForm(W0_TIntersection, W0params[row][0], W0params[row][1])
+    WS_TIntersection = invExponentialForm(convert(maximumFlightTime, "s", "hr"), params[0], params[1])
+    W0_WS_TIntersection = exponentialForm(WS_TIntersection, W0params[row][0], W0params[row][1])
     W0fromTIntersection.append(W0_WS_TIntersection)
 
 hlines(convert(maximumFlightTime, "s", "hr"), fWS[0], fWS[-1], colors = "k")
@@ -169,22 +169,21 @@ for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    plot(cleanWes, cleanOffsetWSs, "k")
+    plot(cleanOffsetWSs, cleanWes, "k")
 
 # W/S Contour
-print(pWS)
 for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), pWS, transpose(pWe))): # for each row
     
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    plot(cleanWes, cleanOffsetWSs, "k")
+    plot(cleanOffsetWSs, cleanWes, "k")
     
 # dT0 Intersection Curve
-for row, (Cs, WSs, W0s) in enumerate(zip(pC, pWS, W0fromdT0Intersection)):
-    cleanWSs = dropOnOtherList(WSs, Cs)
-    #print(WSs, W0s)
-    #plot(cleanWSs, W0s)
+for (Cs, Wes, WSs, W0s) in zip(pC, pWe, pWS, W0fromdT0Intersection):
+    cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
+    print(cleanOffsetWSs, W0fromdT0Intersection)
+    plot(cleanOffsetWSs, W0fromdT0Intersection)
 
 title("Carpet Plot")
 xlabel("Wing Loading")

@@ -15,7 +15,7 @@ from equations import *
 from sizing import *
 
 sys.path.append(os.path.join(rootDirectory, "configurations"))
-from tecnam import defineAirplane as defineAirplaneObj
+from Gopher import defineAirplane as defineAirplaneObj
 
 # EXTERNAL DEPENDENCIES
 

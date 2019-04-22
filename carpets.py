@@ -161,25 +161,26 @@ ylabel("Landing Field Length [ft]")
 ################################################################################
 # SIZING PLOT
 ################################################################################
-
 ###### SIZING PLOT
 # Plot wing loading vs. empty weight grid
 offset = 4 #lb/ft^2
 
 figure()
+# P/W Contour
 for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
     # Clean list by checking if solution converged
-    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
+    print(cleanOffsetWSs)
+    plot(cleanWes, cleanOffsetWSs)
 
-    plot(cleanWes, cleanWSs, "k")
-
-for (Cs, WSs, Wes) in zip(transpose(pC), transpose(pWS), transpose(pWe)): # for each row
+# W/S Contour
+for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), transpose(pWS), transpose(pWe))): # for each row
     # Clean list by checking if solution converged
-    cleanWSs = dropOnOtherList(WSs, Cs)
+    cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-
-    plot(cleanWes, cleanWSs, "k")
+    print(cleanOffsetWSs)
+    plot(cleanWes, cleanOffsetWSs)
 
 title("Carpet Plot")
 xlabel("Wing Loading")

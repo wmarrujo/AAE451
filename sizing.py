@@ -309,6 +309,8 @@ def simulateAirplane(initialAirplane, mission, silent=False):
     # SIMULATION
     
     finalAirplane = mission.simulate(timestep, airplane, simulationRecordingFunction, silent=silent)
+    if finalAirplane is None:
+        succeeded = False
     
     # RETURN ALL DATA
     

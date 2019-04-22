@@ -55,7 +55,7 @@ class Mission:
                 iteration += 1
             if not verified:
                 break # get out of the for loop too
-
+        
         printSimulationProgressBar(iteration, ended=True, message="succeeded" if verified else "failed") if not silent else None
         if verified:
             return airplane

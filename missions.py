@@ -240,7 +240,7 @@ def _referenceMissionInitializeCruise(airplane, t, t0):
     airplane.throttle = 0.7
 
 def _referenceMissionCompletedCruise(airplane, t, t0):
-    return referenceMission.cruiseRange <= airplane.position
+    return referenceRange <= airplane.position
 
 referenceMission.segments["cruise"].initialize = _referenceMissionInitializeCruise
 referenceMission.segments["cruise"].completed = _referenceMissionCompletedCruise

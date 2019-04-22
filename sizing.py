@@ -222,19 +222,19 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
 def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
     # DEPENDENCIES
     
-    def setInitialAirplaneConfiguration(airplane, referenceMission, X):
+    def setInitialConfiguration(airplane, referenceMission, X):
         WFguess = X[0]
         rangeGuess = X[1]
         A = copy.deepcopy(airplane)
-        B = copy.deepcopy(referenceMission)
-        B.cruiseRange = rangeGuess
+        M = copy.deepcopy(referenceMission)
+        M.cruiseRange = rangeGuess
         A.powerplant.gas.mass = WFguess / g
         
-        return (A, B)
+        return (A, M)
     
     def functionToFindRootOf(X):
         # define airplane
-        initialAirplane, referenceMissionChanged = setInitialAirplaneConfiguration(baseConfiguration, referenceMission, X)
+        initialAirplane, referenceMissionChanged = setInitialConfiguration(baseConfiguration, referenceMission, X)
         # simulation
         simulationResult = simulateAirplane(initialAirplane, referenceMissionChanged, silent=silent)
         initialAirplane = simulationResult["initial airplane"]
@@ -266,11 +266,12 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
     # ROOT FINDING
     result = root(functionToFindRootOf, guess, tol=1e-4)
     closestGuess = result["x"]
-    initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, closestGuess[0], closestGuess[1])
-    closed = norm([0, 0], closestGuess) <= 1 # use norm if more than 1 dimension
+    initialAirplane, referenceMissionChanged = setInitialConfiguration(baseConfiguration, referenceMission, closestGuess)
+    closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 N
     
     return {
         "airplane": initialAirplane,
+        "mission": referenceMissionChanged,
         "closed": closed}
 
 ################################################################################
@@ -389,7 +390,7 @@ def saveAirplaneConfiguration(airplaneConfiguration, airplaneID, configurationNa
     saveObject(airplaneConfiguration, airplaneConfigurationFilePath)
 
 # RESOURCES
-    
+
 def airplaneDefinitionFunction(airplaneName):
     module = import_module(airplaneName)
     return module.defineAirplane

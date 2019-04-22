@@ -40,11 +40,8 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-#WSs = [WS*0.8, WS, WS*1.2]
-#PWs = [PW*0.9, PW, PW*1.1]
-
-WSs = [WS*0.8, WS]
-PWs = [PW*0.9, PW]
+WSs = [WS*0.8, WS, WS*1.2]
+PWs = [PW*0.9, PW, PW*1.1]
 
 DPs = [[{
     "wing loading": WS,
@@ -66,21 +63,21 @@ p = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulatio
 
 # make matrix for each driving parameter independently
 
-pWS = [[convert(WS, "N/m^2", "lb/ft^2") for WS in copy(WSs)] for PW in PWs]
-pPW = transpose([[convert(PW, "W/N", "hp/lb") for PW in copy(PWs)] for WS in WSs])
+pWS = map2D(lambda DP: convert(DP["wing loading"], "N/m^2", "lb/ft^2"), DPs)
+pPW = transpose(map2D(lambda DP: convert(DP["power to weight ratio"], "W/N", "hp/lb"), DPs))
 fWS = [convert(WS, "N/m^2", "lb/ft^2") for WS in fit_WS]
 fPW = [convert(PW, "W/N", "hp/lb") for PW in fit_PW]
 
 # make matrix for each performance parameter independently
 
 pC = [[True for PP in row] for row in p] # TODO: cache convergence # Verification that simulation converged at this value
-pWe = [[convert(PP["empty weight"], "N", "lb") for PP in row] for row in p]
-pdT0 = [[convert(PP["takeoff field length"], "m", "ft") for PP in row] for row in p]
-pdL = [[convert(PP["landing field length"], "m", "ft") for PP in row] for row in p]
-pR = [[convert(PP["range"], "m", "nmi") for PP in row] for row in p]
-pV = [[convert(PP["average ground speed"], "m/s", "kts") for PP in row] for row in p]
-pT = [[convert(PP["flight time"], "s", "hr") for PP in row] for row in p]
-pF = [[convert(PP["fuel used"], "N", "lb") for PP in row] for row in p]
+pWe = map2D(lambda PP: convert(PP["empty weight"], "N", "lb"), p)
+pdT0 = map2D(lambda PP: convert(PP["takeoff field length"], "m", "ft"), p)
+pdL = map2D(lambda PP: convert(PP["landing field length"], "m", "ft"), p)
+pR = map2D(lambda PP: convert(PP["range"], "m", "nmi"), p)
+# pV = [[convert(PP["average ground speed"], "m/s", "kts") for PP in row] for row in p]
+# pT = [[convert(PP["flight time"], "s", "hr") for PP in row] for row in p]
+# pF = [[convert(PP["fuel used"], "N", "lb") for PP in row] for row in p]
 
 constrainedFieldLength = convert(minimumTakeoffFieldLength, "m", "ft")
 
@@ -154,8 +151,6 @@ for row, (Cs, WSs, dLs) in enumerate(zip(pC, pWS, pdL)):
     W0_dLIntersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
     W0_WS_dLIntersection = invExponentialForm(W0_dLIntersection, W0params[row][0], W0params[row][1])
     W0fromdLIntersection.append(W0_WS_dLIntersection)
-
-    print(W0fromdLIntersection)
 
 hlines(constrainedFieldLength, fWS[0], fWS[-1], colors = "k")
 

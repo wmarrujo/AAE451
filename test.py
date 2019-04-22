@@ -26,8 +26,8 @@ import cProfile
 ################################################################################
 
 airplaneName = "Gopher"
-WS = convert(30, "lb/ft^2", "N/m^2")
-PW = convert(0.1, "hp/lb", "W/N")
+WS = convert(10, "lb/ft^2", "N/m^2")
+PW = convert(0.8, "hp/lb", "W/N")
 DPS = {"wing loading": WS, "power to weight ratio": PW}
 # cProfile.run("PPs = getPerformanceParameters(airplaneName, DPS, designMission)")
 designDict = getAirplaneDesignData(airplaneName, DPS, designMission, silent=False)

@@ -12,6 +12,7 @@ import sys
 
 class Mission:
     segments = None
+    cruiseRange = None
 
     def simulate(self, tstep, airplane, recordingFunction=(lambda t, s, a: None), silent=False):
         """

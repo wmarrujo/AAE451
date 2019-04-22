@@ -176,6 +176,7 @@ designMission.segments["shutdown"].update = UpdateWaiting
 referenceMission = Mission()
 referenceMission.passengerFactor = 0.5
 referenceMission.pilots = 1
+referenceMission.cruiseRange = 100
 
 referenceMission.segments = Segments([
     Segment("startup"),
@@ -226,7 +227,7 @@ def _referenceMissionInitializeClimb(airplane, t, t0):
     airplane.speed = VelocityForMaximumExcessPower(airplane)
 
 def _referenceMissionCompletedClimb(airplane, t, t0):
-    return cruiseAltitude <= airplane.altitude
+    return referenceMission.cruiseRange <= airplane.altitude
 
 referenceMission.segments["climb"].initialize = _referenceMissionInitializeClimb
 referenceMission.segments["climb"].completed = _referenceMissionCompletedClimb

@@ -132,7 +132,7 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
             print("Loaded Design Initial Configuration                              - {:10.10}".format(id)) if not silent else None
         # close reference version of design airplane
         print("Creating Reference Configuration                                 - {:10.10}".format(id)) if not silent else None
-        closureResult = closeFuelOnly(initialDesignAirplane, referenceMission, silent=silent)
+        closureResult = closeReferenceMission(initialDesignAirplane, referenceMission, silent=silent)
         initialReferenceAirplane = closureResult["airplane"]
         closed = closureResult["closed"]
         # cache results
@@ -219,22 +219,24 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
         "airplane": airplane,
         "closed": closed}
 
-def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
+def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
     # DEPENDENCIES
     
-    def setInitialAirplaneConfiguration(airplane, X):
+    def setInitialAirplaneConfiguration(airplane, referenceMission, X):
         WFguess = X[0]
+        rangeGuess = X[1]
         A = copy.deepcopy(airplane)
-        
+        B = copy.deepcopy(referenceMission)
+        B.cruiseRange = rangeGuess
         A.powerplant.gas.mass = WFguess / g
         
-        return A
+        return (A, B)
     
     def functionToFindRootOf(X):
         # define airplane
-        initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, X)
+        initialAirplane, referenceMissionChanged = setInitialAirplaneConfiguration(baseConfiguration, referenceMission, X)
         # simulation
-        simulationResult = simulateAirplane(initialAirplane, referenceMission, silent=silent)
+        simulationResult = simulateAirplane(initialAirplane, referenceMissionChanged, silent=silent)
         initialAirplane = simulationResult["initial airplane"]
         simulation = simulationResult["simulation"]
         finalAirplane = simulationResult["final airplane"]
@@ -244,7 +246,12 @@ def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
         # post-validation
         if succeeded:
             Wgs = [mg*g for mg in simulation["gas mass"]]
-            result = [Wgs[-1]]
+            rs = simulation["position"]
+            descentEndIndex = lastIndex(simulation["segment"], lambda s: s == "descent")
+            
+            print(rs[descentEndIndex])
+            
+            result = [Wgs[-1] , rs[descentEndIndex] - referenceRange]
         
         else:
             result = [1e10] # pseudo bound
@@ -254,13 +261,13 @@ def closeFuelOnly(baseConfiguration, referenceMission, silent=False):
     
     # INITIALIZATION
     
-    guess = [convert(300,"lb","N")]
+    guess = [convert(300,"lb","N"), convert(200,"nmi","m")]
     
     # ROOT FINDING
-    result = root(functionToFindRootOf, guess, tol=1e-2)
+    result = root(functionToFindRootOf, guess, tol=1e-4)
     closestGuess = result["x"]
-    initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, closestGuess)
-    closed = closestGuess[0] <= 1 # use norm if more than 1 dimension
+    initialAirplane = setInitialAirplaneConfiguration(baseConfiguration, closestGuess[0], closestGuess[1])
+    closed = norm([0, 0], closestGuess) <= 1 # use norm if more than 1 dimension
     
     return {
         "airplane": initialAirplane,
@@ -323,6 +330,7 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
     
     emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: obstacleHeight <= h)]
+    
     dL = ps[-1] - ps[lastIndex(hs, lambda h: obstacleHeight <= h)]
     climbBeginIndex = firstIndex(ss, lambda s: s == "climb")
     descentEndIndex = lastIndex(ss, lambda s: s == "descent")

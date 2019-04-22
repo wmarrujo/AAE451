@@ -3,7 +3,7 @@
 import sys
 import os
 hereDirectory = os.path.dirname(os.path.abspath(__file__))
-rootDirectory = hereDirectory
+rootDirectory = os.path.join(hereDirectory, "..")
 sys.path.append(rootDirectory)
 
 # LOCAL DEPENDENCIES

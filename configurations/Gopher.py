@@ -226,7 +226,7 @@ def defineAirplane(definingParameters):
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, airplane.powerplant.gas.mass, landingLoadFactor, mainGear.length)
     mainGear.composite = 0
-    mainGear.retractable = True
+    mainGear.retractable = True 
     mainGear.mass += mainGear.composite*mainGear.mass*0.14
     mainGear.retractable = True
     mainGear.x = convert(15,"ft","m") # [m]

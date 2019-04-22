@@ -343,8 +343,7 @@ def MaximumSteadyLevelFlightSpeed(airplane):
     #
     # minDifIndex = dif.index(min(dif))
     # Vh = velocity[minDifIndex]
-
-
+    
     Vhguess = convert(200, "kts", "m/s")
     
     def functionToFindRootOf(X):
@@ -362,7 +361,7 @@ def MaximumSteadyLevelFlightSpeed(airplane):
         return EP
     
     X0 = [Vhguess]
-    result = root(functionToFindRootOf, X0, tol=1e-1)
+    result = root(functionToFindRootOf, X0, tol=1e-2)
     Xf = result["x"]
     Vh = Xf[0]
     
@@ -373,7 +372,7 @@ def MaximumSteadyLevelFlightSpeed(airplane):
 ################################################################################
 
 def EngineeringHours(airplane, plannedAircraft):
-    Waf =  0.065* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
+    Waf =  0.65* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Fcert = certFudge
@@ -384,7 +383,7 @@ def EngineeringHours(airplane, plannedAircraft):
     return 0.0396 * (Waf**0.791) * (Vh**1.526) * (N**0.183) * Fcert * Fcf * Fcomp * Fpress
 
 def ToolingHours(airplane, plannedAircraft):
-    Waf =  0.065* convert(airplane.initialGrossWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
+    Waf =  0.65* convert(airplane.initialGrossWeight, "N", "lb")    # need to change once compnenet weight build-up is complete
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Qm = plannedAircraft/60
@@ -396,7 +395,7 @@ def ToolingHours(airplane, plannedAircraft):
     return 1.0032 * (Waf**0.764) * (Vh**0.899) * (N**0.178) * (Qm**0.066) * Ftaper * Fcf * Fcomp * Fpress
 
 def ManufacturingHours(airplane, plannedAircraft):
-    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")
+    Waf = 0.65* convert(airplane.initialGrossWeight, "N", "lb")
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     Fcert = certFudge
@@ -413,7 +412,7 @@ def EngineeringCost(airplane, plannedAircraft):
     return 2.0969 * Heng * Reng * CPI
 
 def DevelopmentalSupportCost(airplane):
-    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
+    Waf = 0.65* convert(airplane.initialGrossWeight, "N", "lb")   # need to change once compnenet weight build-up is complete
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     Np = numberFlightTestAircraft
     Fcert = certFudge
@@ -425,7 +424,7 @@ def DevelopmentalSupportCost(airplane):
     return 0.06458 * (Waf**0.873) * (Vh**1.89) * (Np**0.346) * Fcert * Fcf * Fcomp * Fpress * CPI
 
 def FlightTestCost(airplane):
-    Waf = 0.065* convert(EmptyWeight(airplane), "N", "lb")   # need to change once compnenet weight build-up is complete
+    Waf = 0.65* convert(EmptyWeight(airplane), "N", "lb")   # need to change once compnenet weight build-up is complete
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     Np = numberFlightTestAircraft
     CPI = inflation2012to2019
@@ -456,7 +455,7 @@ def QualityControlCost(airplane, plannedAircraft):
     return 0.13 * Cmfg * Fcert * Fcomp
 
 def MaterialCost(airplane, plannedAircraft):
-    Waf = 0.065* convert(airplane.initialGrossWeight, "N", "lb")
+    Waf = 0.65* convert(airplane.initialGrossWeight, "N", "lb")
     Vh = convert(MaximumSteadyLevelFlightSpeed(airplane), "m/s", "kts")
     N = plannedAircraft
     CPI = inflation2012to2019
@@ -566,7 +565,7 @@ def StorageCost(airplane):
     return 12 * Rstor * CPI
 
 def AnnualFuelCost(airplane, simulation):
-    ts = simulation["time"]
+    ts = simulation["flight time"]
     ss = simulation["segment"]
     mfs = simulation["gas mass"]
     

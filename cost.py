@@ -24,12 +24,10 @@ from matplotlib.pyplot import *
 # DEFINE AIRPLANE
 ################################################################################
 
-W0 = convert(3952, "lb", "N")
-Wf = convert(525, "lb", "N")
 WS = convert(20, "lb/ft^2", "N/m^2")
 PW = convert(0.072, "hp/lb", "W/N")
 
-DPS = {"initial gross weight": W0, "initial fuel weight": Wf, "wing loading": WS, "power to weight ratio": PW}
+DPS = {"wing loading": WS, "power to weight ratio": PW}
 PPs = getPerformanceParameters("Gopher", DPS, designMission)
 
 ID = airplaneDefinitionID("Gopher", DPS)
@@ -41,7 +39,7 @@ engine = airplane.engines[0]
 # PRODUCTION COST
 ################################################################################
 
-salesPrice = [250000, 280000, 300000] # [2019 USD]
+salesPrice = [800000, 700000, 600000] # [2019 USD]
 
 # Production Cost For 500 Planned Aircraft
 
@@ -110,7 +108,7 @@ print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}\n".format(salesPrice[2], Nbe
 
 # Operating Cost
 
-purchasePrice = 280000 # [2019 USD] # We set this based on breakevens above
+purchasePrice = 700000 # [2019 USD] # We set this based on breakevens above
 
 totalAnnualOperatingCost = TotalAnnualCost(airplane, simulation, purchasePrice)
 operatingCostPerHour = CostPerFlightHour(airplane, simulation, purchasePrice)

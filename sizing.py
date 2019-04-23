@@ -199,7 +199,7 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
             emptyFuelMass = finalAirplane.powerplant.emptyFuelMass
             finalFuelMass = finalAirplane.powerplant.fuelMass
             
-            result = [grossWeightDifference, finalFuelMass*g - emptyFuelMass*g]
+            result = [convert(grossWeightDifference, "N", "lb"), convert(finalFuelMass*g - emptyFuelMass*g, "N", "lb")] # W0 guess = W0 predicted, Wf capacity is all used up by end of mission
         else:
             result = [1e10, 1e10] # pseudo bound
         
@@ -216,9 +216,8 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
     result = root(functionToFindRootOf, guess, tol=1e-4)
     closestGuess = result["x"]
     airplane = defineSpecificAirplane(setDefiningParameters(drivingParameters, closestGuess))
-    closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 N
+    closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 lb & 1 lb
     
-
     return {
         "airplane": airplane,
         "closed": closed}
@@ -230,11 +229,10 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
         WFguess = X[0]
         rangeGuess = X[1]
         A = copy.deepcopy(airplane)
-        M = copy.deepcopy(referenceMission)
-        M.segments["cruise"].completed = lambda birplane, t, t0: rangeGuess <= birplane.position
+        referenceMission.segments["cruise"].completed = lambda birplane, t, t0: rangeGuess <= birplane.position
         A.powerplant.gas.mass = WFguess / g
         
-        return (A, M)
+        return (A, referenceMission)
     
     def functionToFindRootOf(X):
         # define airplane
@@ -249,19 +247,20 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
         # post-validation
         if succeeded:
             Wgs = [mg*g for mg in simulation["gas mass"]]
-            rs = simulation["position"]
-            descentEndIndex = lastIndex(simulation["segment"], lambda s: s == "descent")
+            range = simulation["position"][lastIndex(simulation["segment"], lambda s: s == "descent")] # the range not including the loiter segments
+            # FIXME: range getting beginning of descent
             
-            result = [Wgs[-1] , rs[descentEndIndex] - referenceRange]
-        
+            result = [Wgs[-1] , convert(range - referenceRange, "m", "nmi")] # no gas left after whole mission & range flown = desired range
+         
         else:
-            result = [float("inf"), float("inf")] # pseudo bound
-        
+            result = [1e10,1e10] # pseudo bound
+
         print(X, "->", result, "=>", norm([0, 0], result))
         return result
     
     # INITIALIZATION
     
+
     Wg = baseConfiguration.powerplant.gas.mass * g if baseConfiguration.powerplant.gas else 0
     guess = [Wg, convert(100, "nmi", "m")]
     
@@ -269,7 +268,7 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
     result = root(functionToFindRootOf, guess, tol=1e-4, options={"eps": 25})
     closestGuess = result["x"]
     initialAirplane, referenceMissionChanged = setInitialConfiguration(baseConfiguration, referenceMission, closestGuess)
-    closed = norm([0, 0], result["fun"]) <= convert(1, "nmi", "m") # within 1 nmi
+    closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 N & 1 nmi
     
     return {
         "airplane": initialAirplane,
@@ -335,7 +334,6 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
     
     emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: obstacleHeight <= h)]
-    
     dL = ps[-1] - ps[lastIndex(hs, lambda h: obstacleHeight <= h)]
     climbBeginIndex = firstIndex(ss, lambda s: s == "climb")
     descentEndIndex = lastIndex(ss, lambda s: s == "descent")

@@ -91,5 +91,5 @@ inspectionCost = 2000 # [2019 USD/year] # average from Blue Skies gravitational
 
 minimumTakeoffFieldLength = convert(2500, "ft", "m")
 minimumRange = convert(250, "nmi", "m")
-referenceRange = convert(135, "nmi", "m")
+referenceRange = convert(136, "nmi", "m")
 maximumFlightTime = convert(1.5, "hr", "s")

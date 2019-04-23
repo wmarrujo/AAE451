@@ -205,7 +205,7 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
         else:
             result = [1e10, 1e10] # pseudo bound
         
-        print(X, "->", result, "=>", norm([0, 0], result)) if not silent else None # show convergence
+        # print(X, "->", result, "=>", norm([0, 0], result)) if not silent else None # show convergence
         
         return result
     
@@ -257,7 +257,7 @@ def closeReferenceMissionByFuelWeightAndRange(baseConfiguration, referenceMissio
         else:
             result = [1e10,1e10] # pseudo bound
 
-        print(X, "->", result, "=>", norm([0, 0], result))
+        # print(X, "->", result, "=>", norm([0, 0], result))
         return result
     
     # INITIALIZATION

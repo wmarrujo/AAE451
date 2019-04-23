@@ -48,6 +48,7 @@ print("average ground speed:    {:.0f} kts".format(convert(designPPs["range"]/de
 print("flight time:             {:.1f} hr".format(convert(designPPs["mission time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(designPPs["fuel used"]*g, "N", "lb")))
 print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(designDict["initial airplane"]), "N", "lb")))
+print("landing weight           {:.0f} lb".format(convert(AirplaneWeight(designDict["final airplane"]),"N","lb")))
 
 print("---- Reference Mission")
 print("empty weight:            {:.0f} lb".format(convert(referencePPs["empty weight"], "N", "lb")))
@@ -58,11 +59,12 @@ print("average ground speed:    {:.0f} kts".format(convert(referencePPs["range"]
 print("flight time:             {:.1f} hr".format(convert(referencePPs["mission time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(referencePPs["fuel used"]*g, "N", "lb")))
 print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(referenceDict["initial airplane"]), "N", "lb")))
+print("End weight:              {:.0f} lb".format(convert(AirplaneWeight(referenceDict["final airplane"]),"N","lb")))
 
 print("---- Aborted Mission")
 print("landing field length:    {:.0f} ft".format(convert(abortedPPs["landing field length"], "m", "ft")))
-print("initial gross weight:    {:.0f} ft".format(convert(AirplaneWeight(abortedDict["initial airplane"]), "N", "lb")))
-print("final gross weight:      {:.0f} ft".format(convert(AirplaneWeight(abortedDict["final airplane"]), "N", "lb")))
+print("initial gross weight:    {:.0f} lb".format(convert(AirplaneWeight(abortedDict["initial airplane"]), "N", "lb")))
+print("final gross weight:      {:.0f} lb".format(convert(AirplaneWeight(abortedDict["final airplane"]), "N", "lb")))
 
 initialDAirplane = designDict["initial airplane"]
 initialRAirplane = referenceDict["initial airplane"]

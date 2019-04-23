@@ -9,6 +9,7 @@ rootDirectory = hereDirectory
 
 from utilities import *
 from sizing import *
+from missions import *
 
 # EXTERNAL DEPENDENCIES
 
@@ -58,8 +59,12 @@ airplaneName = "Gopher"
 
 # GET DRIVING PARAMETERS
 
-data = map2D(lambda DP: getAirplaneDesignData(airplaneName, DP, designMission), DPs) # FIXME: should this be reference mission data?
-p = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), data)
+designData = map2D(lambda DP: getAirplaneDesignData(airplaneName, DP, designMission), DPs)
+#referenceData = map2D(lambda DP: getReferenceMissionData(airplaneName, DP, designMission, referenceMission, referenceMissionName="reference", closeReferenceMissionFunction=closeReferenceMissionByFuelWeightAndRange), DPs)
+abortedData = map2D(lambda DP: getReferenceMissionData(airplaneName, DP, designMission, abortedMission, referenceMissionName="aborted"), DPs)
+p = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), designData)
+#pR = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), referenceData)
+pA = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), abortedData)
 
 # make matrix for each driving parameter independently
 
@@ -73,7 +78,7 @@ fPW = [convert(PW, "W/N", "hp/lb") for PW in fit_PW]
 
 pC = [[True for PP in row] for row in p] # TODO: cache convergence # Verification that simulation converged at this value
 pdT0 = map2D(lambda PP: convert(PP["takeoff field length"], "m", "ft"), p)
-pdL = map2D(lambda PP: convert(PP["landing field length"], "m", "ft"), p)
+pdL = map2D(lambda PP: convert(PP["landing field length"], "m", "ft"), pA)
 pR = map2D(lambda PP: convert(PP["range"], "m", "nmi"), p)
 pT = map2D(lambda PP: convert(PP["mission time"], "s", "hr"), p)
 

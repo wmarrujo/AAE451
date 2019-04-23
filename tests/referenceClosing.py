@@ -39,7 +39,7 @@ designPPs = getPerformanceParameters(designDict["initial airplane"], designDict[
 referencePPs = getPerformanceParameters(referenceDict["initial airplane"], referenceDict["simulation"], referenceDict["final airplane"])
 abortedPPs = getPerformanceParameters(abortedDict["initial airplane"], abortedDict["simulation"], abortedDict["final airplane"])
 
-print("Begin Design Performance Parameters")
+print("---- Design Mission")
 print("empty weight:            {:.0f} lb".format(convert(designPPs["empty weight"], "N", "lb")))
 print("takeoff field length:    {:.0f} ft".format(convert(designPPs["takeoff field length"], "m", "ft")))
 print("landing field length:    {:.0f} ft".format(convert(designPPs["landing field length"], "m", "ft")))
@@ -48,9 +48,8 @@ print("average ground speed:    {:.0f} kts".format(convert(designPPs["range"]/de
 print("flight time:             {:.1f} hr".format(convert(designPPs["mission time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(designPPs["fuel used"]*g, "N", "lb")))
 print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(designDict["initial airplane"]), "N", "lb")))
-print("End Design Performance Parameters")
 
-print("Begin Reference Performance Parameters")
+print("---- Reference Mission")
 print("empty weight:            {:.0f} lb".format(convert(referencePPs["empty weight"], "N", "lb")))
 print("takeoff field length:    {:.0f} ft".format(convert(referencePPs["takeoff field length"], "m", "ft")))
 print("landing field length:    {:.0f} ft".format(convert(referencePPs["landing field length"], "m", "ft")))
@@ -59,15 +58,16 @@ print("average ground speed:    {:.0f} kts".format(convert(referencePPs["range"]
 print("flight time:             {:.1f} hr".format(convert(referencePPs["mission time"], "s", "hr")))
 print("fuel used:               {:.0f} lb".format(convert(referencePPs["fuel used"]*g, "N", "lb")))
 print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(referenceDict["initial airplane"]), "N", "lb")))
-print("End Reference Performance Parameters")
 
-print("Aborted Mission")
+print("---- Aborted Mission")
 print("landing field length:    {:.0f} ft".format(convert(abortedPPs["landing field length"], "m", "ft")))
+print("initial gross weight:    {:.0f} ft".format(convert(AirplaneWeight(abortedDict["initial airplane"]), "N", "lb")))
+print("final gross weight:      {:.0f} ft".format(convert(AirplaneWeight(abortedDict["final airplane"]), "N", "lb")))
 
 initialDAirplane = designDict["initial airplane"]
 initialRAirplane = referenceDict["initial airplane"]
 
-print("Aircraft Geometry")
+print("---- Aircraft Geometry")
 print("wing")
 print("span:                    {:.3f} ft".format(convert(initialDAirplane.wing.span, "m", "ft")))
 print("chord:                   {:.3f} ft".format(convert(initialDAirplane.wing.chord, "m", "ft")))
@@ -78,7 +78,7 @@ print("vertical stabilizer")
 print("span:                    {:.3f} ft".format(convert(initialDAirplane.verticalStabilizer.span, "m", "ft")))
 print("chord:                   {:.3f} ft".format(convert(initialDAirplane.verticalStabilizer.chord, "m", "ft")))
 
-print("weight & balance")
+print("---- Weight & Balance")
 for c in initialDAirplane.components:
     print("weight: {:10.3f} lb - position {:10.3f} ft - {}".format(convert(c.mass*g, "N", "lb"), convert(c.x, "m", "ft"), type(c)))
 

@@ -409,7 +409,7 @@ def _abortedMissionInitializeDescent(airplane, t, t0):
     airplane.throttle = 0
 
 def _abortedMissionCompletedDescent(airplane, t, t0):
-    return airplane.altitude <= convert(100, "ft", "m")
+    return airplane.altitude <= convert(0, "ft", "m")
 
 abortedMission.segments["descent"].initialize = _abortedMissionInitializeDescent
 abortedMission.segments["descent"].completed = _abortedMissionCompletedDescent

@@ -334,7 +334,6 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
     
     emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: obstacleHeight <= h)]
-    
     dL = ps[-1] - ps[lastIndex(hs, lambda h: obstacleHeight <= h)]
     climbBeginIndex = firstIndex(ss, lambda s: s == "climb")
     descentEndIndex = lastIndex(ss, lambda s: s == "descent")

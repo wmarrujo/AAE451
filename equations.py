@@ -32,7 +32,7 @@ def PayloadWeight(airplane):
     return (Wpax + Wbag) * pax + pilotWeight * pilots
 
 def FuelWeight(airplane):
-    mf = airplane.powerplant.fuelMass
+    mf = airplane.powerplant.gas.mass
 
     return mf*g
 
@@ -862,7 +862,7 @@ def UpdateDescent(airplane, t, tstep):
 
 def UpdateLanding(airplane, t, tstep):
     acceleration = AccelerationOnLanding(airplane) # find acceleration from thrust, drag and ground friction
-    airplane.speed += acceleration * tstep # update speed with acceleration
     airplane.position += airplane.speed * tstep # update position with speed
+    airplane.speed += acceleration * tstep # update speed with acceleration
 
     UpdateFuel(airplane, tstep) # update the fuel

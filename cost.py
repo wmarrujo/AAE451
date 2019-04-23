@@ -47,7 +47,7 @@ engineR = airplane.engines[0]
 # PRODUCTION COST
 ################################################################################
 
-salesPrice = [600000, 500000, 400000] # [2019 USD]
+salesPrice = [750000, 650000, 550000] # [2019 USD]
 
 # Production Cost For 500 Planned Aircraft
 

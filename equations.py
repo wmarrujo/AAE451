@@ -703,7 +703,7 @@ def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines, powerToWe
     
     # Weng = 1.0*2.575 * mU**0.9 * N
     Weng = WU * (PW * W0 / (N * P0))**0.78
-    return convert(Weng, "lb", "N")
+    return convert(Weng, "lb", "N")/g
 
 def PredictMainGearMass(airplaneGrossWeight, airplaneFuelMass, landingLoadFactor, length):
     W0 = convert(airplaneGrossWeight, "N", "lb")

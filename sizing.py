@@ -238,7 +238,6 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
     
     def functionToFindRootOf(X):
         # define airplane
-        print(X)
         initialAirplane, referenceMissionChanged = setInitialConfiguration(baseConfiguration, referenceMission, X)
         # simulation
         simulationResult = simulateAirplane(initialAirplane, referenceMissionChanged, silent=silent)
@@ -246,7 +245,6 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
         simulation = simulationResult["simulation"]
         finalAirplane = simulationResult["final airplane"]
         succeeded = simulationResult["succeeded"]
-        print(succeeded)
         
         # post-validation
         if succeeded:
@@ -258,14 +256,14 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
             result = [Wgs[-1] , rs[descentEndIndex] - referenceRange]
         
         else:
-            result = [1e10] # pseudo bound
+            result = [1e10,1e10] # pseudo bound
         
         print(X, "->", result, "=>", result[0])
         return result
     
     # INITIALIZATION
     
-    guess = [convert(300,"lb","N"), convert(100,"nmi","m")]
+    guess = [convert(300,"lb","N"), convert(200,"nmi","m")]
     
     # ROOT FINDING
     result = root(functionToFindRootOf, guess, tol=1e-4, options={'eps':25})

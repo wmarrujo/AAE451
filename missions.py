@@ -327,3 +327,118 @@ def _referenceMissionCompletedShutdown(airplane, t, t0):
 referenceMission.segments["shutdown"].initialize = _referenceMissionInitializeShutdown
 referenceMission.segments["shutdown"].completed = _referenceMissionCompletedShutdown
 referenceMission.segments["shutdown"].update = UpdateWaiting
+
+######################################################################################
+# ABORTED TAKEOFF
+######################################################################################
+# Takeoff, abort the mission & immediately come back to land.
+
+abortedMission = Mission()
+abortedMission.passengerFactor = 1
+abortedMission.pilots = 1
+
+abortedMission.segments = Segments([
+    Segment("startup"),
+    Segment("takeoff"),
+    Segment("climb"),
+    Segment("cruise"),
+    Segment("descent"),
+    Segment("landing"),
+    Segment("shutdown")
+    ])
+
+# STARTUP
+
+def _abortedMissionInitializeStartup(airplane, t, t0):
+    airplane.altitude = 0
+    airplane.speed = 0
+    airplane.throttle = 0.3
+    airplane.position = 0
+    airplane.pitch = 0
+    airplane.flightPathAngle = 0
+
+def _abortedMissionCompletedStartup(airplane, t, t0):
+    return convert(10, "min", "s") <= t - t0
+
+abortedMission.segments["startup"].initialize = _abortedMissionInitializeStartup
+abortedMission.segments["startup"].completed = _abortedMissionCompletedStartup
+abortedMission.segments["startup"].update = UpdateWaiting
+
+# TAKEOFF
+
+def _abortedMissionInitializeTakeoff(airplane, t, t0):
+    airplane.throttle = 1
+
+def _abortedMissionCompletedTakeoff(airplane, t, t0):
+    return TakeoffSpeed(airplane) <= airplane.speed
+
+abortedMission.segments["takeoff"].initialize = _abortedMissionInitializeTakeoff
+abortedMission.segments["takeoff"].completed = _abortedMissionCompletedTakeoff
+abortedMission.segments["takeoff"].update = UpdateTakeoff
+
+# CLIMB
+
+def _abortedMissionInitializeClimb(airplane, t, t0):
+    airplane.throttle = 1
+    airplane.speed = VelocityForMaximumExcessPower(airplane)
+
+def _abortedMissionCompletedClimb(airplane, t, t0):
+    return convert(1000, "ft", "m") <= airplane.altitude
+
+abortedMission.segments["climb"].initialize = _abortedMissionInitializeClimb
+abortedMission.segments["climb"].completed = _abortedMissionCompletedClimb
+abortedMission.segments["climb"].update = UpdateClimb
+
+# CRUISE
+
+def _abortedMissionInitializeCruise(airplane, t, t0):
+    airplane.flightPathAngle = 0 # level flight
+    airplane.pitch = 0 # angle of attack to maintain
+    airplane.throttle = 0.7
+
+def _abortedMissionCompletedCruise(airplane, t, t0):
+    return convert(3, "min", "s") <= t-t0 # don't fly the cruise, do 1 loop of the pattern for 3 min
+
+abortedMission.segments["cruise"].initialize = _abortedMissionInitializeCruise
+abortedMission.segments["cruise"].completed = _abortedMissionCompletedCruise
+abortedMission.segments["cruise"].update = UpdateCruise
+
+# DESCENT
+
+def _abortedMissionInitializeDescent(airplane, t, t0):
+    airplane.throttle = 0
+
+def _abortedMissionCompletedDescent(airplane, t, t0):
+    return airplane.altitude <= convert(100, "ft", "m")
+
+abortedMission.segments["descent"].initialize = _abortedMissionInitializeDescent
+abortedMission.segments["descent"].completed = _abortedMissionCompletedDescent
+abortedMission.segments["descent"].update = UpdateDescent
+
+# LANDING
+
+def _abortedMissionInitializeLanding(airplane, t, t0):
+    airplane.pitch = 0
+    airplane.flightPathAngle = 0
+    airplane.altitude = 0
+    airplane.throttle = 0
+
+def _abortedMissionCompletedLanding(airplane, t, t0):
+    return airplane.speed <= 0.1
+
+abortedMission.segments["landing"].initialize = _abortedMissionInitializeLanding
+abortedMission.segments["landing"].completed = _abortedMissionCompletedLanding
+abortedMission.segments["landing"].update = UpdateLanding
+
+# SHUTDOWN
+
+def _abortedMissionInitializeShutdown(airplane, t, t0):
+    airplane.speed = 0
+    airplane.throttle = 0.1
+
+def _abortedMissionCompletedShutdown(airplane, t, t0):
+    return convert(10, "min", "s") <= t - t0
+
+abortedMission.segments["shutdown"].initialize = _abortedMissionInitializeShutdown
+abortedMission.segments["shutdown"].completed = _abortedMissionCompletedShutdown
+abortedMission.segments["shutdown"].update = UpdateWaiting

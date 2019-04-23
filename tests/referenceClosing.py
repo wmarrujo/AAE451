@@ -31,9 +31,11 @@ drivingParameters = {
     "power to weight ratio": convert(0.072, "hp/lb", "W/N")}
 # cProfile.run("PPs = getPerformanceParameters(airplaneName, DPS, designMission)")
 designDict = getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent=False)
-referenceDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", silent=False)
+referenceDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", closeReferenceMissionFunction=closeReferenceMissionByFuelWeightAndRange, silent=False)
+abortedDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, abortedMission, referenceMissionName="abort", silent=False)
 referencePPs = getPerformanceParameters(referenceDict["initial airplane"], referenceDict["simulation"], referenceDict["final airplane"])
 designPPs = getPerformanceParameters(designDict["initial airplane"], designDict["simulation"], designDict["final airplane"])
+abortedPPs = getPerformanceParameters(abortedDict["initial airplane"], abortedDict["simulation"], abortedDict["final airplane"])
 
         # "empty weight": emptyWeight,
         # "takeoff field length": dTO,
@@ -64,6 +66,9 @@ print("flight time:             {:.1f} hr".format(convert(referencePPs["mission 
 print("fuel used:               {:.0f} lb".format(convert(referencePPs["fuel used"]*g, "N", "lb")))
 print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(referenceDict["initial airplane"]), "N", "lb")))
 print("End Reference Performance Parameters")
+
+print("Aborted Mission")
+print("landing field length:    {:.0f} ft".format(convert(abortedPPs["landing field length"], "m", "ft")))
 
 initialDAirplane = designDict["initial airplane"]
 initialRAirplane = referenceDict["initial airplane"]
@@ -137,5 +142,18 @@ xlabel("C.G. [ft]")
 ylabel("Weight [lb]")
 title("Reference Mission C.G. Movement")
 
+simulation = abortedDict["simulation"]
+ts = simulation["time"]
+ps = simulation["position"]
+hs = simulation["altitude"]
+Vs = simulation["speed"]
+Ws = simulation["weight"]
+CGs = simulation["cg"]
+
+figure()
+plot([convert(p, "m", "nmi") for p in ps], [convert(h, "m", "ft") for h in hs])
+xlabel("Range [nmi]")
+ylabel("Altitude [ft]")
+title("Aborted Mission Track")
 
 show()

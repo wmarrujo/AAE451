@@ -15,7 +15,7 @@ sys.path.append(configurationsDirectory)
 from utilities import *
 
 from parameters import *
-from missions import *
+from equations import *
 
 # EXTERNAL DEPENDENCIES
 
@@ -110,7 +110,7 @@ def getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent
         "simulation": designSimulation,
         "final airplane": finalDesignAirplane}
 
-def getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", silent=False):
+def getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", closeReferenceMissionFunction=False, silent=False):
 
     id = airplaneDefinitionID(airplaneName, drivingParameters)
     
@@ -132,13 +132,17 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
         else:
             print("Loaded Design Initial Configuration                              - {:10.10}".format(id)) if not silent else None
         # close reference version of design airplane
-        print("Creating Reference Configuration                                 - {:10.10}".format(id)) if not silent else None
-        closureResult = closeReferenceMission(initialDesignAirplane, referenceMission, silent=silent)
-        initialReferenceAirplane = closureResult["airplane"]
-        closed = closureResult["closed"]
-        # cache results
-        saveAirplaneConfiguration(initialReferenceAirplane, id, referenceMissionName + "-initial")
-        print("Reference Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
+        if not closeReferenceMissionFunction == False: # if it is set
+            print("Creating Reference Configuration                                 - {:10.10}".format(id)) if not silent else None
+            closureResult = closeReferenceMissionFunction(initialDesignAirplane, referenceMission, silent=silent)
+            initialReferenceAirplane = closureResult["airplane"]
+            closed = closureResult["closed"]
+            # cache results
+            saveAirplaneConfiguration(initialReferenceAirplane, id, referenceMissionName + "-initial")
+            print("Reference Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
+        else: # if it was not specified to use a different closed aircraft
+            initialReferenceAirplane = copy.deepcopy(initialDesignAirplane)
+            print("No Reference Mission closure conditions specified, using design configuration") if not silent else None
     else:
         print("Loaded Reference Initial Configuration                           - {:10.10}".format(id)) if not silent else None
     
@@ -157,8 +161,8 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
         saveAirplaneConfiguration(finalReferenceAirplane, id, referenceMissionName + "-final")
         print("Design Mission " + ("SUCCEEDED" if succeeded else "DID NOT SUCCEED")) if not silent else None
     else: # cached
-        print("Loaded Design Configuration Design Mission Simulation            - {:10.10}".format(id)) if not silent else None
-        print("Loaded Design Final Configuration                                - {:10.10}".format(id)) if not silent else None
+        print("Loaded Reference Configuration Reference Mission Simulation      - {:10.10}".format(id)) if not silent else None
+        print("Loaded Reference Final Configuration                             - {:10.10}".format(id)) if not silent else None
     
     return {
         "initial airplane": initialReferenceAirplane,
@@ -171,7 +175,6 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
 
 def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission, silent=False):
     # DEPENDENCIES
-
     
     def setDefiningParameters(drivingParameters, X):
         definingParameters = copy.deepcopy(drivingParameters)
@@ -218,12 +221,11 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
     airplane = defineSpecificAirplane(setDefiningParameters(drivingParameters, closestGuess))
     closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 N
     
-
     return {
         "airplane": airplane,
         "closed": closed}
 
-def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
+def closeReferenceMissionByFuelWeightAndRange(baseConfiguration, referenceMission, silent=False):
     # DEPENDENCIES
     
     def setInitialConfiguration(airplane, referenceMission, X):

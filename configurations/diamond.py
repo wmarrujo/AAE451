@@ -187,7 +187,7 @@ def defineAirplane(definingParameters):
     engine.interferenceFactor = 1 #??????
     engine.diameter = 0.522 # m
     engine.length = 0.845 # m
-    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines) / numberOfEngines
+    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines, PW, rotaxMaxP, W0)
     engine.propeller = propeller
     engine.maxPower = (PW*W0) / numberOfEngines
     # engine.maxPower = convert(98.6, "hp", "W")

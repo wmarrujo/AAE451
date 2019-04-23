@@ -29,6 +29,7 @@ def defineAirplane(definingParameters):
     Wf = definingParameters["initial fuel weight"]
     WS = definingParameters["wing loading"]
     PW = definingParameters["power to weight ratio"]
+    print(W0, Wf)
 
     # ASSUMPTIONS # FIXME: Define elsewhere? or get from simulations?
     cruiseDynamicPressure = 0.5*densityAtAltitude(cruiseAltitude)*convert(180, "kts", "m/s")**2
@@ -191,7 +192,7 @@ def defineAirplane(definingParameters):
     engine.interferenceFactor = 1
     engine.diameter = 0.65 # m
     engine.length = 1.8 # m
-    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines) / numberOfEngines
+    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines, PW, rotaxMaxP, W0)
     engine.composite = 0
     engine.mass += engine.composite*engine.mass*0.14
     engine.propeller = propeller

@@ -41,8 +41,10 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-WSs = [WS*0.8, WS*0.9, WS, WS*1.1, WS*1.2]
-PWs = [PW*0.9, PW*0.95, PW, PW*1.05, PW*1.1]
+# WSs = [WS*0.8, WS*0.9, WS, WS*1.1, WS*1.2]
+# PWs = [PW*0.9, PW*0.95, PW, PW*1.05, PW*1.1]
+WSs = [WS*0.8, WS, WS*1.2]
+PWs = [PW*0.9, PW, PW*1.1]
 
 DPs = [[{
     "wing loading": WS,
@@ -69,6 +71,7 @@ pA = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulati
 # make matrix for each driving parameter independently
 
 PWs = [convert(PW, "W/N", "hp/lb") for PW in PWs]
+print(PWs)
 
 pWe = map2D(lambda PP: convert(PP["empty weight"], "N", "lb"), p)
 pWS = map2D(lambda DP: convert(DP["wing loading"], "N/m^2", "lb/ft^2"), DPs)
@@ -207,17 +210,13 @@ for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+(offset*row) for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    print(cleanOffsetWSs, cleanWes)
     plot(cleanOffsetWSs, cleanWes, "k")
-
-print("------------------------------------------------------------------------")
 
 # W/S Contour
 for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), pWS, transpose(pWe))): # for each row
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+(offset*row) for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    print(cleanOffsetWSs, cleanWes)
     plot(cleanOffsetWSs, cleanWes, "k")
     
 ###### INTERSECTION CURVES

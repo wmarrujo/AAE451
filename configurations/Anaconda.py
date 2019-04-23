@@ -195,7 +195,7 @@ def defineAirplane(definingParameters):
     engine.interferenceFactor = 1
     engine.diameter = convert(1.9, "ft", "m")
     engine.length = convert(4.4, "ft", "m")
-    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines)
+    engine.mass = PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines, PW, rotaxMaxP, W0)
     engine.composite = 0
     engine.mass += engine.composite*engine.mass*0.14
     engine.propeller = propeller

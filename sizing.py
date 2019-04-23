@@ -186,6 +186,7 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
         # define airplane
         definingParameters = setDefiningParameters(drivingParameters, X)
         initialAirplane = defineSpecificAirplane(definingParameters)
+        initialAirplane.passengers = ceil(designMission.passengerFactor*initialAirplane.maxPassengers)
         # simulate airplane
         simulationResult = simulateAirplane(initialAirplane, designMission, silent=silent)
         initialAirplane = simulationResult["initial airplane"]
@@ -341,6 +342,7 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
     range = ps[descentEndIndex] - ps[climbBeginIndex]
     missionTime = ts[descentEndIndex] - ts[climbBeginIndex]
     fuelUsed = Ws[0] - Ws[-1]
+    print(convert(fuelUsed, "N","lb"))
     
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
     

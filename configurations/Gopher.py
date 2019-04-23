@@ -32,14 +32,14 @@ def defineAirplane(definingParameters):
 
     # ASSUMPTIONS # FIXME: Define elsewhere? or get from simulations?
     cruiseDynamicPressure = 0.5*densityAtAltitude(cruiseAltitude)*convert(180, "kts", "m/s")**2
-    sizingLoadFactor = 3.5
+    sizingLoadFactor = 3.8
     landingLoadFactor = 2.67 * 1.5
     horizontalTailVolumeCoefficient = 0.80
     verticalTailVolumeCoefficient = 0.07
     numberOfEngines = 2
     uninstalledEngineMass = 65.7 # kg
     totalFuelVolume = convert(50, "gal", "m^3")
-    uninstalledAvionicsWeight = 8*9.8 # N # FIXME: you sure?
+    uninstalledAvionicsWeight = 70*9.8 # N # FIXME: you sure?
     cruiseMachNumber = convert(180, "kts", "m/s") / machAtAltitude(cruiseAltitude)
     #Composite pieces (1 = comp, 0 = alloy)
     compositeWing = 0
@@ -53,7 +53,7 @@ def defineAirplane(definingParameters):
     ################################################################################
 
     airplane = Airplane()
-    
+
     airplane.pilots = 1
     airplane.passengers = 0
     airplane.maxPassengers = 5
@@ -103,12 +103,11 @@ def defineAirplane(definingParameters):
     wing.interferenceFactor = 1
     wing.planformArea = W0/WS
     wing.setAspectRatioHoldingPlanformArea(8.6)
-    wing.thicknessToChord = 0.02
+    wing.thicknessToChord = 0.12
     wing.sweep = 0
     wing.taperRatio = 1
     wing.mass = PredictWingMass(wing.span, wing.aspectRatio, wing.chord, sizingLoadFactor, wing.sweep, wing.taperRatio, wing.planformArea, W0, powerplant.fuelMass*g, cruiseDynamicPressure, wing.thicknessToChord, compositeWing)
     wing.composite = 0
-    wing.mass += wing.composite*wing.mass*0.14
     wing.x = convert(9.171+3.11,"ft","m")# [m]
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
@@ -125,11 +124,10 @@ def defineAirplane(definingParameters):
     fuselage = Fuselage()
 
     fuselage.interferenceFactor = 1
-    fuselage.diameter = 1.4 # m
-    fuselage.length = 8.7 # m
+    fuselage.diameter = 1.88 # m
+    fuselage.length = 9.14 # m
     fuselage.mass = PredictFuselageMass(fuselage.wettedArea, W0, fuselage.length, fuselage.diameter, cruiseDynamicPressure, 0, sizingLoadFactor, compositeFuselage)
     fuselage.composite = 0
-    fuselage.mass += fuselage.composite*fuselage.mass*0.14
     fuselage.x = fuselage.length / 2 # [m]
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
@@ -148,11 +146,10 @@ def defineAirplane(definingParameters):
     horizontalStabilizer.planformArea = 2.64 # m^2
     horizontalStabilizer.thicknessToChord = 0.12
     horizontalStabilizer.span = convert(10, "ft", "m")
-    horizontalStabilizer.sweep = 0
+    horizontalStabilizer.sweep = convert(0, "deg", "rad")
     horizontalStabilizer.taperRatio = 1
     horizontalStabilizer.mass = PredictHorizontalStabilizerMass(W0, sizingLoadFactor, horizontalStabilizer.taperRatio, horizontalStabilizer.sweep, wing.sweep, horizontalTailVolumeCoefficient, wing.span, wing.chord, 0.6 * fuselage.length, cruiseDynamicPressure, wing.thicknessToChord, compositeHorizontalStabilizer)
     horizontalStabilizer.composite = 0
-    horizontalStabilizer.mass += horizontalStabilizer.composite*horizontalStabilizer.mass*0.14
     horizontalStabilizer.x = convert(24.817+2.96/2,"ft","m") # [m]
 
     # VERTICAL STABILIZER OBJECT
@@ -163,11 +160,10 @@ def defineAirplane(definingParameters):
     verticalStabilizer.planformArea = 2.86 # m^2
     verticalStabilizer.thicknessToChord = 0.12
     verticalStabilizer.span = convert(6, "ft", "m")
-    verticalStabilizer.sweep = convert(20, "deg", "rad")
-    verticalStabilizer.taperRatio = 1
-    verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 0, W0, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.6 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord, compositeVerticalStabilizer)
+    verticalStabilizer.sweep = convert(50, "deg", "rad")
+    verticalStabilizer.taperRatio = 0.274
+    verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 1, W0, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.6 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord, compositeVerticalStabilizer)
     verticalStabilizer.composite = 0
-    verticalStabilizer.mass += verticalStabilizer.composite*verticalStabilizer.mass*0.14
     verticalStabilizer.x = convert(26.33+6,"ft","m") # [m]
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
@@ -220,12 +216,12 @@ def defineAirplane(definingParameters):
 
     mainGear = MainGear()
 
-    mainGear.length = 0.4 # m
+    mainGear.length = 0.9 # m
     mainGear.interferenceFactor = 1
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(W0, airplane.powerplant.gas.mass, landingLoadFactor, mainGear.length)
     mainGear.composite = 0
-    mainGear.retractable = True 
+    mainGear.retractable = True
     mainGear.mass += mainGear.composite*mainGear.mass*0.14
     mainGear.retractable = True
     mainGear.x = convert(15,"ft","m") # [m]
@@ -234,7 +230,7 @@ def defineAirplane(definingParameters):
 
     frontGear = FrontGear()
 
-    frontGear.length = 0.5 # m
+    frontGear.length = 0.457 # m
     frontGear.interferenceFactor = 1
     frontGear.wettedArea = 0
     frontGear.mass = PredictFrontGearMass(W0, landingLoadFactor, frontGear.length)

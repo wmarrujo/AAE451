@@ -811,12 +811,12 @@ def UpdateFuel(airplane, tstep):
     generatorOn = airplane.powerplant.generatorOn
     
     Eb = E*percentElectric # energy requested of battery
-    Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
+    # Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
     
-    if battery is not None:
-        battery.energy -= Eb
+    # if battery is not None:
+    #     battery.energy -= Eb
     if gas is not None:
-        gas.mass -= Eg/gas.energyDensity
+        gas.mass -= tstep*mdot
 
 def UpdateWaiting(airplane, t, tstep):
     UpdateFuel(airplane, tstep)

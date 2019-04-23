@@ -361,7 +361,6 @@ def EngineeringHours(airplane, plannedAircraft):
     Fpress = pressFudge
 
     print(Vh)
-    print(Waf/0.65)
 
     return 0.0396 * (Waf**0.791) * (Vh**1.526) * (N**0.183) * Fcert * Fcf * Fcomp * Fpress
 
@@ -476,7 +475,7 @@ def LandingGearCost(airplane):
     return dC * CPI
 
 def SeatingCost(airplane):
-    num = airplane.pilots + airplane.passengers
+    num = airplane.pilots + airplane.maxPassengers
     P = seatPrice
 
     return num * P

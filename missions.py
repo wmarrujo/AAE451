@@ -55,6 +55,7 @@ def _designMissionCompletedTakeoff(airplane, t, t0):
 designMission.segments["takeoff"].initialize = _designMissionInitializeTakeoff
 designMission.segments["takeoff"].completed = _designMissionCompletedTakeoff
 designMission.segments["takeoff"].update = UpdateTakeoff
+designMission.segments["takeoff"].stepSizeFraction = 1/10
 
 # CLIMB
 
@@ -68,6 +69,7 @@ def _designMissionCompletedClimb(airplane, t, t0):
 designMission.segments["climb"].initialize = _designMissionInitializeClimb
 designMission.segments["climb"].completed = _designMissionCompletedClimb
 designMission.segments["climb"].update = UpdateClimb
+designMission.segments["climb"].stepSizeFraction = 1/3
 
 # CRUISE
 
@@ -98,6 +100,7 @@ def _designMissionCompletedDescent(airplane, t, t0):
 designMission.segments["descent"].initialize = _designMissionInitializeDescent
 designMission.segments["descent"].completed = _designMissionCompletedDescent
 designMission.segments["descent"].update = UpdateDescent
+designMission.segments["descent"].stepSizeFraction = 1/3
 
 # ABORT CLIMB
 
@@ -111,6 +114,7 @@ def _designMissionCompletedAbortClimb(airplane, t, t0):
 designMission.segments["abortClimb"].initialize = _designMissionInitializeAbortClimb
 designMission.segments["abortClimb"].completed = _designMissionCompletedAbortClimb
 designMission.segments["abortClimb"].update = UpdateClimb
+designMission.segments["abortClimb"].stepSizeFraction = 1/3
 
 # LOITER
 
@@ -140,6 +144,7 @@ def _designMissionCompletedAbortDescent(airplane, t, t0):
 designMission.segments["abortDescent"].initialize = _designMissionInitializeAbortDescent
 designMission.segments["abortDescent"].completed = _designMissionCompletedAbortDescent
 designMission.segments["abortDescent"].update = UpdateDescent
+designMission.segments["abortDescent"].stepSizeFraction = 1/3
 
 # LANDING
 
@@ -155,6 +160,7 @@ def _designMissionCompletedLanding(airplane, t, t0):
 designMission.segments["landing"].initialize = _designMissionInitializeLanding
 designMission.segments["landing"].completed = _designMissionCompletedLanding
 designMission.segments["landing"].update = UpdateLanding
+designMission.segments["landing"].stepSizeFraction = 1/10
 
 # SHUTDOWN
 
@@ -218,6 +224,7 @@ def _referenceMissionCompletedTakeoff(airplane, t, t0):
 referenceMission.segments["takeoff"].initialize = _referenceMissionInitializeTakeoff
 referenceMission.segments["takeoff"].completed = _referenceMissionCompletedTakeoff
 referenceMission.segments["takeoff"].update = UpdateTakeoff
+referenceMission.segments["takeoff"].stepSizeFraction = 1/10
 
 # CLIMB
 
@@ -231,6 +238,7 @@ def _referenceMissionCompletedClimb(airplane, t, t0):
 referenceMission.segments["climb"].initialize = _referenceMissionInitializeClimb
 referenceMission.segments["climb"].completed = _referenceMissionCompletedClimb
 referenceMission.segments["climb"].update = UpdateClimb
+referenceMission.segments["climb"].stepSizeFraction = 1/3
 
 # CRUISE
 
@@ -257,6 +265,7 @@ def _referenceMissionCompletedDescent(airplane, t, t0):
 referenceMission.segments["descent"].initialize = _referenceMissionInitializeDescent
 referenceMission.segments["descent"].completed = _referenceMissionCompletedDescent
 referenceMission.segments["descent"].update = UpdateDescent
+referenceMission.segments["descent"].stepSizeFraction = 1/3
 
 # ABORT CLIMB
 
@@ -270,6 +279,7 @@ def _referenceMissionCompletedAbortClimb(airplane, t, t0):
 referenceMission.segments["abortClimb"].initialize = _referenceMissionInitializeAbortClimb
 referenceMission.segments["abortClimb"].completed = _referenceMissionCompletedAbortClimb
 referenceMission.segments["abortClimb"].update = UpdateClimb
+referenceMission.segments["abortClimb"].stepSizeFraction = 1/3
 
 # LOITER
 
@@ -299,6 +309,7 @@ def _referenceMissionCompletedAbortDescent(airplane, t, t0):
 referenceMission.segments["abortDescent"].initialize = _referenceMissionInitializeAbortDescent
 referenceMission.segments["abortDescent"].completed = _referenceMissionCompletedAbortDescent
 referenceMission.segments["abortDescent"].update = UpdateDescent
+referenceMission.segments["abortDescent"].stepSizeFraction = 1/3
 
 # LANDING
 
@@ -314,6 +325,7 @@ def _referenceMissionCompletedLanding(airplane, t, t0):
 referenceMission.segments["landing"].initialize = _referenceMissionInitializeLanding
 referenceMission.segments["landing"].completed = _referenceMissionCompletedLanding
 referenceMission.segments["landing"].update = UpdateLanding
+referenceMission.segments["landing"].stepSizeFraction = 1/10
 
 # SHUTDOWN
 
@@ -375,6 +387,7 @@ def _abortedMissionCompletedTakeoff(airplane, t, t0):
 abortedMission.segments["takeoff"].initialize = _abortedMissionInitializeTakeoff
 abortedMission.segments["takeoff"].completed = _abortedMissionCompletedTakeoff
 abortedMission.segments["takeoff"].update = UpdateTakeoff
+abortedMission.segments["takeoff"].stepSizeFraction = 1/10
 
 # CLIMB
 
@@ -388,6 +401,7 @@ def _abortedMissionCompletedClimb(airplane, t, t0):
 abortedMission.segments["climb"].initialize = _abortedMissionInitializeClimb
 abortedMission.segments["climb"].completed = _abortedMissionCompletedClimb
 abortedMission.segments["climb"].update = UpdateClimb
+abortedMission.segments["climb"].stepSizeFraction = 1/5
 
 # CRUISE
 
@@ -409,11 +423,12 @@ def _abortedMissionInitializeDescent(airplane, t, t0):
     airplane.throttle = 0
 
 def _abortedMissionCompletedDescent(airplane, t, t0):
-    return airplane.altitude <= convert(0, "ft", "m")
+    return airplane.altitude <= convert(5, "ft", "m")
 
 abortedMission.segments["descent"].initialize = _abortedMissionInitializeDescent
 abortedMission.segments["descent"].completed = _abortedMissionCompletedDescent
 abortedMission.segments["descent"].update = UpdateDescent
+abortedMission.segments["descent"].stepSizeFraction = 1/5
 
 # LANDING
 
@@ -429,6 +444,7 @@ def _abortedMissionCompletedLanding(airplane, t, t0):
 abortedMission.segments["landing"].initialize = _abortedMissionInitializeLanding
 abortedMission.segments["landing"].completed = _abortedMissionCompletedLanding
 abortedMission.segments["landing"].update = UpdateLanding
+abortedMission.segments["landing"].stepSizeFraction = 1/10
 
 # SHUTDOWN
 

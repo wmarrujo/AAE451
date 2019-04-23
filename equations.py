@@ -807,7 +807,7 @@ def UpdateFuel(airplane, tstep):
 
     Eb = E*percentElectric # energy requested of battery
     Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
-
+    
     if battery is not None:
         battery.energy -= Eb
     if gas is not None:

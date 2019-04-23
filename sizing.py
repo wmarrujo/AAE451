@@ -254,23 +254,16 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
             result = [Wgs[-1] , convert(range - referenceRange, "m", "nmi")] # no gas left after whole mission & range flown = desired range
          
         else:
-<<<<<<< HEAD
             result = [1e10,1e10] # pseudo bound
-=======
-            result = [float("inf"), float("inf")] # pseudo bound
->>>>>>> 08f8ea3fa044a5fea9fc37f9b29f92a720ef174e
-        
+
         print(X, "->", result, "=>", norm([0, 0], result))
         return result
     
     # INITIALIZATION
     
-<<<<<<< HEAD
-    guess = [convert(300,"lb","N"), convert(200,"nmi","m")]
-=======
+
     Wg = baseConfiguration.powerplant.gas.mass * g if baseConfiguration.powerplant.gas else 0
     guess = [Wg, convert(100, "nmi", "m")]
->>>>>>> 08f8ea3fa044a5fea9fc37f9b29f92a720ef174e
     
     # ROOT FINDING
     result = root(functionToFindRootOf, guess, tol=1e-4, options={"eps": 25})

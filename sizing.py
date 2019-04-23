@@ -229,11 +229,10 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
         WFguess = X[0]
         rangeGuess = X[1]
         A = copy.deepcopy(airplane)
-        M = copy.deepcopy(referenceMission)
-        M.segments["cruise"].completed = lambda birplane, t, t0: rangeGuess <= birplane.position
+        referenceMission.segments["cruise"].completed = lambda birplane, t, t0: rangeGuess <= birplane.position
         A.powerplant.gas.mass = WFguess / g
         
-        return (A, M)
+        return (A, referenceMission)
     
     def functionToFindRootOf(X):
         # define airplane

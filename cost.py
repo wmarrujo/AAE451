@@ -21,7 +21,7 @@ from sizing import *
 from matplotlib.pyplot import *
 
 ################################################################################
-# DEFINE AIRPLANE
+# DEFINE AIRPLANES
 ################################################################################
 
 WS = convert(20, "lb/ft^2", "N/m^2")
@@ -35,6 +35,13 @@ PPs = getPerformanceParameters(data["initial airplane"], data["simulation"], dat
 airplane = data["initial airplane"]
 simulation = data["simulation"]
 engine = airplane.engines[0]
+
+dataR = getAirplaneDesignData("Gopher", DPS, referenceMission)
+PPsR = getPerformanceParameters(data["initial airplane"], data["simulation"], data["final airplane"])
+
+airplaneR = data["initial airplane"]
+simulationR = data["simulation"]
+engineR = airplane.engines[0]
 
 ################################################################################
 # PRODUCTION COST
@@ -111,8 +118,8 @@ print("Breakeven Aircraft at {:0.2f} USD is {:0.0f}\n".format(salesPrice[2], Nbe
 
 purchasePrice = 400000 # [2019 USD] # We set this based on breakevens above
 
-totalAnnualOperatingCost = TotalAnnualCost(airplane, simulation, purchasePrice)
-operatingCostPerHour = CostPerFlightHour(airplane, simulation, purchasePrice)
+totalAnnualOperatingCost = TotalAnnualCost(airplaneR, simulationR, purchasePrice)
+operatingCostPerHour = CostPerFlightHour(airplaneR, simulationR, purchasePrice)
 print("Total Annual Operating Cost {:0.2f} USD".format(totalAnnualOperatingCost))
 print("Operating Cost Per Hour {:0.2f} USD/hr".format(operatingCostPerHour))
 

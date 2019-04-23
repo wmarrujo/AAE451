@@ -560,8 +560,9 @@ def AnnualFuelCost(airplane, simulation):
     gd = airplane.powerplant.gas.density if airplane.powerplant.gas else 0
     VFR = MFR / gd if gd != 0 else 0  # volumetric flow rate [m^3/s]
 
-    FFcruise = 10*convert(VFR, "m^3/s", "gal/hr")  # should be in the teens, currently 1.6 gal/hr, NEEDS FIX
-
+    FFcruise = 4*convert(VFR, "m^3/s", "gal/hr")  # should be in the teens, currently 1.6 gal/hr, NEEDS FIX
+    print(FFcruise)
+    
     Rfuel = fuelRate
 
     # Battery Operating Cost

@@ -75,9 +75,9 @@ def verifySimulation(iteration, t, segmentName, airplane):
     return True
 
 def printSimulationProgressBar(iteration, ended=False, message=""):
+    barLength = int(ceil(iteration / 400))
+    bar = "╶"*(barLength-8) + "────━━ ✈︎"[-barLength-2:]
     if not ended:
-        barLength = int(ceil(iteration / 400))
-        bar = "╶"*(barLength-8) + "────━━ ✈︎"[-barLength-2:]
         print("\rSimulating ({:6d}): {} {}              ".format(iteration, bar, message), end="", flush=True)
     else: # ended
         print("\rSimulating ({:6d}): {} ".format(iteration, bar), end="", flush=True)

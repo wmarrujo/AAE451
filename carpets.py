@@ -9,6 +9,7 @@ rootDirectory = hereDirectory
 
 from utilities import *
 from sizing import *
+from missions import *
 
 # EXTERNAL DEPENDENCIES
 
@@ -40,8 +41,8 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-WSs = [WS*0.8, WS, WS*1.2]
-PWs = [PW*0.9, PW, PW*1.1]
+WSs = [WS*0.8, WS*0.9, WS, WS*1.1, WS*1.2]
+PWs = [PW*0.9, PW*0.95, PW, PW*1.05, PW*1.1]
 
 DPs = [[{
     "wing loading": WS,
@@ -49,8 +50,8 @@ DPs = [[{
     } for WS in WSs] for PW in PWs]
 
 # Driving Parameters (used for fit curves)
-fit_WS = linspace(WS*0.5, WS*1.5, 1000)
-fit_PW = linspace(PW*0.5, PW*1.5, 1000)
+fit_WS = linspace(WS*0.8, WS*1.2, 1000)
+fit_PW = linspace(PW*0.8, PW*1.2, 1000)
 
 # AIRPLANE
 
@@ -58,10 +59,16 @@ airplaneName = "Gopher"
 
 # GET DRIVING PARAMETERS
 
-data = map2D(lambda DP: getAirplaneDesignData(airplaneName, DP, designMission), DPs) # FIXME: should this be reference mission data?
-p = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), data)
+designData = map2D(lambda DP: getAirplaneDesignData(airplaneName, DP, designMission), DPs)
+#referenceData = map2D(lambda DP: getReferenceMissionData(airplaneName, DP, designMission, referenceMission, referenceMissionName="reference", closeReferenceMissionFunction=closeReferenceMissionByFuelWeightAndRange), DPs)
+abortedData = map2D(lambda DP: getReferenceMissionData(airplaneName, DP, designMission, abortedMission, referenceMissionName="aborted"), DPs)
+p = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), designData)
+#pR = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), referenceData)
+pA = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulation"], d["final airplane"]), abortedData)
 
 # make matrix for each driving parameter independently
+
+PWs = [convert(PW, "W/N", "hp/lb") for PW in PWs]
 
 pWe = map2D(lambda PP: convert(PP["empty weight"], "N", "lb"), p)
 pWS = map2D(lambda DP: convert(DP["wing loading"], "N/m^2", "lb/ft^2"), DPs)
@@ -73,7 +80,7 @@ fPW = [convert(PW, "W/N", "hp/lb") for PW in fit_PW]
 
 pC = [[True for PP in row] for row in p] # TODO: cache convergence # Verification that simulation converged at this value
 pdT0 = map2D(lambda PP: convert(PP["takeoff field length"], "m", "ft"), p)
-pdL = map2D(lambda PP: convert(PP["landing field length"], "m", "ft"), p)
+pdL = map2D(lambda PP: convert(PP["landing field length"], "m", "ft"), pA)
 pR = map2D(lambda PP: convert(PP["range"], "m", "nmi"), p)
 pT = map2D(lambda PP: convert(PP["mission time"], "s", "hr"), p)
 
@@ -95,8 +102,8 @@ for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
 
     W0params.append([a,b])
 
-    plot(cleanWSs, cleanWes, "k.")
-    plot(fWS, [exponentialForm(WS, a, b) for WS in fWS], label="P/W= {:.2f}".format(PWs[row]))
+    plot(cleanWSs, cleanWes)
+    plot(fWS, [exponentialForm(WS, a, b) for WS in fWS], label="P/W= {:.4f} hp/lb".format(PWs[row]))
 
 title("Empty Weight Trends")
 xlabel("Wing Loading [lb/ft^2]")
@@ -117,7 +124,7 @@ for row, (Cs, WSs, dT0s) in enumerate(zip(pC, pWS, pdT0)):
 
     # Create fit curves
     params, pconv = curve_fit(fit_func, cleanWSs, cleandT0s, p0=(1, 0))
-    plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS], label="P/W= {:.2f}".format(PWs[row]))
+    plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS], label="P/W= {:.4f} hp/lb".format(PWs[row]))
 
      # Find intersection of curve with field length limit
     WS_dT0Intersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
@@ -145,7 +152,7 @@ for row, (Cs, WSs, dLs) in enumerate(zip(pC, pWS, pdL)):
 
     # Create fit curves
     params, pconv = curve_fit(fit_func, cleanWSs, cleandLs, p0=(1, 0))
-    plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS], label="P/W= {:.2f}".format(PWs[row]))
+    plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS], label="P/W= {:.4f} hp/lb".format(PWs[row]))
 
      # Find intersection of curve with field length limit
     WS_dLIntersection = invExponentialForm(constrainedFieldLength, params[0], params[1])
@@ -173,7 +180,7 @@ for row, (Cs, WSs, Ts) in enumerate(zip(pC, pWS, pT)):
 
     # Create fit curves
     params, pconv = curve_fit(fit_func, cleanWSs, cleanTs, p0=(1, 0))
-    plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS], label="P/W= {:.2f}".format(PWs[row]))
+    plot(fWS, [exponentialForm(WS, params[0], params[1]) for WS in fWS], label="P/W= {:.4f} hp/lb".format(PWs[row]))
 
      # Find intersection of curve with flight time limit
     WS_TIntersection = invExponentialForm(convert(maximumFlightTime, "s", "hr"), params[0], params[1])
@@ -198,15 +205,19 @@ figure()
 # P/W Contour
 for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
     # Clean list by checking if solution converged
-    cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
+    cleanOffsetWSs = [WS+(offset*row) for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
+    print(cleanOffsetWSs, cleanWes)
     plot(cleanOffsetWSs, cleanWes, "k")
+
+print("------------------------------------------------------------------------")
 
 # W/S Contour
 for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), pWS, transpose(pWe))): # for each row
     # Clean list by checking if solution converged
-    cleanOffsetWSs = [WS+offset*row for WS in dropOnOtherList(WSs, Cs)]
+    cleanOffsetWSs = [WS+(offset*row) for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
+    print(cleanOffsetWSs, cleanWes)
     plot(cleanOffsetWSs, cleanWes, "k")
     
 ###### INTERSECTION CURVES

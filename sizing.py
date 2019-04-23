@@ -238,7 +238,6 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
     
     def functionToFindRootOf(X):
         # define airplane
-        print(X)
         initialAirplane, referenceMissionChanged = setInitialConfiguration(baseConfiguration, referenceMission, X)
         # simulation
         simulationResult = simulateAirplane(initialAirplane, referenceMissionChanged, silent=silent)
@@ -246,32 +245,31 @@ def closeReferenceMission(baseConfiguration, referenceMission, silent=False):
         simulation = simulationResult["simulation"]
         finalAirplane = simulationResult["final airplane"]
         succeeded = simulationResult["succeeded"]
-        print(succeeded)
         
         # post-validation
         if succeeded:
             Wgs = [mg*g for mg in simulation["gas mass"]]
             rs = simulation["position"]
             descentEndIndex = lastIndex(simulation["segment"], lambda s: s == "descent")
-
             
             result = [Wgs[-1] , rs[descentEndIndex] - referenceRange]
         
         else:
-            result = [1e10] # pseudo bound
+            result = [float("inf"), float("inf")] # pseudo bound
         
-        print(X, "->", result, "=>", result[0])
+        print(X, "->", result, "=>", norm([0, 0], result))
         return result
     
     # INITIALIZATION
     
-    guess = [convert(300,"lb","N"), convert(100,"nmi","m")]
+    Wg = baseConfiguration.powerplant.gas.mass * g if baseConfiguration.powerplant.gas else 0
+    guess = [Wg, convert(100, "nmi", "m")]
     
     # ROOT FINDING
-    result = root(functionToFindRootOf, guess, tol=1e-4, options={'eps':25})
+    result = root(functionToFindRootOf, guess, tol=1e-4, options={"eps": 25})
     closestGuess = result["x"]
     initialAirplane, referenceMissionChanged = setInitialConfiguration(baseConfiguration, referenceMission, closestGuess)
-    closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 N
+    closed = norm([0, 0], result["fun"]) <= convert(1, "nmi", "m") # within 1 nmi
     
     return {
         "airplane": initialAirplane,

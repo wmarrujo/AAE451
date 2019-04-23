@@ -55,6 +55,7 @@ def _designMissionCompletedTakeoff(airplane, t, t0):
 designMission.segments["takeoff"].initialize = _designMissionInitializeTakeoff
 designMission.segments["takeoff"].completed = _designMissionCompletedTakeoff
 designMission.segments["takeoff"].update = UpdateTakeoff
+designMission.segments["takeoff"].stepSizeFraction = 1/10
 
 # CLIMB
 
@@ -68,6 +69,7 @@ def _designMissionCompletedClimb(airplane, t, t0):
 designMission.segments["climb"].initialize = _designMissionInitializeClimb
 designMission.segments["climb"].completed = _designMissionCompletedClimb
 designMission.segments["climb"].update = UpdateClimb
+designMission.segments["climb"].stepSizeFraction = 1/3
 
 # CRUISE
 
@@ -98,6 +100,7 @@ def _designMissionCompletedDescent(airplane, t, t0):
 designMission.segments["descent"].initialize = _designMissionInitializeDescent
 designMission.segments["descent"].completed = _designMissionCompletedDescent
 designMission.segments["descent"].update = UpdateDescent
+designMission.segments["descent"].stepSizeFraction = 1/3
 
 # ABORT CLIMB
 
@@ -111,6 +114,7 @@ def _designMissionCompletedAbortClimb(airplane, t, t0):
 designMission.segments["abortClimb"].initialize = _designMissionInitializeAbortClimb
 designMission.segments["abortClimb"].completed = _designMissionCompletedAbortClimb
 designMission.segments["abortClimb"].update = UpdateClimb
+designMission.segments["abortClimb"].stepSizeFraction = 1/3
 
 # LOITER
 
@@ -140,6 +144,7 @@ def _designMissionCompletedAbortDescent(airplane, t, t0):
 designMission.segments["abortDescent"].initialize = _designMissionInitializeAbortDescent
 designMission.segments["abortDescent"].completed = _designMissionCompletedAbortDescent
 designMission.segments["abortDescent"].update = UpdateDescent
+designMission.segments["abortDescent"].stepSizeFraction = 1/3
 
 # LANDING
 
@@ -155,6 +160,7 @@ def _designMissionCompletedLanding(airplane, t, t0):
 designMission.segments["landing"].initialize = _designMissionInitializeLanding
 designMission.segments["landing"].completed = _designMissionCompletedLanding
 designMission.segments["landing"].update = UpdateLanding
+designMission.segments["landing"].stepSizeFraction = 1/10
 
 # SHUTDOWN
 
@@ -218,6 +224,7 @@ def _referenceMissionCompletedTakeoff(airplane, t, t0):
 referenceMission.segments["takeoff"].initialize = _referenceMissionInitializeTakeoff
 referenceMission.segments["takeoff"].completed = _referenceMissionCompletedTakeoff
 referenceMission.segments["takeoff"].update = UpdateTakeoff
+referenceMission.segments["takeoff"].stepSizeFraction = 1/10
 
 # CLIMB
 
@@ -231,6 +238,7 @@ def _referenceMissionCompletedClimb(airplane, t, t0):
 referenceMission.segments["climb"].initialize = _referenceMissionInitializeClimb
 referenceMission.segments["climb"].completed = _referenceMissionCompletedClimb
 referenceMission.segments["climb"].update = UpdateClimb
+referenceMission.segments["climb"].stepSizeFraction = 1/3
 
 # CRUISE
 
@@ -257,6 +265,7 @@ def _referenceMissionCompletedDescent(airplane, t, t0):
 referenceMission.segments["descent"].initialize = _referenceMissionInitializeDescent
 referenceMission.segments["descent"].completed = _referenceMissionCompletedDescent
 referenceMission.segments["descent"].update = UpdateDescent
+referenceMission.segments["descent"].stepSizeFraction = 1/3
 
 # ABORT CLIMB
 
@@ -270,6 +279,7 @@ def _referenceMissionCompletedAbortClimb(airplane, t, t0):
 referenceMission.segments["abortClimb"].initialize = _referenceMissionInitializeAbortClimb
 referenceMission.segments["abortClimb"].completed = _referenceMissionCompletedAbortClimb
 referenceMission.segments["abortClimb"].update = UpdateClimb
+referenceMission.segments["abortClimb"].stepSizeFraction = 1/3
 
 # LOITER
 
@@ -299,6 +309,7 @@ def _referenceMissionCompletedAbortDescent(airplane, t, t0):
 referenceMission.segments["abortDescent"].initialize = _referenceMissionInitializeAbortDescent
 referenceMission.segments["abortDescent"].completed = _referenceMissionCompletedAbortDescent
 referenceMission.segments["abortDescent"].update = UpdateDescent
+referenceMission.segments["abortDescent"].stepSizeFraction = 1/3
 
 # LANDING
 
@@ -314,6 +325,7 @@ def _referenceMissionCompletedLanding(airplane, t, t0):
 referenceMission.segments["landing"].initialize = _referenceMissionInitializeLanding
 referenceMission.segments["landing"].completed = _referenceMissionCompletedLanding
 referenceMission.segments["landing"].update = UpdateLanding
+referenceMission.segments["landing"].stepSizeFraction = 1/10
 
 # SHUTDOWN
 
@@ -327,3 +339,122 @@ def _referenceMissionCompletedShutdown(airplane, t, t0):
 referenceMission.segments["shutdown"].initialize = _referenceMissionInitializeShutdown
 referenceMission.segments["shutdown"].completed = _referenceMissionCompletedShutdown
 referenceMission.segments["shutdown"].update = UpdateWaiting
+
+######################################################################################
+# ABORTED TAKEOFF
+######################################################################################
+# Takeoff, abort the mission & immediately come back to land.
+
+abortedMission = Mission()
+abortedMission.passengerFactor = 1
+abortedMission.pilots = 1
+
+abortedMission.segments = Segments([
+    Segment("startup"),
+    Segment("takeoff"),
+    Segment("climb"),
+    Segment("cruise"),
+    Segment("descent"),
+    Segment("landing"),
+    Segment("shutdown")
+    ])
+
+# STARTUP
+
+def _abortedMissionInitializeStartup(airplane, t, t0):
+    airplane.altitude = 0
+    airplane.speed = 0
+    airplane.throttle = 0.3
+    airplane.position = 0
+    airplane.pitch = 0
+    airplane.flightPathAngle = 0
+
+def _abortedMissionCompletedStartup(airplane, t, t0):
+    return convert(10, "min", "s") <= t - t0
+
+abortedMission.segments["startup"].initialize = _abortedMissionInitializeStartup
+abortedMission.segments["startup"].completed = _abortedMissionCompletedStartup
+abortedMission.segments["startup"].update = UpdateWaiting
+
+# TAKEOFF
+
+def _abortedMissionInitializeTakeoff(airplane, t, t0):
+    airplane.throttle = 1
+
+def _abortedMissionCompletedTakeoff(airplane, t, t0):
+    return TakeoffSpeed(airplane) <= airplane.speed
+
+abortedMission.segments["takeoff"].initialize = _abortedMissionInitializeTakeoff
+abortedMission.segments["takeoff"].completed = _abortedMissionCompletedTakeoff
+abortedMission.segments["takeoff"].update = UpdateTakeoff
+abortedMission.segments["takeoff"].stepSizeFraction = 1/10
+
+# CLIMB
+
+def _abortedMissionInitializeClimb(airplane, t, t0):
+    airplane.throttle = 1
+    airplane.speed = VelocityForMaximumExcessPower(airplane)
+
+def _abortedMissionCompletedClimb(airplane, t, t0):
+    return convert(1000, "ft", "m") <= airplane.altitude
+
+abortedMission.segments["climb"].initialize = _abortedMissionInitializeClimb
+abortedMission.segments["climb"].completed = _abortedMissionCompletedClimb
+abortedMission.segments["climb"].update = UpdateClimb
+abortedMission.segments["climb"].stepSizeFraction = 1/5
+
+# CRUISE
+
+def _abortedMissionInitializeCruise(airplane, t, t0):
+    airplane.flightPathAngle = 0 # level flight
+    airplane.pitch = 0 # angle of attack to maintain
+    airplane.throttle = 0.7
+
+def _abortedMissionCompletedCruise(airplane, t, t0):
+    return convert(3, "min", "s") <= t-t0 # don't fly the cruise, do 1 loop of the pattern for 3 min
+
+abortedMission.segments["cruise"].initialize = _abortedMissionInitializeCruise
+abortedMission.segments["cruise"].completed = _abortedMissionCompletedCruise
+abortedMission.segments["cruise"].update = UpdateCruise
+
+# DESCENT
+
+def _abortedMissionInitializeDescent(airplane, t, t0):
+    airplane.throttle = 0
+
+def _abortedMissionCompletedDescent(airplane, t, t0):
+    return airplane.altitude <= convert(5, "ft", "m")
+
+abortedMission.segments["descent"].initialize = _abortedMissionInitializeDescent
+abortedMission.segments["descent"].completed = _abortedMissionCompletedDescent
+abortedMission.segments["descent"].update = UpdateDescent
+abortedMission.segments["descent"].stepSizeFraction = 1/5
+
+# LANDING
+
+def _abortedMissionInitializeLanding(airplane, t, t0):
+    airplane.pitch = 0
+    airplane.flightPathAngle = 0
+    airplane.altitude = 0
+    airplane.throttle = 0
+
+def _abortedMissionCompletedLanding(airplane, t, t0):
+    return airplane.speed <= 0.1
+
+abortedMission.segments["landing"].initialize = _abortedMissionInitializeLanding
+abortedMission.segments["landing"].completed = _abortedMissionCompletedLanding
+abortedMission.segments["landing"].update = UpdateLanding
+abortedMission.segments["landing"].stepSizeFraction = 1/10
+
+# SHUTDOWN
+
+def _abortedMissionInitializeShutdown(airplane, t, t0):
+    airplane.speed = 0
+    airplane.throttle = 0.1
+
+def _abortedMissionCompletedShutdown(airplane, t, t0):
+    return convert(10, "min", "s") <= t - t0
+
+abortedMission.segments["shutdown"].initialize = _abortedMissionInitializeShutdown
+abortedMission.segments["shutdown"].completed = _abortedMissionCompletedShutdown
+abortedMission.segments["shutdown"].update = UpdateWaiting

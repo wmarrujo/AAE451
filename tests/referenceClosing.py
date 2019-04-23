@@ -32,18 +32,12 @@ drivingParameters = {
 # cProfile.run("PPs = getPerformanceParameters(airplaneName, DPS, designMission)")
 designDict = getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent=False)
 referenceDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", closeReferenceMissionFunction=closeReferenceMissionByFuelWeightAndRange, silent=False)
+referenceDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", silent=False)
 abortedDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, abortedMission, referenceMissionName="abort", silent=False)
-referencePPs = getPerformanceParameters(referenceDict["initial airplane"], referenceDict["simulation"], referenceDict["final airplane"])
+
 designPPs = getPerformanceParameters(designDict["initial airplane"], designDict["simulation"], designDict["final airplane"])
+referencePPs = getPerformanceParameters(referenceDict["initial airplane"], referenceDict["simulation"], referenceDict["final airplane"])
 abortedPPs = getPerformanceParameters(abortedDict["initial airplane"], abortedDict["simulation"], abortedDict["final airplane"])
-
-        # "empty weight": emptyWeight,
-        # "takeoff field length": dTO,
-        # "landing field length": dL,
-        # "range": range,
-        # "mission time": missionTime,
-        # "fuel used": fuelUsed}
-
 
 print("Begin Design Performance Parameters")
 print("empty weight:            {:.0f} lb".format(convert(designPPs["empty weight"], "N", "lb")))
@@ -73,7 +67,6 @@ print("landing field length:    {:.0f} ft".format(convert(abortedPPs["landing fi
 initialDAirplane = designDict["initial airplane"]
 initialRAirplane = referenceDict["initial airplane"]
 
-
 print("Aircraft Geometry")
 print("wing")
 print("span:                    {:.3f} ft".format(convert(initialDAirplane.wing.span, "m", "ft")))
@@ -88,7 +81,6 @@ print("chord:                   {:.3f} ft".format(convert(initialDAirplane.verti
 print("weight & balance")
 for c in initialDAirplane.components:
     print("weight: {:10.3f} lb - position {:10.3f} ft - {}".format(convert(c.mass*g, "N", "lb"), convert(c.x, "m", "ft"), type(c)))
-
 
 simulation = designDict["simulation"]
 ts = simulation["time"]

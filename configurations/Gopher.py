@@ -82,6 +82,7 @@ def defineAirplane(definingParameters):
     powerplant.gas = gas
     powerplant.percentElectric = 0
     powerplant.fuelMass = Wf/g
+    powerplant.SFC = 0
 
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION

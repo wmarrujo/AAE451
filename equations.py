@@ -96,8 +96,12 @@ def AllEnginesPower(airplane):
     th = airplane.throttle
     engines = airplane.engines
     maxPs = [engine.maxPower for engine in engines]
-    P = sum([th*maxP for maxP in maxPs])
-    
+    densitySL = densityAtAltitude(0)
+    densityAlt = densityAtAltitude(airplane.altitude)
+    lapse = (densityAlt/densitySL - (1 - densityAlt/densitySL) / 7.55)
+    bhp = sum([th*convert(maxP, "W", "hp") for maxP in maxPs]) * lapse
+    P = convert(bhp, "hp", "W")
+
     return P
 
 def AirplaneThrust(airplane):
@@ -562,7 +566,7 @@ def AnnualFuelCost(airplane, simulation):
 
     FFcruise = 4*convert(VFR, "m^3/s", "gal/hr")  # should be in the teens, currently 1.6 gal/hr, NEEDS FIX
     print(FFcruise)
-    
+
     Rfuel = fuelRate
 
     # Battery Operating Cost
@@ -634,7 +638,7 @@ def PredictWingMass(span, aspectRatio, chord, loadFactor, sweep, taperRatio, pla
     q = convert(cruiseDynamicPressure, "N/m^2", "lb/ft^2")
     tc = thicknessToChordRatio
     composite = compositeYN
-    
+
     Wfw = Wf/2 # fuel weight per wing
     Ww = 0.8 * (1 + 0.35*composite)*0.036*S**0.758 * Wfw**0.0035 * (AR / cos(L)**2)**0.6 * q**0.006 * lambd**0.04 * (100 * tc / cos(L))**-0.3 * (Nz * W0)**0.49
     return convert(Ww, "lb", "N") / g
@@ -649,7 +653,7 @@ def PredictFuselageMass(wettedArea, airplaneGrossWeight, length, diameter, cruis
     Wp = convert(pressurizationWeightPenalty, "N", "lb")
     Nz = loadFactor
     composite = compositeYN
-    
+
     LD = L/d
     Wf = (1 + 0.35*composite)*0.052 * Sf**1.086 * (Nz*W0)**0.177 * Lt**(-0.051) * LD**(-0.072) * q**0.241 + Wp # RAYMER eqn 15.48
     return convert(Wf, "lb", "N")/g
@@ -667,7 +671,7 @@ def PredictHorizontalStabilizerMass(airplaneGrossWeight, loadFactor, taperRatio,
     q = convert(cruiseDynamicPressure, "N/m^2", "lb/ft^2")
     tc = wingThicknessToChordRatio
     composite = compositeYN
-    
+
     AR = b/c
     Sht = convert(ch * (b * c * c / dt), "m^2", "ft^2") # FIXME: move to airplane definition
     # print("Horizontal Tail Area: ", Sht, " ft^2")
@@ -687,7 +691,7 @@ def PredictVerticalStabilizerMass(taperRatio, sweep, loadFactor, tailConfig, air
     Sw = wingPlanformArea
     tc = wingThicknessToChordRatio
     composite = compositeYN
-    
+
     Svt = convert(cv * (Sw * bw / dv), "m^2", "ft^2") # FIXME: move to airplane definition
     # print("Vertical Tail Area: ", Svt, " ft^2")
     AR = wingSpan / wingChord
@@ -700,7 +704,7 @@ def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines, powerToWe
     PW = convert(powerToWeightRatio, "W/N", "hp/lb")
     P0 = convert(baselinePower,"W/N","hp/lb") # power of the baseline engine
     W0 = convert(airplaneGrossWeight, "N", "lb")
-    
+
     # Weng = 1.0*2.575 * mU**0.9 * N
     Weng = WU * (PW * W0 / (N * P0))**0.78
     return convert(Weng, "lb", "N")/g
@@ -711,7 +715,7 @@ def PredictMainGearMass(airplaneGrossWeight, airplaneFuelMass, landingLoadFactor
     Wl = W0 - 0.8 * Wf
     Nz = landingLoadFactor
     Lm = convert(length, "m", "in") # FIXME: you sure this isn't ft?
-    
+
     Wmg = 0.095 * (Nz * Wl)**0.768 * (Lm/12)**0.409 # FIXME: error here
     return convert(Wmg, "lb", "N")/g
 
@@ -719,7 +723,7 @@ def PredictFrontGearMass(airplaneGrossWeight, landingLoadFactor, length):
     Wl = convert(airplaneGrossWeight, "N", "lb")
     Nz = landingLoadFactor
     Ln = convert(length, "m", "in") # FIXME: you sure this isn't ft?
-    
+
     Wng = 0.125 * (Nz * Wl)**0.566 * (Ln/12)**0.845
     return convert(Wng, "lb", "N")/g
 
@@ -728,7 +732,7 @@ def PredictFuelSystemMass(totalFuelVolume, dropTanksVolume, numberOfFuelTanks, n
     Vd = convert(dropTanksVolume, "m^3", "gal")
     Nt = numberOfFuelTanks
     Neng = numberOfEngines
-    
+
     Vi = Vt - Vd
     Wfs = 0.9 * 2.49 * Vt**0.726 * (1 / (Vi/Vt))**0.363 * Nt**0.242 * Neng**0.157
     return convert(Wfs, "lb", "N")/g
@@ -738,25 +742,25 @@ def PredictFlightControlsMass(fuselageLength, wingSpan, loadFactor, airplaneGros
     b = convert(wingSpan, "m", "ft")
     Nz = loadFactor
     W0 = convert(airplaneGrossWeight, "N", "lb")
-    
+
     Wfc = 0.053 * Lf**1.536 * b**0.371 * (Nz * W0 * 10**-4)**0.80
     return convert(Wfc, "lb", "N")/g
 
 def PredictHydraulicsMass(airplaneGrossWeight):
     W0 = airplaneGrossWeight
-    
+
     return 0.001*W0/g
 
 def PredictAvionicsMass(uninstalledAvionicsWeight):
     WU = convert(uninstalledAvionicsWeight, "N", "lb")
-    
+
     W = 0.3 * 2.117 * WU**0.933
     return convert(W, "lb", "N")/g
 
 def PredictElectronicsMass(fuelSystemMass, installedAvionicsMass):
     Wfs = convert(fuelSystemMass * g, "N", "lb")
     Wavi = convert(installedAvionicsMass * g, "N", "lb")
-    
+
     Welec = 0.65 * 12.57 * (Wfs + Wavi)**0.51
     return convert(Welec, "lb", "N")/g
 
@@ -765,13 +769,13 @@ def PredictAirConIceMass(airplaneGrossWeight, peopleLoaded, installedAvionicsMas
     Np = peopleLoaded
     Wavi = convert(installedAvionicsMass * g, "N", "lb")
     M = cruiseMachNumber
-    
+
     Waci = 0.45 * 0.265 * W0**0.52 * Np**0.68 * Wavi**0.17 * M**0.08
     return convert(Waci, "lb", "N")/g
 
 def PredictFurnishingsMass(airplaneGrossWeight):
     W0 = convert(airplaneGrossWeight, "N", "lb")
-    
+
     W = 0.0582 * W0 - 65
     return convert(W, "lb", "N")/g
 
@@ -779,20 +783,20 @@ def CalculatePassengerPayloadMass(ariplanePassengers):
     numpax = ariplanePassengers
     Wpax = heavyPassengerWeight if numpax <= 3 else lightPassengerWeight
     mass = numpax * Wpax / g
-    
+
     return mass
 
 def CalculateBaggageMass(airplanePassengers):
     numpax = airplanePassengers
     Wbag = heavyPassengerBagWeight if numpax <= 3 else lightPassengerBagWeight
     mass = numpax * Wbag / g
-    
+
     return mass
 
 def CalculatePilotPayloadMass(airplanePilots):
     numpilots = airplanePilots
     mass = numpilots * pilotWeight / g
-    
+
     return mass
 
 ################################################################################
@@ -809,12 +813,15 @@ def UpdateFuel(airplane, tstep):
     generator = airplane.powerplant.generator
     percentElectric = airplane.powerplant.percentElectric
     generatorOn = airplane.powerplant.generatorOn
-    
+
     Eb = E*percentElectric # energy requested of battery
-    # Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
-    
-    # if battery is not None:
-    #     battery.energy -= Eb
+    Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
+
+    SFC = airplane.powerplant.SFC # kg/kW*s (PER ENGINE)
+    mdot = SFC * P * length(airplane.engines)# kg/s
+
+    if battery is not None:
+        battery.energy -= Eb
     if gas is not None:
         gas.mass -= tstep*mdot
 
@@ -825,7 +832,7 @@ def UpdateTakeoff(airplane, t, tstep): # see Raymer-v6 section 17.8.1
     acceleration = AccelerationOnTakeoff(airplane) # find acceleration from thrust, drag and ground friction
     airplane.speed += acceleration * tstep # update speed with acceleration
     airplane.position += airplane.speed * tstep # update position with speed
-    
+
     UpdateFuel(airplane, tstep) # update the fuel
 
 def UpdateClimb(airplane, t, tstep):
@@ -834,11 +841,11 @@ def UpdateClimb(airplane, t, tstep):
     airplane.pitch = 0
     W = AirplaneWeight(airplane)
     airplane.angleOfAttack = GetAngleOfAttackForSteadyLevelFlight(airplane)
-    
+
     ExcessPower = ExcessPowerAtAltitudeForSteadyLevelFlight(airplane)
     climbRate = ExcessPower / W
     V = airplane.speed
-    
+
     airplane.flightPathAngle = arcsin(climbRate / V)
     airplane.pitch = airplane.flightPathAngle + airplane.pitch # make it the angle of attack we're talking about
     airplane.altitude += V * sin(airplane.flightPathAngle) * tstep
@@ -848,7 +855,7 @@ def UpdateClimb(airplane, t, tstep):
 
 def UpdateCruise(airplane, t, tstep):
     VbestR = MaximumLiftOverDragVelocity(airplane)
-    
+
     airplane.speed = VbestR
     airplane.position += VbestR * tstep
     UpdateFuel(airplane, tstep)
@@ -857,7 +864,7 @@ def UpdateDescent(airplane, t, tstep):
     gamma = arctan2(convert(-1000, "ft", "m"), convert(3, "nmi", "m")) # using "rule of threes" (for passenger comfort) - glide ratio of 3nmi per 1000ft of descent
     VminP = MinimumPowerSpeed(airplane)
     # TODO: update throttle setting
-    
+
     airplane.flightPathAngle = gamma
     airplane.pitch = gamma
     airplane.speed = VminP
@@ -870,5 +877,5 @@ def UpdateLanding(airplane, t, tstep):
     acceleration = AccelerationOnLanding(airplane) # find acceleration from thrust, drag and ground friction
     airplane.position += airplane.speed * tstep # update position with speed
     airplane.speed += acceleration * tstep # update speed with acceleration
-    
+
     UpdateFuel(airplane, tstep) # update the fuel

@@ -42,7 +42,7 @@ def defineAirplane(definingParameters):
     numberOfEngines = 2
     uninstalledEngineMass = 136.078 # [kg] # l(IO)-360-M1A dry weight = 300lbs
     totalFuelVolume = convert(79.441, "gal", "m^3")
-    uninstalledAvionicsWeight = 20*9.8 # N # FIXME: you sure?   #????
+    uninstalledAvionicsWeight = 70*9.8 # N # FIXME: you sure?   #????
     cruiseMachNumber = convert(176, "kts", "m/s") / machAtAltitude(cruiseAltitude)
     #Composite pieces (1 = comp, 0 = alloy)
     compositeWing = 1
@@ -161,7 +161,7 @@ def defineAirplane(definingParameters):
     verticalStabilizer.span = 1.723 # [m]
     verticalStabilizer.sweep = convert(20, "deg", "rad")
     verticalStabilizer.taperRatio = 1 #?????
-    verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 0, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.6 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord, compositeVerticalStabilizer)
+    verticalStabilizer.mass = PredictVerticalStabilizerMass(verticalStabilizer.taperRatio, verticalStabilizer.sweep, sizingLoadFactor, 1, airplane.initialGrossWeight, cruiseDynamicPressure, verticalTailVolumeCoefficient, 0.6 * fuselage.length, wing.span, wing.chord, wing.planformArea, wing.thicknessToChord, compositeVerticalStabilizer)
 
     # FINISH AIRPLANE DEFINITION FOR THIS SECTION
 
@@ -207,7 +207,7 @@ def defineAirplane(definingParameters):
 
     mainGear = MainGear()
 
-    mainGear.length = 0.5 # m
+    mainGear.length = 0.6 # m
     mainGear.interferenceFactor = 1
     mainGear.wettedArea = 0
     mainGear.mass = PredictMainGearMass(airplane.initialGrossWeight, airplane.powerplant.gas.mass, landingLoadFactor, mainGear.length)
@@ -217,7 +217,7 @@ def defineAirplane(definingParameters):
 
     frontGear = FrontGear()
 
-    frontGear.length = 0.5 # m
+    frontGear.length = 0.65 # m
     frontGear.interferenceFactor = 1  #???
     frontGear.wettedArea = 0  #????
     frontGear.mass = PredictFrontGearMass(airplane.initialGrossWeight, landingLoadFactor, frontGear.length)

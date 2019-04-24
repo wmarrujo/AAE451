@@ -206,7 +206,7 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
         else:
             result = [1e10, 1e10] # pseudo bound
         
-        # print(X, "->", result, "=>", norm([0, 0], result)) if not silent else None # show convergence
+        print(X, "->", result, "=>", norm([0, 0], result)) if not silent else None # show convergence
         
         return result
     
@@ -258,7 +258,7 @@ def closeReferenceMissionByFuelWeightAndRange(baseConfiguration, referenceMissio
         else:
             result = [1e10,1e10] # pseudo bound
 
-        # print(X, "->", result, "=>", norm([0, 0], result))
+        print(X, "->", result, "=>", norm([0, 0], result))
         return result
     
     # INITIALIZATION
@@ -342,7 +342,6 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
     range = ps[descentEndIndex] - ps[climbBeginIndex]
     missionTime = ts[descentEndIndex] - ts[climbBeginIndex]
     fuelUsed = Ws[0] - Ws[-1]
-    print(convert(fuelUsed, "N","lb"))
     
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
     

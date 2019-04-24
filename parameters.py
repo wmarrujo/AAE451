@@ -47,7 +47,7 @@ class Mission:
                     verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
                 except (KeyboardInterrupt, SystemExit): # if you quit it, actually quit
                     raise
-                except: # otherwise, keep going
+                except Exception as e: # otherwise, keep going
                     exception_type, exception_value, exception_traceback = sys.exc_info()
                     print("The Simulation Encountered an Error: ", exception_value)
                     verified = False

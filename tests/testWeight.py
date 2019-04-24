@@ -27,8 +27,8 @@ import cProfile
 ################################################################################
 WS = convert(20, "lb/ft^2", "N/m^2") #14.66  17.06 22.45
 PW = convert(0.072, "hp/lb", "W/N") #0.0706  0.0727 0.0792
-W0 = convert(3029 , "lb", "N") #2550 2771 3935
-Wf = convert(200 , "lb", "N") #318 317 478
+W0 = convert(3500 , "lb", "N") #2550 2771 3935
+Wf = convert(300 , "lb", "N") #318 317 478
 DPS = {"wing loading": WS, "power to weight ratio": PW, "initial gross weight": W0, "initial fuel weight": Wf}
 # cProfile.run("PPs = getPerformanceParameters(airplaneName, DPS, designMission)")
 airplane = defineAirplaneObj(DPS)

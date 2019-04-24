@@ -822,7 +822,7 @@ def UpdateFuel(airplane, tstep):
     Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
 
     SFC = airplane.powerplant.SFC # kg/kW*s (PER ENGINE)
-    mdot = SFC * P/1000 * len(airplane.engines) # kg/s
+    mdot = SFC * P * len(airplane.engines) # kg/s
 
     if battery is not None:
         battery.energy -= Eb

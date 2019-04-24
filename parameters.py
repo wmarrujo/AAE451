@@ -161,7 +161,7 @@ class Powerplant: # the powerplant system configuration
     percentElectric = None # number : (0 <= x <= 1) # how much of the output energy comes from electricity
     generatorOn = None # bool # is the generator on, giving energy to the battery?
     SFC = None # engine SFC
-    
+
     @property
     def fuelMass(self):
         mg = self.gas.mass if self.gas is not None else 0

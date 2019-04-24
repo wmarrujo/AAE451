@@ -86,7 +86,7 @@ def getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent
         print("Design Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
     else:
         print("Loaded Design Initial Configuration                              - {:10.10}".format(id)) if not silent else None
-    
+
     # get simulation results
     designSimulation = loadSimulation(id, "design-simulation")
     finalDesignAirplane = loadAirplaneConfiguration(id, "design-final")
@@ -104,7 +104,7 @@ def getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent
     else: # cached
         print("Loaded Design Configuration Design Mission Simulation            - {:10.10}".format(id)) if not silent else None
         print("Loaded Design Final Configuration                                - {:10.10}".format(id)) if not silent else None
-    
+
     return {
         "initial airplane": initialDesignAirplane,
         "simulation": designSimulation,
@@ -112,7 +112,7 @@ def getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent
 
 def getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", closeReferenceMissionFunction=False, silent=False):
     id = airplaneDefinitionID(airplaneName, drivingParameters)
-    
+
     # get initial airplane
     initialReferenceAirplane = loadAirplaneConfiguration(id, referenceMissionName + "-initial")
     if initialReferenceAirplane is None: # not cached
@@ -144,7 +144,7 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
             print("No Reference Mission closure conditions specified, using design configuration") if not silent else None
     else:
         print("Loaded Reference Initial Configuration                           - {:10.10}".format(id)) if not silent else None
-    
+
     # get simulation results
     referenceSimulation = loadSimulation(id, referenceMissionName + "-simulation")
     finalReferenceAirplane = loadAirplaneConfiguration(id, referenceMissionName + "-final")
@@ -162,7 +162,7 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
     else: # cached
         print("Loaded Reference Configuration Reference Mission Simulation      - {:10.10}".format(id)) if not silent else None
         print("Loaded Reference Final Configuration                             - {:10.10}".format(id)) if not silent else None
-    
+
     return {
         "initial airplane": initialReferenceAirplane,
         "simulation": referenceSimulation,
@@ -174,14 +174,14 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
 
 def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission, silent=False):
     # DEPENDENCIES
-    
+
     def setDefiningParameters(drivingParameters, X):
         definingParameters = copy.deepcopy(drivingParameters)
         definingParameters["initial gross weight"] = X[0]
         definingParameters["initial fuel weight"] = X[1]
-        
+
         return definingParameters
-    
+
     def functionToFindRootOf(X):
         # define airplane
         definingParameters = setDefiningParameters(drivingParameters, X)
@@ -193,7 +193,7 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
         simulation = simulationResult["simulation"]
         finalAirplane = simulationResult["final airplane"]
         succeeded = simulationResult["succeeded"]
-        
+
         # calculate resultant point
         if succeeded:
             guessedGrossWeight = definingParameters["initial gross weight"]
@@ -201,42 +201,42 @@ def closeAircraftDesign(defineSpecificAirplane, drivingParameters, designMission
             grossWeightDifference = abs(guessedGrossWeight - predictedGrossWeight)
             emptyFuelMass = finalAirplane.powerplant.emptyFuelMass
             finalFuelMass = finalAirplane.powerplant.fuelMass
-            
+
             result = [convert(grossWeightDifference, "N", "lb"), convert(finalFuelMass*g - emptyFuelMass*g, "N", "lb")] # W0 guess = W0 predicted, Wf capacity is all used up by end of mission
         else:
             result = [1e10, 1e10] # pseudo bound
-        
+
         print(X, "->", result, "=>", norm([0, 0], result)) if not silent else None # show convergence
-        
+
         return result
-    
+
     # INITIALIZATION
-    
+
     guess = [convert(3000, "lb", "N"), convert(300, "lb", "N")]
-    
+
     # ROOT FINDING
-    
+
     result = root(functionToFindRootOf, guess, tol=1e-4)
     closestGuess = result["x"]
     airplane = defineSpecificAirplane(setDefiningParameters(drivingParameters, closestGuess))
     closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 lb & 1 lb
-    
+
     return {
         "airplane": airplane,
         "closed": closed}
 
 def closeReferenceMissionByFuelWeightAndRange(baseConfiguration, referenceMission, silent=False):
     # DEPENDENCIES
-    
+
     def setInitialConfiguration(airplane, referenceMission, X):
         WFguess = X[0]
         rangeGuess = X[1]
         A = copy.deepcopy(airplane)
         referenceMission.segments["cruise"].completed = lambda birplane, t, t0: rangeGuess <= birplane.position
         A.powerplant.gas.mass = WFguess / g
-        
+
         return (A, referenceMission)
-    
+
     def functionToFindRootOf(X):
         # define airplane
         initialAirplane, referenceMissionChanged = setInitialConfiguration(baseConfiguration, referenceMission, X)
@@ -246,32 +246,32 @@ def closeReferenceMissionByFuelWeightAndRange(baseConfiguration, referenceMissio
         simulation = simulationResult["simulation"]
         finalAirplane = simulationResult["final airplane"]
         succeeded = simulationResult["succeeded"]
-        
+
         # post-validation
         if succeeded:
             Wgs = [mg*g for mg in simulation["gas mass"]]
             range = simulation["position"][lastIndex(simulation["segment"], lambda s: s == "descent")] # the range not including the loiter segments
             # FIXME: range getting beginning of descent
-            
+
             result = [Wgs[-1] , convert(range - referenceRange, "m", "nmi")] # no gas left after whole mission & range flown = desired range
-        
+
         else:
             result = [1e10,1e10] # pseudo bound
 
         print(X, "->", result, "=>", norm([0, 0], result))
         return result
-    
+
     # INITIALIZATION
-    
+
     Wg = baseConfiguration.powerplant.gas.mass * g if baseConfiguration.powerplant.gas else 0
     guess = [Wg, convert(100, "nmi", "m")]
-    
+
     # ROOT FINDING
     result = root(functionToFindRootOf, guess, tol=1e-4, options={"eps": 25})
     closestGuess = result["x"]
     initialAirplane, referenceMissionChanged = setInitialConfiguration(baseConfiguration, referenceMission, closestGuess)
     closed = norm([0, 0], result["fun"]) <= sqrt(2) # within 1 N & 1 nmi
-    
+
     return {
         "airplane": initialAirplane,
         "mission": referenceMissionChanged,
@@ -283,18 +283,18 @@ def closeReferenceMissionByFuelWeightAndRange(baseConfiguration, referenceMissio
 
 def simulateAirplane(initialAirplane, mission, silent=False):
     # INITIALIZATION
-    
+
     succeeded = True
     airplane = copy.deepcopy(initialAirplane)
     simulation = dict(zip(simulationParametersKeys, [[] for n in range(len(simulationParametersKeys))])) # put in headers as keys
-    
+
     def simulationRecordingFunction(time, segmentName, airplane):
         W = AirplaneWeight(airplane)
         T = AirplaneThrust(airplane)
         V = airplane.speed
         cg = CenterGravity(airplane)
         mg = airplane.powerplant.gas.mass if airplane.powerplant.gas else 0
-        
+
         simulation["time"].append(time)
         simulation["segment"].append(segmentName)
         simulation["position"].append(airplane.position)
@@ -304,15 +304,15 @@ def simulateAirplane(initialAirplane, mission, silent=False):
         simulation["speed"].append(V)
         simulation["cg"].append(cg)
         simulation["gas mass"].append(mg)
-    
+
     # SIMULATION
-    
+
     finalAirplane = mission.simulate(timestep, airplane, simulationRecordingFunction, silent=silent)
     if finalAirplane is None:
         succeeded = False
-    
+
     # RETURN ALL DATA
-    
+
     return {
         "initial airplane": initialAirplane,
         "final airplane": finalAirplane,
@@ -325,15 +325,15 @@ def simulateAirplane(initialAirplane, mission, silent=False):
 
 def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
     # GET DATA FROM SIMULATION
-    
+
     ts = simulation["time"]
     ss = simulation["segment"]
     ps = simulation["position"]
     hs = simulation["altitude"]
     Ws = simulation["weight"]
-    
+
     # CALCULATE PERFORMANCE PARAMETERS
-    
+
     emptyWeight = initialAirplane.emptyMass*g
     dTO = ps[firstIndex(hs, lambda h: obstacleHeight <= h)]
     dL = ps[-1] - ps[lastIndex(hs, lambda h: obstacleHeight <= h)]
@@ -342,9 +342,8 @@ def getPerformanceParameters(initialAirplane, simulation, finalAirplane):
     range = ps[descentEndIndex] - ps[climbBeginIndex]
     missionTime = ts[descentEndIndex] - ts[climbBeginIndex]
     fuelUsed = Ws[0] - Ws[-1]
-    
     # RETURN PERFORMANCE PARAMETERS DICTIONARY
-    
+
     return {
         "empty weight": emptyWeight,
         "takeoff field length": dTO,

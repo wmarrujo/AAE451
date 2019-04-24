@@ -50,7 +50,7 @@ print("landing field length:    {:.0f} ft".format(convert(designPPs["landing fie
 print("range:                   {:.2f} nmi".format(convert(designPPs["range"], "m", "nmi")))
 print("average ground speed:    {:.0f} kts".format(convert(designPPs["range"]/designPPs["mission time"], "m/s", "kts")))
 print("flight time:             {:.1f} hr".format(convert(designPPs["mission time"], "s", "hr")))
-print("fuel used:               {:.0f} lb".format(convert(designPPs["fuel used"]*g, "N", "lb")))
+print("fuel used:               {:.0f} lb".format(convert(designPPs["fuel used"], "N", "lb")))
 print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(designDict["initial airplane"]), "N", "lb")))
 print("End Design Performance Parameters")
 
@@ -61,7 +61,7 @@ print("landing field length:    {:.0f} ft".format(convert(referencePPs["landing 
 print("range:                   {:.2f} nmi".format(convert(referencePPs["range"], "m", "nmi")))
 print("average ground speed:    {:.0f} kts".format(convert(referencePPs["range"]/referencePPs["mission time"], "m/s", "kts")))
 print("flight time:             {:.1f} hr".format(convert(referencePPs["mission time"], "s", "hr")))
-print("fuel used:               {:.0f} lb".format(convert(referencePPs["fuel used"]*g, "N", "lb")))
+print("fuel used:               {:.0f} lb".format(convert(referencePPs["fuel used"], "N", "lb")))
 print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(referenceDict["initial airplane"]), "N", "lb")))
 print("End Reference Performance Parameters")
 

@@ -33,7 +33,6 @@ def PayloadWeight(airplane):
 
 def FuelWeight(airplane):
     mf = airplane.powerplant.gas.mass
-
     return mf*g
 
 def EmptyWeight(airplane):
@@ -110,7 +109,11 @@ def AirplaneThrust(airplane):
     th = airplane.throttle
     engines = airplane.engines
     maxPs = [engine.maxPower for engine in engines]
-    Ps = [th*maxP for maxP in maxPs]
+    densitySL = densityAtAltitude(0)
+    densityAlt = densityAtAltitude(airplane.altitude)
+    lapse = (densityAlt/densitySL - (1 - densityAlt/densitySL) / 7.55)
+    Ps = [th*maxP * lapse for maxP in maxPs]
+    # Ps = [th*maxP for maxP in maxPs]
     etaps = [engine.propeller.efficiency for engine in engines]
     PAs = [P*etap for (P, etap) in zip(Ps, etaps)]
     Ts = [PA/V for PA in PAs]
@@ -819,7 +822,7 @@ def UpdateFuel(airplane, tstep):
     Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
 
     SFC = airplane.powerplant.SFC # kg/kW*s (PER ENGINE)
-    mdot = SFC * P * len(airplane.engines) # kg/s
+    mdot = SFC * P/1000 * len(airplane.engines) # kg/s
 
     if battery is not None:
         battery.energy -= Eb

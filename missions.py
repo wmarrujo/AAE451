@@ -147,7 +147,7 @@ def _designMissionInitializeAbortDescent(airplane, t, t0):
     airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _designMissionCompletedAbortDescent(airplane, t, t0):
-    return airplane.altitude <= 0
+    return airplane.altitude <= convert(5, "ft", "m")
 
 designMission.segments["abortDescent"].initialize = _designMissionInitializeAbortDescent
 designMission.segments["abortDescent"].completed = _designMissionCompletedAbortDescent
@@ -215,6 +215,7 @@ def _referenceMissionInitializeStartup(airplane, t, t0):
     airplane.position = 0
     airplane.pitch = 0
     airplane.flightPathAngle = 0
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _referenceMissionCompletedStartup(airplane, t, t0):
     return convert(10, "min", "s") <= t - t0
@@ -227,6 +228,7 @@ referenceMission.segments["startup"].update = UpdateWaiting
 
 def _referenceMissionInitializeTakeoff(airplane, t, t0):
     airplane.throttle = 1
+    airplane.powerplant.SFC = 7.89e-5 # kg/kW*s
 
 def _referenceMissionCompletedTakeoff(airplane, t, t0):
     return TakeoffSpeed(airplane) <= airplane.speed
@@ -241,6 +243,7 @@ referenceMission.segments["takeoff"].stepSizeFraction = 1/10
 def _referenceMissionInitializeClimb(airplane, t, t0):
     airplane.throttle = 1
     airplane.speed = VelocityForMaximumExcessPower(airplane)
+    airplane.powerplant.SFC = 8.12e-5 # kg/kW*s
 
 def _referenceMissionCompletedClimb(airplane, t, t0):
     return cruiseAltitude <= airplane.altitude
@@ -256,6 +259,7 @@ def _referenceMissionInitializeCruise(airplane, t, t0):
     airplane.flightPathAngle = 0 # level flight
     airplane.pitch = 0 # angle of attack to maintain
     airplane.throttle = 0.7
+    airplane.powerplant.SFC = 1.188e-4 # kg/kW*s
 
 def _referenceMissionCompletedCruise(airplane, t, t0):
     return referenceRange <= airplane.position
@@ -268,6 +272,7 @@ referenceMission.segments["cruise"].update = UpdateCruise
 
 def _referenceMissionInitializeDescent(airplane, t, t0):
     airplane.throttle = 0
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _referenceMissionCompletedDescent(airplane, t, t0):
     return airplane.altitude <= convert(100, "ft", "m")
@@ -282,6 +287,7 @@ referenceMission.segments["descent"].stepSizeFraction = 1/3
 def _referenceMissionInitializeAbortClimb(airplane, t, t0):
     airplane.throttle = 1
     airplane.speed = VelocityForMaximumExcessPower(airplane)
+    airplane.powerplant.SFC = 8.12e-5 # kg/kW*s
 
 def _referenceMissionCompletedAbortClimb(airplane, t, t0):
     return loiterAltitude <= airplane.altitude
@@ -299,6 +305,7 @@ def _referenceMissionInitializeLoiter(airplane, t, t0):
     airplane.flightPathAngle = 0
     airplane.pitch = 0
     airplane.speed = MaximumLiftOverDragVelocity(airplane) # speed to maintain
+    airplane.powerplant.SFC = 9.311e-5 # kg/kW*s
 
 def _referenceMissionCompletedLoiter(airplane, t, t0):
     return loiterTime <= t - t0
@@ -312,9 +319,10 @@ referenceMission.segments["loiter"].update = UpdateCruise
 def _referenceMissionInitializeAbortDescent(airplane, t, t0):
     airplane.throttle = 0.3
     airplane.speed = convert(170, "kts", "m/s") # TODO: fix in same vein as with cruise velocity
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _referenceMissionCompletedAbortDescent(airplane, t, t0):
-    return airplane.altitude <= 0
+    return airplane.altitude <= convert(5, "ft", "m")
 
 referenceMission.segments["abortDescent"].initialize = _referenceMissionInitializeAbortDescent
 referenceMission.segments["abortDescent"].completed = _referenceMissionCompletedAbortDescent
@@ -328,6 +336,7 @@ def _referenceMissionInitializeLanding(airplane, t, t0):
     airplane.flightPathAngle = 0
     airplane.altitude = 0
     airplane.throttle = 0
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _referenceMissionCompletedLanding(airplane, t, t0):
     return airplane.speed <= 0.1
@@ -342,6 +351,7 @@ referenceMission.segments["landing"].stepSizeFraction = 1/10
 def _referenceMissionInitializeShutdown(airplane, t, t0):
     airplane.speed = 0
     airplane.throttle = 0.1
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _referenceMissionCompletedShutdown(airplane, t, t0):
     return convert(10, "min", "s") <= t - t0

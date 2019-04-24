@@ -19,27 +19,38 @@ from sizing import *
 # EXTERNAL DEPENDENCIES
 
 from matplotlib.pyplot import *
+import copy
 
 ################################################################################
 # TESTS
 ################################################################################
 
-airplaneName = "Gopher"
-drivingParameters = {
-    "wing loading": convert(20, "lb/ft^2", "N/m^2"),
-    "power to weight ratio": convert(0.072, "hp/lb", "W/N")}
+# DEFINE THE AIRPLANE
 
-designDict = getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent=False)
-referenceDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", closeReferenceMissionFunction=closeReferenceMissionByFuelWeightAndRange, silent=False)
-referenceDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", silent=False)
-abortedDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, abortedMission, referenceMissionName="abort", silent=False)
+airplaneName = "tecnam"
+drivingParameters = {
+    "wing loading": convert(17.1, "lb/ft^2", "N/m^2"),
+    "power to weight ratio": convert(1/13.84, "hp/lb", "W/N")}
+# MTOW: 2712 lb = 1230 kg
+# Cruise speed: 66-138 kts => 100 kts
+# Max Fuel: 200 L = 52.8 gal
+# cruise: 70% throttle => 9.66 hr => 130 kts = 66.8 m/s => 2323037 m = 1254.3 nmi
+
+# TECNAM MISSIONS
+
+tecnamDesignMission = copy.deepcopy(abortedMission)
+tecnamDesignMission.segments["climb"].completed = lambda airplane, t, t0: convert(3000, "ft", "m") <= airplane.altitude
+tecnamDesignMission.segments["cruise"].completed = lambda airplane, t, t0: convert(669, "nmi", "m") <= airplane.position
+
+# GET DATA
+
+designDict = getAirplaneDesignData(airplaneName, drivingParameters, tecnamDesignMission, silent=False)
+abortedDict = getReferenceMissionData(airplaneName, drivingParameters, tecnamDesignMission, abortedMission, referenceMissionName="abort", silent=False)
 
 designDict["initial airplane"].passengers = ceil(designMission.passengerFactor*designDict["initial airplane"].maxPassengers)
-referenceDict["initial airplane"].passengers = ceil(referenceMission.passengerFactor*referenceDict["initial airplane"].maxPassengers)
 abortedDict["initial airplane"].passengers = ceil(abortedMission.passengerFactor*abortedDict["initial airplane"].maxPassengers)
 
 designPPs = getPerformanceParameters(designDict["initial airplane"], designDict["simulation"], designDict["final airplane"])
-referencePPs = getPerformanceParameters(referenceDict["initial airplane"], referenceDict["simulation"], referenceDict["final airplane"])
 abortedPPs = getPerformanceParameters(abortedDict["initial airplane"], abortedDict["simulation"], abortedDict["final airplane"])
 
 print("---- Design Mission")
@@ -52,17 +63,6 @@ print("flight time:             {:.1f} hr".format(convert(designPPs["mission tim
 print("fuel used:               {:.0f} lb".format(convert(designPPs["fuel used"], "N", "lb")))
 print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(designDict["initial airplane"]), "N", "lb")))
 print("landing weight           {:.0f} lb".format(convert(AirplaneWeight(designDict["final airplane"]),"N","lb")))
-
-print("---- Reference Mission")
-print("empty weight:            {:.0f} lb".format(convert(referencePPs["empty weight"], "N", "lb")))
-print("takeoff field length:    {:.0f} ft".format(convert(referencePPs["takeoff field length"], "m", "ft")))
-print("landing field length:    {:.0f} ft".format(convert(referencePPs["landing field length"], "m", "ft")))
-print("range:                   {:.2f} nmi".format(convert(referencePPs["range"], "m", "nmi")))
-print("average ground speed:    {:.0f} kts".format(convert(referencePPs["range"]/referencePPs["mission time"], "m/s", "kts")))
-print("flight time:             {:.1f} hr".format(convert(referencePPs["mission time"], "s", "hr")))
-print("fuel used:               {:.0f} lb".format(convert(referencePPs["fuel used"], "N", "lb")))
-print("takeoff weight:          {:.0f} lb".format(convert(AirplaneWeight(referenceDict["initial airplane"]), "N", "lb")))
-print("End weight:              {:.0f} lb".format(convert(AirplaneWeight(referenceDict["final airplane"]),"N","lb")))
 
 print("---- Aborted Mission")
 print("landing field length:    {:.0f} ft".format(convert(abortedPPs["landing field length"], "m", "ft")))
@@ -112,32 +112,6 @@ plot([convert(CG, "m", "ft") for CG in CGs], [convert(W, "N", "lb") for W in Ws]
 xlabel("C.G. [ft]")
 ylabel("Weight [lb]")
 title("Design Mission C.G. Movement")
-
-simulation = referenceDict["simulation"]
-ts = simulation["time"]
-ps = simulation["position"]
-hs = simulation["altitude"]
-Vs = simulation["speed"]
-Ws = simulation["weight"]
-CGs = simulation["cg"]
-
-figure()
-plot([convert(p, "m", "nmi") for p in ps], [convert(h, "m", "ft") for h in hs])
-xlabel("Range [nmi]")
-ylabel("Altitude [ft]")
-title("Reference Mission Track")
-
-figure()
-plot([convert(t, "s", "hr") for t in ts], [convert(V, "m/s", "kts") for V in Vs])
-xlabel("Time [hr]")
-ylabel("Speed [kts]")
-title("Reference Mission Velocity Track")
-
-figure()
-plot([convert(CG, "m", "ft") for CG in CGs], [convert(W, "N", "lb") for W in Ws])
-xlabel("C.G. [ft]")
-ylabel("Weight [lb]")
-title("Reference Mission C.G. Movement")
 
 simulation = abortedDict["simulation"]
 ts = simulation["time"]

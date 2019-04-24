@@ -388,6 +388,7 @@ def _abortedMissionInitializeStartup(airplane, t, t0):
     airplane.position = 0
     airplane.pitch = 0
     airplane.flightPathAngle = 0
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _abortedMissionCompletedStartup(airplane, t, t0):
     return convert(10, "min", "s") <= t - t0
@@ -400,6 +401,7 @@ abortedMission.segments["startup"].update = UpdateWaiting
 
 def _abortedMissionInitializeTakeoff(airplane, t, t0):
     airplane.throttle = 1
+    airplane.powerplant.SFC = 7.89e-5 # kg/kW*s
 
 def _abortedMissionCompletedTakeoff(airplane, t, t0):
     return TakeoffSpeed(airplane) <= airplane.speed
@@ -414,6 +416,7 @@ abortedMission.segments["takeoff"].stepSizeFraction = 1/10
 def _abortedMissionInitializeClimb(airplane, t, t0):
     airplane.throttle = 1
     airplane.speed = VelocityForMaximumExcessPower(airplane)
+    airplane.powerplant.SFC = 8.12e-5 # kg/kW*s
 
 def _abortedMissionCompletedClimb(airplane, t, t0):
     return convert(1000, "ft", "m") <= airplane.altitude
@@ -429,6 +432,7 @@ def _abortedMissionInitializeCruise(airplane, t, t0):
     airplane.flightPathAngle = 0 # level flight
     airplane.pitch = 0 # angle of attack to maintain
     airplane.throttle = 0.7
+    airplane.powerplant.SFC = 1.188e-4 # kg/kW*s
 
 def _abortedMissionCompletedCruise(airplane, t, t0):
     return convert(3, "min", "s") <= t-t0 # don't fly the cruise, do 1 loop of the pattern for 3 min
@@ -441,6 +445,7 @@ abortedMission.segments["cruise"].update = UpdateCruise
 
 def _abortedMissionInitializeDescent(airplane, t, t0):
     airplane.throttle = 0
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _abortedMissionCompletedDescent(airplane, t, t0):
     return airplane.altitude <= convert(5, "ft", "m")
@@ -457,6 +462,7 @@ def _abortedMissionInitializeLanding(airplane, t, t0):
     airplane.flightPathAngle = 0
     airplane.altitude = 0
     airplane.throttle = 0
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _abortedMissionCompletedLanding(airplane, t, t0):
     return airplane.speed <= 0.1
@@ -471,6 +477,7 @@ abortedMission.segments["landing"].stepSizeFraction = 1/10
 def _abortedMissionInitializeShutdown(airplane, t, t0):
     airplane.speed = 0
     airplane.throttle = 0.1
+    airplane.powerplant.SFC = 8.014e-5 # kg/kW*s
 
 def _abortedMissionCompletedShutdown(airplane, t, t0):
     return convert(10, "min", "s") <= t - t0

@@ -13,14 +13,14 @@ import sys
 class Mission:
     segments = None
     cruiseRange = None
-
+    
     def simulate(self, tstep, airplane, recordingFunction=(lambda t, s, a: None), silent=False):
         """
         takes a time step, an airplane definition, and an optional recording function to run each iteration
         returns the success of the simulation. If it was able to complete it, it returns True, if it encountered something that broke the verification, it returns False
-
+        
         the recording function takes the simulation time, the segment name, and the airplane in its current state
-
+        
         """
         tstepBase = tstep
         airplane.passengers = ceil(self.passengerFactor*airplane.maxPassengers)
@@ -30,20 +30,20 @@ class Mission:
         self.segments[0].initialize(airplane, t, t) # make airplane valid before the recording function
         recordingFunction(t, "start", airplane)
         printSimulationProgressBar(iteration) if not silent else None
-
+        
         for segment in self.segments:
             t0 = t
             segment.initialize(airplane, t, t0)
             tstep = tstepBase * segment.stepSizeFraction
-
+            
             while verified and not segment.completed(airplane, t, t0):
                 try:
                     segment.update(airplane, t, tstep)
-
+                    
                     # hard bounds so it doesn't crash
                     if airplane.altitude < 0:
                         airplane.altitude = 0
-
+                    
                     verified = verifySimulation(iteration, t, segment.name, airplane) # here to make sure the simulation doesn't run forever
                 except (KeyboardInterrupt, SystemExit): # if you quit it, actually quit
                     raise
@@ -51,14 +51,15 @@ class Mission:
                     exception_type, exception_value, exception_traceback = sys.exc_info()
                     print("The Simulation Encountered an Error: ", exception_value)
                     verified = False
+                    raise e
                 recordingFunction(t, segment.name, airplane)
                 printSimulationProgressBar(iteration, message=segment.name) if not silent else None
-
+                
                 t = t + tstep
                 iteration += 1
             if not verified:
                 break # get out of the for loop too
-
+        
         printSimulationProgressBar(iteration, ended=True, message="succeeded" if verified else "failed") if not silent else None
         if verified:
             return airplane
@@ -85,10 +86,10 @@ def printSimulationProgressBar(iteration, ended=False, message=""):
 
 class Segments:
     segments = None
-
+    
     def __init__(self, segments):
         self.segments = segments
-
+    
     def __getitem__(self, key):
         if type(key) is int:
             return self.segments[key]
@@ -98,16 +99,16 @@ class Segments:
 class Segment:
     name = None
     stepSizeFraction = 1
-
+    
     def __init__(self, name):
         self.name = name
-
+    
     def initialize(Airplane, t, t0): # reset the airplane parameters to simulate going forward, t is total mission time elapsed, t0 is the beginning time of the mission segment
         pass
-
+    
     def checkComplete(Airplane, t, t0): # returns true when mission segment has been completed, t is total mission time elapsed, t0 is the beginning time of the mission segment
         pass
-
+    
     def update(Airplane, t, tstep): # TODO: write comment
         pass
 
@@ -140,7 +141,7 @@ class Airplane:
     def angleOfAttack(self):
         p = self.pitch
         fpA = self.flightPathAngle
-
+        
         return p - fpA
     @angleOfAttack.setter
     def angleOfAttack(self, a):

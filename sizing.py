@@ -83,6 +83,7 @@ def getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent
         closed = closureResult["closed"]
         # cache results
         saveAirplaneConfiguration(initialDesignAirplane, id, "design-initial")
+        saveFlag("NOTCLOSED", airplaneID, "design-initial") if not closed else None
         print("Design Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
     else:
         print("Loaded Design Initial Configuration                              - {:10.10}".format(id)) if not silent else None
@@ -127,6 +128,7 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
             closed = closureResult["closed"]
             # cache results
             saveAirplaneConfiguration(initialDesignAirplane, id, "design-initial")
+            saveFlag("NOTCLOSED", airplaneID, "design-initial") if not closed else None
             print("Design Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
         else:
             print("Loaded Design Initial Configuration                              - {:10.10}".format(id)) if not silent else None
@@ -138,6 +140,7 @@ def getReferenceMissionData(airplaneName, drivingParameters, designMission, refe
             closed = closureResult["closed"]
             # cache results
             saveAirplaneConfiguration(initialReferenceAirplane, id, referenceMissionName + "-initial")
+            saveFlag("NOTCLOSED", airplaneID, referenceMissionName + "-initial") if not closed else None
             print("Reference Aircraft " + ("CLOSED" if closed else "DID NOT CLOSE")) if not silent else None
         else: # if it was not specified to use a different closed aircraft
             initialReferenceAirplane = copy.deepcopy(initialDesignAirplane)
@@ -391,6 +394,16 @@ def saveAirplaneConfiguration(airplaneConfiguration, airplaneID, configurationNa
     createAirplaneIDDirectoryIfNotMade(airplaneID)
     airplaneConfigurationFilePath = os.path.join(simulationDirectory, airplaneID, configurationName + ".pyobj")
     saveObject(airplaneConfiguration, airplaneConfigurationFilePath)
+
+# FLAGS
+
+def saveFlag(flag, airplaneID, simulationName):
+    flagPath = os.path.join(simulationDirectory, airplaneID, simulationName + "-" + flag)
+    os.open(flagPath, "a").close()
+
+def readFlag(flag, airplaneID, simulationName):
+    flagPath = os.path.join(simulationDirectory, airplaneID, simulationName + "-" + flag)
+    return os.path.exists(flagPath)
 
 # RESOURCES
 

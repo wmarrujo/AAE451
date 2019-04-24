@@ -29,7 +29,7 @@ def exponentialForm(x, a, b):
 
 def invExponentialForm(y, a, b):
     return log(y / a) / b
-    
+
 ################################################################################
 # DEFINITIONS
 ################################################################################
@@ -41,10 +41,8 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 # DRIVNG PARAMETERS MATRIX
 
-WSs = [WS*0.8, WS*0.9, WS, WS*1.1, WS*1.2]
-PWs = [PW*0.9, PW*0.95, PW, PW*1.05, PW*1.1]
-# WSs = [WS*0.8, WS, WS*1.2]
-# PWs = [PW*0.9, PW, PW*1.1]
+WSs = [WS*0.9, WS, WS*1.1]
+PWs = [PW*0.9, PW, PW*1.1]
 
 DPs = [[{
     "wing loading": WS,
@@ -218,7 +216,7 @@ for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), pWS, transpose(pWe))): #
     cleanOffsetWSs = [WS+(offset*row) for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
     plot(cleanOffsetWSs, cleanWes, "k")
-    
+
 ###### INTERSECTION CURVES
 # Takeoff Field Length
 cleanOffsetWSs = [WS for WS in dropOnOtherList(WSs, Cs)]

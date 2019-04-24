@@ -80,7 +80,7 @@ def _designMissionInitializeCruise(airplane, t, t0):
     airplane.flightPathAngle = 0 # level flight
     airplane.pitch = 0 # angle of attack to maintain
     airplane.throttle = 0.7
-    airplane.powerplant.SFC = 8.35e-5 # kg/kW*s
+    airplane.powerplant.SFC = 1.188e-4 # kg/kW*s
 
 def _designMissionCompletedCruise(airplane, t, t0):
     return minimumRange <= airplane.position

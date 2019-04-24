@@ -805,7 +805,8 @@ def CalculatePilotPayloadMass(airplanePilots):
 
 def UpdateFuel(airplane, tstep):
     P = AllEnginesPower(airplane)
-    E = P*tstep
+    engineEfficiency = 0.26 # chem energy to shaft power (includes power draw of other components)
+    E = P*tstep / engineEfficiency
     gas = airplane.powerplant.gas
     battery = airplane.powerplant.battery
     mg = gas.mass if gas is not None else 0
@@ -824,6 +825,8 @@ def UpdateFuel(airplane, tstep):
         battery.energy -= Eb
     if gas is not None:
         gas.mass -= tstep*mdot
+        # gas.mass -= Eg/gas.energyDensity
+
 
 def UpdateWaiting(airplane, t, tstep):
     UpdateFuel(airplane, tstep)

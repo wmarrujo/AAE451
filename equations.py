@@ -706,7 +706,6 @@ def PredictInstalledEngineMass(uninstalledEngineMass, numberOfEngines, powerToWe
     W0 = convert(airplaneGrossWeight, "N", "lb")
 
     WUAdjust = WU * (PW * W0 / (N * P0))**0.78
-    print(WUAdjust)
     Weng = 2.575 * WUAdjust**0.9
     return convert(Weng, "lb", "N")/g
 
@@ -820,7 +819,7 @@ def UpdateFuel(airplane, tstep):
     Eg = E*(1-percentElectric) + (generator.power*tstep*generator.efficiency if generatorOn else 0) # energy requested of gas
 
     SFC = airplane.powerplant.SFC # kg/kW*s (PER ENGINE)
-    mdot = SFC * P * length(airplane.engines)# kg/s
+    mdot = SFC * P * len(airplane.engines) # kg/s
 
     if battery is not None:
         battery.energy -= Eb

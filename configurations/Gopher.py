@@ -29,7 +29,6 @@ def defineAirplane(definingParameters):
     Wf = definingParameters["initial fuel weight"]
     WS = definingParameters["wing loading"]
     PW = definingParameters["power to weight ratio"]
-    print(W0, Wf)
 
     # ASSUMPTIONS # FIXME: Define elsewhere? or get from simulations?
     cruiseDynamicPressure = 0.5*densityAtAltitude(cruiseAltitude)*convert(180, "kts", "m/s")**2

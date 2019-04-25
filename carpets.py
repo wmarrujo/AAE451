@@ -29,7 +29,7 @@ def exponentialForm(x, a, b):
 
 def invExponentialForm(y, a, b):
     return log(y / a) / b
-
+    
 ################################################################################
 # DEFINITIONS
 ################################################################################
@@ -43,6 +43,8 @@ PW = convert(0.072, "hp/lb", "W/N")
 
 WSs = [WS*0.9, WS, WS*1.1]
 PWs = [PW*0.9, PW, PW*1.1]
+# WSs = [WS*0.8, WS, WS*1.2]
+# PWs = [PW*0.9, PW, PW*1.1]
 
 DPs = [[{
     "wing loading": WS,
@@ -69,7 +71,6 @@ pA = map2D(lambda d: getPerformanceParameters(d["initial airplane"], d["simulati
 # make matrix for each driving parameter independently
 
 PWs = [convert(PW, "W/N", "hp/lb") for PW in PWs]
-print(PWs)
 
 pWe = map2D(lambda PP: convert(PP["empty weight"], "N", "lb"), p)
 pWS = map2D(lambda DP: convert(DP["wing loading"], "N/m^2", "lb/ft^2"), DPs)
@@ -103,7 +104,7 @@ for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
 
     W0params.append([a,b])
 
-    plot(cleanWSs, cleanWes)
+    plot(cleanWSs, cleanWes, "k.")
     plot(fWS, [exponentialForm(WS, a, b) for WS in fWS], label="P/W= {:.4f} hp/lb".format(PWs[row]))
 
 title("Empty Weight Trends")
@@ -208,15 +209,23 @@ for row, (Cs, WSs, Wes) in enumerate(zip(pC, pWS, pWe)): # for each row
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+(offset*row) for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    plot(cleanOffsetWSs, cleanWes, "k")
+    #plot(cleanOffsetWSs, cleanWes, ".k")
+    
+    fitOffsetWS = linspace(cleanOffsetWSs[0]*0.9, cleanOffsetWSs[-1]*1.1, 1000)
+    params, pconv = curve_fit(fit_func, cleanOffsetWSs, cleanWes, p0=(1, 0))
+    plot(fitOffsetWS, [exponentialForm(WS, params[0], params[1]) for WS in fitOffsetWS], "k")
 
 # W/S Contour
 for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), pWS, transpose(pWe))): # for each row
     # Clean list by checking if solution converged
     cleanOffsetWSs = [WS+(offset*row) for WS in dropOnOtherList(WSs, Cs)]
     cleanWes = dropOnOtherList(Wes, Cs)
-    plot(cleanOffsetWSs, cleanWes, "k")
-
+    #plot(cleanOffsetWSs, cleanWes, ".k")
+    
+    fitOffsetWS = linspace(cleanOffsetWSs[0]*0.9, cleanOffsetWSs[-1]*1.1, 1000)
+    params, pconv = curve_fit(fit_func, cleanOffsetWSs, cleanWes, p0=(1, 0))
+    plot(fitOffsetWS, [exponentialForm(WS, params[0], params[1]) for WS in fitOffsetWS], "k")
+    
 ###### INTERSECTION CURVES
 # Takeoff Field Length
 cleanOffsetWSs = [WS for WS in dropOnOtherList(WSs, Cs)]

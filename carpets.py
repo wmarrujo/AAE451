@@ -57,7 +57,7 @@ fit_PW = linspace(PW*0.8, PW*1.2, 1000)
 
 # AIRPLANE
 
-airplaneName = "Gopher"
+airplaneName = "tecnam"
 
 # GET DRIVING PARAMETERS
 
@@ -227,6 +227,9 @@ for row, (Cs, WSs, Wes) in enumerate(zip(transpose(pC), pWS, transpose(pWe))): #
     plot(fitOffsetWS, [exponentialForm(WS, params[0], params[1]) for WS in fitOffsetWS], "k")
     
 ###### INTERSECTION CURVES
+fit_WS = linspace(WS*0.8, WS*1.5, 1000)
+fWS = [convert(WS, "N/m^2", "lb/ft^2") for WS in fit_WS]
+
 # Takeoff Field Length
 cleanOffsetWSs = [WS for WS in dropOnOtherList(WSs, Cs)]
 params, pconv = curve_fit(fit_func, cleanOffsetWSs, W0fromdT0Intersection, p0=(1, 0))

@@ -30,6 +30,7 @@ designMission.segments = Segments([
 # STARTUP
 
 def _designMissionInitializeStartup(airplane, t, t0):
+    airplane.passengers = ceil(airplane.maxPassengers * designMission.passengerFactor)
     airplane.altitude = 0
     airplane.speed = 0
     airplane.throttle = 0.3
@@ -209,6 +210,7 @@ referenceMission.segments = Segments([
 # STARTUP
 
 def _referenceMissionInitializeStartup(airplane, t, t0):
+    airplane.passengers = ceil(airplane.maxPassengers * referenceMission.passengerFactor)
     airplane.altitude = 0
     airplane.speed = 0
     airplane.throttle = 0.3
@@ -382,6 +384,7 @@ abortedMission.segments = Segments([
 # STARTUP
 
 def _abortedMissionInitializeStartup(airplane, t, t0):
+    airplane.passengers = ceil(airplane.maxPassengers * abortedMission.passengerFactor)
     airplane.altitude = 0
     airplane.speed = 0
     airplane.throttle = 0.3

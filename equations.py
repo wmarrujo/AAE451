@@ -17,7 +17,7 @@ from matplotlib.pyplot import *
 ################################################################################
 
 def AirplaneWeight(airplane): # TODO: calculate with airplane.mass?
-    Wpay = PayloadWeight(airplane)
+    Wpay = PayloadWeight(airplane) # convert(702, "lb", "N") # convert(649, "lb", "N")
     Wfuel = FuelWeight(airplane)
     Wempty = airplane.emptyMass * g
     

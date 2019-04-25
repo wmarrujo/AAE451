@@ -27,10 +27,10 @@ import copy
 
 # DEFINE THE AIRPLANE
 
-airplaneName = "tecnam"
+airplaneName = "diamond"
 drivingParameters = {
-    "wing loading": convert(17.1, "lb/ft^2", "N/m^2"),
-    "power to weight ratio": convert(1/13.84, "hp/lb", "W/N")}
+    "wing loading": convert(22.45, "lb/ft^2", "N/m^2"), # 17.1
+    "power to weight ratio": convert(0.0792, "hp/lb", "W/N")} # 1/13.84
 # MTOW: 2712 lb = 1230 kg
 # Cruise speed: 66-138 kts => 100 kts
 # Max Fuel: 200 L = 52.8 gal
@@ -39,8 +39,8 @@ drivingParameters = {
 # TECNAM MISSIONS
 
 tecnamDesignMission = copy.deepcopy(abortedMission)
-tecnamDesignMission.segments["climb"].completed = lambda airplane, t, t0: convert(3000, "ft", "m") <= airplane.altitude
-tecnamDesignMission.segments["cruise"].completed = lambda airplane, t, t0: convert(669, "nmi", "m") <= airplane.position
+tecnamDesignMission.segments["climb"].completed = lambda airplane, t, t0: convert(3000, "ft", "m") <= airplane.altitude # 3000 7500
+tecnamDesignMission.segments["cruise"].completed = lambda airplane, t, t0: convert(700, "nmi", "m") <= airplane.position # 669 700
 
 # GET DATA
 
@@ -70,7 +70,7 @@ print("initial gross weight:    {:.0f} lb".format(convert(AirplaneWeight(aborted
 print("final gross weight:      {:.0f} lb".format(convert(AirplaneWeight(abortedDict["final airplane"]), "N", "lb")))
 
 initialDAirplane = designDict["initial airplane"]
-initialRAirplane = referenceDict["initial airplane"]
+# initialRAirplane = referenceDict["initial airplane"]
 
 print("---- Aircraft Geometry")
 print("wing")

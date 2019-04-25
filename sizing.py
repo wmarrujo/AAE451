@@ -253,10 +253,11 @@ def closeReferenceMissionByFuelWeightAndRange(baseConfiguration, referenceMissio
         # post-validation
         if succeeded:
             Wgs = [mg*g for mg in simulation["gas mass"]]
-            range = simulation["position"][lastIndex(simulation["segment"], lambda s: s == "descent")] # the range not including the loiter segments
+            # range = simulation["position"][lastIndex(simulation["segment"], lambda s: s == "descent")] # the range not including the loiter segments
+            time = simulation["time"][lastIndex(simulation["segment"], lambda s: s == "descent")]
             # FIXME: range getting beginning of descent
 
-            result = [Wgs[-1] , convert(range - referenceRange, "m", "nmi")] # no gas left after whole mission & range flown = desired range
+            result = [Wgs[-1] , time - 45*60]#convert(range - referenceRange, "m", "nmi")] # no gas left after whole mission & range flown = desired range
 
         else:
             result = [1e10,1e10] # pseudo bound

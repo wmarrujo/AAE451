@@ -57,7 +57,7 @@ fit_PW = linspace(PW*0.8, PW*1.2, 1000)
 
 # AIRPLANE
 
-airplaneName = "tecnam"
+airplaneName = "Gopher"
 
 # GET DRIVING PARAMETERS
 

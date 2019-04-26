@@ -26,8 +26,8 @@ from matplotlib.pyplot import *
 
 airplaneName = "Gopher"
 drivingParameters = {
-    "wing loading": convert(20, "lb/ft^2", "N/m^2"),
-    "power to weight ratio": convert(0.072, "hp/lb", "W/N")}
+    "wing loading": convert(19.7, "lb/ft^2", "N/m^2"),
+    "power to weight ratio": convert(0.068, "hp/lb", "W/N")}
 
 designDict = getAirplaneDesignData(airplaneName, drivingParameters, designMission, silent=False)
 referenceDict = getReferenceMissionData(airplaneName, drivingParameters, designMission, referenceMission, referenceMissionName="reference", closeReferenceMissionFunction=closeReferenceMissionByFuelWeightAndRange, silent=False)
